@@ -29,91 +29,106 @@
       </span>
     </header>
 
-    <!-- Banner aurora verde -->
-    <div class="login-banner">
-      <div class="login-banner__aurora"></div>
-      <div class="dp-frame">
+    <!-- Banner azul (Windows 7) -->
+    <div class="login-banner login-banner--blue">
+      <div class="login-banner__sky"></div>
+      <div class="dp-frame dp-frame--generic">
         <div class="dp-frame__inner">
-          <img id="dp-image" src="assets/icons/icon-192.png" alt="Foto de exibição" />
+          <svg class="avatar-generic" viewBox="0 0 100 100" aria-label="Foto de exibição">
+            <defs>
+              <linearGradient id="avBg" x1="0" y1="0" x2="0" y2="1">
+                <stop offset="0%" stop-color="#f4f8fb"/>
+                <stop offset="100%" stop-color="#d7e3ec"/>
+              </linearGradient>
+              <linearGradient id="avPerson" x1="0" y1="0" x2="0" y2="1">
+                <stop offset="0%" stop-color="#b9c3cc"/>
+                <stop offset="100%" stop-color="#8f9ba6"/>
+              </linearGradient>
+            </defs>
+            <rect width="100" height="100" fill="url(#avBg)"/>
+            <circle cx="50" cy="38" r="19" fill="url(#avPerson)"/>
+            <path d="M16 96c0-20 15-31 34-31s34 11 34 31z" fill="url(#avPerson)"/>
+          </svg>
         </div>
       </div>
     </div>
 
     <!-- Corpo do login -->
     <main class="login-body">
-      <h1 class="welcome">Bem-vindo novamente!</h1>
+      <h1 class="signin-title">Entrar</h1>
+      <p class="signin-subtitle">
+        Entre com seu Windows Live ID. Não possui?
+        <a href="#" class="inline-link" id="link-signup">Inscrever-se.</a>
+      </p>
 
       <form id="login-form" class="login-form" autocomplete="on" novalidate>
-        <!-- Combobox de e-mail -->
-        <div class="field field--combo">
-          <input
-            id="login-email"
-            name="email"
-            type="email"
-            inputmode="email"
-            placeholder="Endereço de e-mail"
-            autocomplete="username"
-            required
-          />
-          <button type="button" class="combo-arrow" aria-label="Escolher conta" tabindex="-1"></button>
-        </div>
+        <div class="login-card">
+          <!-- Combobox de e-mail -->
+          <div class="field field--combo">
+            <input
+              id="login-email"
+              name="email"
+              type="email"
+              inputmode="email"
+              placeholder="Example555@hotmail.com"
+              autocomplete="username"
+              required
+            />
+            <button type="button" class="combo-arrow" aria-label="Escolher conta" tabindex="-1"></button>
+          </div>
 
-        <!-- Senha -->
-        <div class="field">
-          <input
-            id="login-password"
-            name="password"
-            type="password"
-            placeholder="Senha"
-            autocomplete="current-password"
-            required
-          />
-        </div>
+          <!-- Senha -->
+          <div class="field">
+            <input
+              id="login-password"
+              name="password"
+              type="password"
+              placeholder="Insira sua senha"
+              autocomplete="current-password"
+              required
+            />
+          </div>
 
-        <!-- Entrar como (status) -->
-        <div class="signin-as">
-          <span class="signin-as__label">Entrar como:</span>
-          <button type="button" id="status-toggle" class="status-select" aria-haspopup="listbox" aria-expanded="false">
-            <span class="status-dot status-dot--online" id="status-dot"></span>
-            <span id="status-label">Disponível</span>
-            <span class="caret-down"></span>
-          </button>
+          <!-- Entrar como (status) -->
+          <div class="signin-as">
+            <span class="signin-as__label">Entrar como:</span>
+            <button type="button" id="status-toggle" class="status-select" aria-haspopup="listbox" aria-expanded="false">
+              <span class="status-dot status-dot--online" id="status-dot"></span>
+              <span id="status-label">Disponível</span>
+              <span class="caret-down"></span>
+            </button>
 
-          <button type="button" id="options-toggle" class="options-chevron" aria-label="Mais opções" aria-expanded="false">
-            <span class="chevron"></span>
-          </button>
+            <!-- Menu de status -->
+            <ul id="status-menu" class="status-menu" role="listbox" hidden>
+              <li role="option" data-status="online"    data-label="Disponível"><span class="status-dot status-dot--online"></span>Disponível</li>
+              <li role="option" data-status="busy"       data-label="Ocupado"><span class="status-dot status-dot--busy"></span>Ocupado</li>
+              <li role="option" data-status="away"       data-label="Ausente"><span class="status-dot status-dot--away"></span>Ausente</li>
+              <li role="option" data-status="invisible"  data-label="Invisível"><span class="status-dot status-dot--invisible"></span>Invisível</li>
+            </ul>
+          </div>
 
-          <!-- Menu de status -->
-          <ul id="status-menu" class="status-menu" role="listbox" hidden>
-            <li role="option" data-status="online"    data-label="Disponível"><span class="status-dot status-dot--online"></span>Disponível</li>
-            <li role="option" data-status="busy"       data-label="Ocupado"><span class="status-dot status-dot--busy"></span>Ocupado</li>
-            <li role="option" data-status="away"       data-label="Ausente"><span class="status-dot status-dot--away"></span>Ausente</li>
-            <li role="option" data-status="invisible"  data-label="Invisível"><span class="status-dot status-dot--invisible"></span>Invisível</li>
-          </ul>
-        </div>
+          <!-- Opções (sempre visíveis) -->
+          <div class="login-options">
+            <label class="checkbox">
+              <input type="checkbox" id="opt-remember-me" />
+              <span class="checkbox__box"></span>
+              <span class="checkbox__text">Lembrar-me</span>
+            </label>
 
-        <!-- Opções expansíveis -->
-        <div id="login-options" class="login-options" hidden>
-          <label class="checkbox">
-            <input type="checkbox" id="opt-remember-me" checked />
-            <span class="checkbox__box"></span>
-            <span class="checkbox__text">Lembrar-me</span>
-            <a href="#" class="inline-link" id="link-forget-me">(Esquecer-me)</a>
-          </label>
+            <label class="checkbox">
+              <input type="checkbox" id="opt-remember-pass" />
+              <span class="checkbox__box"></span>
+              <span class="checkbox__text">Lembrar minha senha</span>
+            </label>
 
-          <label class="checkbox">
-            <input type="checkbox" id="opt-remember-pass" checked />
-            <span class="checkbox__box"></span>
-            <span class="checkbox__text">Lembrar minha senha</span>
-          </label>
+            <label class="checkbox">
+              <input type="checkbox" id="opt-auto-signin" />
+              <span class="checkbox__box"></span>
+              <span class="checkbox__text">Entrar automaticamente</span>
+            </label>
 
-          <label class="checkbox">
-            <input type="checkbox" id="opt-auto-signin" />
-            <span class="checkbox__box"></span>
-            <span class="checkbox__text">Entrar automaticamente</span>
-          </label>
-
-          <a href="#" class="inline-link inline-link--block" id="link-forgot-pass">Esqueceu sua senha?</a>
+            <a href="#" class="inline-link inline-link--block" id="link-forgot-pass">Esqueceu sua senha?</a>
+          </div>
         </div>
 
         <!-- Mensagem de erro/status -->
@@ -121,12 +136,6 @@
 
         <!-- Botão Entrar -->
         <button type="submit" id="btn-signin" class="btn-signin">Entrar</button>
-
-        <!-- Link para cadastro -->
-        <p class="signup-line">
-          Não tem uma conta?
-          <a href="#" class="inline-link" id="link-signup">Cadastre-se</a>
-        </p>
       </form>
     </main>
 

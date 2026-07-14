@@ -131,6 +131,46 @@ body {
 }
 .dp-frame__inner img { width: 100%; height: 100%; object-fit: cover; display: block; }
 
+/* ---------- Variante azul (Windows 7) ---------- */
+.login-banner--blue { background: #bfe0f6; }
+.login-banner__sky {
+  position: absolute; inset: 0;
+  overflow: hidden;
+  background: linear-gradient(180deg,
+    #7db4e3 0%, #9ecdf1 26%, #c2e0f7 58%, #ddeffb 82%, #eef7fd 100%);
+}
+.login-banner__sky::before {
+  content: "";
+  position: absolute; left: -20%; top: -40%;
+  width: 140%; height: 120%;
+  background: radial-gradient(60% 55% at 40% 60%, rgba(255,255,255,0.55), transparent 70%);
+  transform: rotate(-8deg);
+}
+.login-banner__sky::after {
+  content: "";
+  position: absolute; right: -10%; top: -30%;
+  width: 70%; height: 90%;
+  background: radial-gradient(50% 60% at 70% 40%, rgba(255,255,255,0.35), transparent 75%);
+}
+
+/* ---------- Moldura do avatar genérico ---------- */
+.dp-frame--generic {
+  width: 104px;
+  height: 104px;
+  padding: 6px;
+  background: linear-gradient(#ffffff, #d9e2ea);
+  border: 1px solid #ffffff;
+  border-radius: 8px;
+  box-shadow: 0 3px 9px rgba(0, 0, 0, 0.28),
+              inset 0 0 0 1px rgba(120, 150, 175, 0.35);
+}
+.dp-frame--generic .dp-frame__inner {
+  border: 1px solid #a9bccb;
+  border-radius: 5px;
+  background: #eef4f8;
+}
+.avatar-generic { width: 100%; height: 100%; display: block; }
+
 /* ============================================================
    CORPO DO LOGIN
    ============================================================ */
@@ -154,12 +194,36 @@ body {
   letter-spacing: 0.2px;
 }
 
+/* ---------- Cabeçalho "Entrar" (tema azul) ---------- */
+.signin-title {
+  font-size: 1.45rem;
+  font-weight: 400;
+  color: #2f4a63;
+  margin: 6px 0 4px;
+}
+.signin-subtitle {
+  font-size: 0.82rem;
+  color: #5a6b78;
+  margin: 0 0 18px;
+  max-width: 300px;
+  line-height: 1.5;
+}
+
 .login-form {
   width: 100%;
   max-width: 320px;
   display: flex;
   flex-direction: column;
   align-items: stretch;
+}
+
+/* Cartão que agrupa os campos (borda sutil) */
+.login-card {
+  border: 1px solid #d7e0e8;
+  border-radius: 5px;
+  padding: 14px 14px 12px;
+  background: #ffffff;
+  box-shadow: inset 0 1px 0 #fff;
 }
 
 /* ---------- Campos ---------- */
