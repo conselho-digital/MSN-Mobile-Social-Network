@@ -15,7 +15,7 @@
 </head>
 <body>
   <!-- ==================== TELA DE LOGIN ==================== -->
-  <section id="screen-login" class="screen screen--active">
+  <section id="screen-login" class="screen screen--active signin-screen">
     <!-- Barra de título estilo Windows -->
     <header class="titlebar">
       <span class="titlebar__app">
@@ -29,40 +29,34 @@
       </span>
     </header>
 
-    <!-- Banner azul (Windows 7) -->
-    <div class="login-banner login-banner--blue">
-      <div class="login-banner__sky"></div>
-      <button type="button" class="help-menu" aria-haspopup="true">
-        Ajuda <span class="caret-down caret-down--light"></span>
+    <div class="signin-scroll">
+      <!-- Ajuda "?" -->
+      <button type="button" class="help-icon" aria-label="Ajuda" aria-haspopup="true">
+        <span class="help-icon__q">?</span><span class="caret-down"></span>
       </button>
-      <div class="dp-frame dp-frame--generic">
-        <div class="dp-frame__inner">
-          <svg class="avatar-generic" viewBox="0 0 100 100" aria-label="Foto de exibição">
-            <defs>
-              <linearGradient id="avBg" x1="0" y1="0" x2="0" y2="1">
-                <stop offset="0%" stop-color="#f4f8fb"/>
-                <stop offset="100%" stop-color="#d7e3ec"/>
-              </linearGradient>
-              <linearGradient id="avPerson" x1="0" y1="0" x2="0" y2="1">
-                <stop offset="0%" stop-color="#b9c3cc"/>
-                <stop offset="100%" stop-color="#8f9ba6"/>
-              </linearGradient>
-            </defs>
-            <rect width="100" height="100" fill="url(#avBg)"/>
-            <circle cx="50" cy="38" r="19" fill="url(#avPerson)"/>
-            <path d="M16 96c0-20 15-31 34-31s34 11 34 31z" fill="url(#avPerson)"/>
-          </svg>
+
+      <!-- Avatar -->
+      <div class="signin-avatar">
+        <div class="dp-frame dp-frame--generic">
+          <div class="dp-frame__inner">
+            <svg class="avatar-generic" viewBox="0 0 100 100" aria-label="Foto de exibição">
+              <defs>
+                <linearGradient id="avBg" x1="0" y1="0" x2="0" y2="1">
+                  <stop offset="0%" stop-color="#f4f8fb"/><stop offset="100%" stop-color="#d7e3ec"/>
+                </linearGradient>
+                <linearGradient id="avPerson" x1="0" y1="0" x2="0" y2="1">
+                  <stop offset="0%" stop-color="#b9c3cc"/><stop offset="100%" stop-color="#8f9ba6"/>
+                </linearGradient>
+              </defs>
+              <rect width="100" height="100" fill="url(#avBg)"/>
+              <circle cx="50" cy="38" r="19" fill="url(#avPerson)"/>
+              <path d="M16 96c0-20 15-31 34-31s34 11 34 31z" fill="url(#avPerson)"/>
+            </svg>
+          </div>
         </div>
       </div>
-    </div>
 
-    <!-- Corpo do login -->
-    <main class="login-body">
-      <h1 class="signin-title">Entrar</h1>
-      <p class="signin-subtitle">
-        Entre com seu email. Não possui?
-        <a href="#" class="inline-link" id="link-signup">Inscrever-se.</a>
-      </p>
+      <h1 class="welcome">Bem-vindo novamente!</h1>
 
       <form id="login-form" class="login-form" autocomplete="on" novalidate>
         <div class="login-card">
@@ -92,13 +86,17 @@
             />
           </div>
 
-          <!-- Entrar como (status) -->
+          <!-- Entrar como (status) + expandir opções -->
           <div class="signin-as">
             <span class="signin-as__label">Entrar como:</span>
             <button type="button" id="status-toggle" class="status-select" aria-haspopup="listbox" aria-expanded="false">
               <span class="status-dot status-dot--online" id="status-dot"></span>
               <span id="status-label">Disponível</span>
               <span class="caret-down"></span>
+            </button>
+
+            <button type="button" id="options-toggle" class="options-chevron" aria-label="Mais opções" aria-expanded="false">
+              <span class="chevron"></span>
             </button>
 
             <!-- Menu de status -->
@@ -110,8 +108,8 @@
             </ul>
           </div>
 
-          <!-- Opções (sempre visíveis) -->
-          <div class="login-options">
+          <!-- Opções recolhíveis -->
+          <div id="login-options" class="login-options" hidden>
             <label class="checkbox">
               <input type="checkbox" id="opt-remember-me" />
               <span class="checkbox__box"></span>
@@ -139,19 +137,25 @@
 
         <!-- Botão Entrar -->
         <button type="submit" id="btn-signin" class="btn-signin">Entrar</button>
-      </form>
-    </main>
 
-    <!-- Rodapé -->
-    <footer class="login-footer">
-      <a href="#" class="inline-link">Declaração de Privacidade</a>
-      <span class="footer-sep">|</span>
-      <a href="#" class="inline-link">Status do servidor</a>
-    </footer>
+        <!-- Link para cadastro -->
+        <p class="signup-line">
+          Não tem uma conta?
+          <a href="#" class="inline-link" id="link-signup">Cadastre-se</a>
+        </p>
+      </form>
+
+      <!-- Rodapé -->
+      <footer class="login-footer">
+        <a href="#" class="inline-link">Declaração de Privacidade</a>
+        <span class="footer-sep">|</span>
+        <a href="#" class="inline-link">Status do servidor</a>
+      </footer>
+    </div>
   </section>
 
   <!-- ==================== TELA DE CADASTRO ==================== -->
-  <section id="screen-signup" class="screen">
+  <section id="screen-signup" class="screen signin-screen">
     <!-- Barra de título -->
     <header class="titlebar">
       <span class="titlebar__app">
@@ -165,35 +169,34 @@
       </span>
     </header>
 
-    <!-- Banner azul -->
-    <div class="login-banner login-banner--blue">
-      <div class="login-banner__sky"></div>
-      <button type="button" class="help-menu" aria-haspopup="true">
-        Ajuda <span class="caret-down caret-down--light"></span>
+    <div class="signin-scroll">
+      <!-- Ajuda "?" -->
+      <button type="button" class="help-icon" aria-label="Ajuda" aria-haspopup="true">
+        <span class="help-icon__q">?</span><span class="caret-down"></span>
       </button>
-      <div class="dp-frame dp-frame--generic">
-        <div class="dp-frame__inner">
-          <svg class="avatar-generic" viewBox="0 0 100 100" aria-label="Foto de exibição">
-            <defs>
-              <linearGradient id="avBg2" x1="0" y1="0" x2="0" y2="1">
-                <stop offset="0%" stop-color="#f4f8fb"/>
-                <stop offset="100%" stop-color="#d7e3ec"/>
-              </linearGradient>
-              <linearGradient id="avPerson2" x1="0" y1="0" x2="0" y2="1">
-                <stop offset="0%" stop-color="#b9c3cc"/>
-                <stop offset="100%" stop-color="#8f9ba6"/>
-              </linearGradient>
-            </defs>
-            <rect width="100" height="100" fill="url(#avBg2)"/>
-            <circle cx="50" cy="38" r="19" fill="url(#avPerson2)"/>
-            <path d="M16 96c0-20 15-31 34-31s34 11 34 31z" fill="url(#avPerson2)"/>
-          </svg>
+
+      <!-- Avatar -->
+      <div class="signin-avatar">
+        <div class="dp-frame dp-frame--generic">
+          <div class="dp-frame__inner">
+            <svg class="avatar-generic" viewBox="0 0 100 100" aria-label="Foto de exibição">
+              <defs>
+                <linearGradient id="avBg2" x1="0" y1="0" x2="0" y2="1">
+                  <stop offset="0%" stop-color="#f4f8fb"/><stop offset="100%" stop-color="#d7e3ec"/>
+                </linearGradient>
+                <linearGradient id="avPerson2" x1="0" y1="0" x2="0" y2="1">
+                  <stop offset="0%" stop-color="#b9c3cc"/><stop offset="100%" stop-color="#8f9ba6"/>
+                </linearGradient>
+              </defs>
+              <rect width="100" height="100" fill="url(#avBg2)"/>
+              <circle cx="50" cy="38" r="19" fill="url(#avPerson2)"/>
+              <path d="M16 96c0-20 15-31 34-31s34 11 34 31z" fill="url(#avPerson2)"/>
+            </svg>
+          </div>
         </div>
       </div>
-    </div>
 
-    <!-- Corpo do cadastro -->
-    <main class="login-body">
+      <!-- Corpo do cadastro -->
       <h1 class="signin-title">Criar sua conta</h1>
       <p class="signin-subtitle">
         Já tem uma conta?
@@ -279,18 +282,18 @@
         <!-- Botão Criar conta -->
         <button type="submit" id="btn-signup" class="btn-signin">Criar conta</button>
       </form>
-    </main>
 
-    <!-- Rodapé -->
-    <footer class="login-footer">
-      <a href="#" class="inline-link">Declaração de Privacidade</a>
-      <span class="footer-sep">|</span>
-      <a href="#" class="inline-link">Status do servidor</a>
-    </footer>
+      <!-- Rodapé -->
+      <footer class="login-footer">
+        <a href="#" class="inline-link">Declaração de Privacidade</a>
+        <span class="footer-sep">|</span>
+        <a href="#" class="inline-link">Status do servidor</a>
+      </footer>
+    </div>
   </section>
 
   <!-- ==================== TELA DE CONEXÃO (bonequinhos girando) ==================== -->
-  <section id="screen-connecting" class="screen">
+  <section id="screen-connecting" class="screen signin-screen">
     <!-- Barra de título -->
     <header class="titlebar">
       <span class="titlebar__app">
@@ -304,33 +307,33 @@
       </span>
     </header>
 
-    <!-- Banner azul (idêntico ao login) -->
-    <div class="login-banner login-banner--blue">
-      <div class="login-banner__sky"></div>
-      <button type="button" class="help-menu" aria-haspopup="true">
-        Ajuda <span class="caret-down caret-down--light"></span>
+    <div class="signin-scroll">
+      <!-- Ajuda "?" -->
+      <button type="button" class="help-icon" aria-label="Ajuda" aria-haspopup="true">
+        <span class="help-icon__q">?</span><span class="caret-down"></span>
       </button>
-      <div class="dp-frame dp-frame--generic">
-        <div class="dp-frame__inner">
-          <svg class="avatar-generic" viewBox="0 0 100 100" aria-label="Foto de exibição">
-            <defs>
-              <linearGradient id="avBgC" x1="0" y1="0" x2="0" y2="1">
-                <stop offset="0%" stop-color="#f4f8fb"/><stop offset="100%" stop-color="#d7e3ec"/>
-              </linearGradient>
-              <linearGradient id="avPersonC" x1="0" y1="0" x2="0" y2="1">
-                <stop offset="0%" stop-color="#b9c3cc"/><stop offset="100%" stop-color="#8f9ba6"/>
-              </linearGradient>
-            </defs>
-            <rect width="100" height="100" fill="url(#avBgC)"/>
-            <circle cx="50" cy="38" r="19" fill="url(#avPersonC)"/>
-            <path d="M16 96c0-20 15-31 34-31s34 11 34 31z" fill="url(#avPersonC)"/>
-          </svg>
+
+      <!-- Avatar (idêntico ao login) -->
+      <div class="signin-avatar">
+        <div class="dp-frame dp-frame--generic">
+          <div class="dp-frame__inner">
+            <svg class="avatar-generic" viewBox="0 0 100 100" aria-label="Foto de exibição">
+              <defs>
+                <linearGradient id="avBgC" x1="0" y1="0" x2="0" y2="1">
+                  <stop offset="0%" stop-color="#f4f8fb"/><stop offset="100%" stop-color="#d7e3ec"/>
+                </linearGradient>
+                <linearGradient id="avPersonC" x1="0" y1="0" x2="0" y2="1">
+                  <stop offset="0%" stop-color="#b9c3cc"/><stop offset="100%" stop-color="#8f9ba6"/>
+                </linearGradient>
+              </defs>
+              <rect width="100" height="100" fill="url(#avBgC)"/>
+              <circle cx="50" cy="38" r="19" fill="url(#avPersonC)"/>
+              <path d="M16 96c0-20 15-31 34-31s34 11 34 31z" fill="url(#avPersonC)"/>
+            </svg>
+          </div>
         </div>
       </div>
-    </div>
 
-    <!-- Corpo -->
-    <main class="login-body connecting-body">
       <h1 class="welcome" id="connecting-text">Entrando...</h1>
 
       <!-- Dois bonequinhos girando um em volta do outro -->
@@ -364,14 +367,14 @@
       </div>
 
       <button type="button" id="btn-cancel" class="btn-signin">Cancelar</button>
-    </main>
 
-    <!-- Rodapé -->
-    <footer class="login-footer">
-      <a href="#" class="inline-link">Declaração de Privacidade</a>
-      <span class="footer-sep">|</span>
-      <a href="#" class="inline-link">Status do servidor</a>
-    </footer>
+      <!-- Rodapé -->
+      <footer class="login-footer">
+        <a href="#" class="inline-link">Declaração de Privacidade</a>
+        <span class="footer-sep">|</span>
+        <a href="#" class="inline-link">Status do servidor</a>
+      </footer>
+    </div>
   </section>
 
   <!-- ==================== DASHBOARD (lista de contatos) ==================== -->

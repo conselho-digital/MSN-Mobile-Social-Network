@@ -23,6 +23,80 @@
     bindExtraLinks();
     bindNavigation();
     bindPasswordToggles();
+    bindWindowControls();
+  }
+
+  /* ---------- Botões da barra de título (início / girar / fechar) ---------- */
+  function bindWindowControls() {
+    document.querySelectorAll(".titlebar__buttons").forEach((bar) => bar.removeAttribute("aria-hidden"));
+    document.querySelectorAll(".tb-btn--min").forEach((b) => {
+      b.setAttribute("role", "button");
+      b.setAttribute("title", "Início");
+      b.setAttribute("aria-label", "Início");
+      b.addEventListener("click", goHome);
+    });
+    document.querySelectorAll(".tb-btn--max").forEach((b) => {
+      b.setAttribute("role", "button");
+      b.setAttribute("title", "Girar a tela");
+      b.setAttribute("aria-label", "Girar a tela");
+      b.addEventListener("click", toggleOrientation);
+    });
+    document.querySelectorAll(".tb-btn--close").forEach((b) => {
+      b.setAttribute("role", "button");
+      b.setAttribute("title", "Fechar");
+      b.setAttribute("aria-label", "Fechar");
+      b.addEventListener("click", closeApp);
+    });
+  }
+
+  // "_" → funciona como o botão Início do celular (envia o app ao segundo plano).
+  // No app empacotado (Android/TWA) o próprio sistema trata; na web fazemos o
+  // melhor esforço: sair da tela cheia e tirar o foco da janela.
+  function goHome() {
+    exitFullscreen();
+    try { window.blur(); } catch (_) {}
+  }
+
+  // "□" → gira a tela para modo paisagem (e volta para retrato).
+  let isLandscape = false;
+  async function toggleOrientation() {
+    try {
+      if (!document.fullscreenElement && document.documentElement.requestFullscreen) {
+        await document.documentElement.requestFullscreen();
+      }
+    } catch (_) {}
+    try {
+      const orientation = screen.orientation;
+      if (orientation && orientation.lock) {
+        await orientation.lock(isLandscape ? "portrait" : "landscape");
+        isLandscape = !isLandscape;
+      }
+    } catch (_) {
+      // orientation.lock exige tela cheia e suporte do dispositivo (móvel)
+    }
+  }
+
+  // "X" → encerra o app (no TWA/Android fecha a atividade e sai dos recentes).
+  // Na web, tentamos fechar; se o navegador bloquear, mostramos a tela de "encerrado".
+  function closeApp() {
+    exitFullscreen();
+    try { window.close(); } catch (_) {}
+    setTimeout(() => {
+      if (!document.hidden) showClosedScreen();
+    }, 200);
+  }
+
+  function showClosedScreen() {
+    document.body.innerHTML =
+      '<div class="app-closed">' +
+      '<img src="assets/icons/icon-192.png" alt="MSN" width="72" height="72" />' +
+      "<p>Aplicativo encerrado.</p>" +
+      '<button type="button" onclick="location.reload()">Abrir novamente</button>' +
+      "</div>";
+  }
+
+  function exitFullscreen() {
+    try { if (document.exitFullscreen && document.fullscreenElement) document.exitFullscreen(); } catch (_) {}
   }
 
   /* ---------- Botões de mostrar/ocultar senha ---------- */
