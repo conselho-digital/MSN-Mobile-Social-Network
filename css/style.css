@@ -458,6 +458,66 @@ body {
   border-top: 5px solid #6b7b88;
 }
 
+/* ---------- Dropdown de contas salvas ---------- */
+.account-menu {
+  position: absolute;
+  left: 0; right: 0;
+  top: calc(100% + 2px);
+  z-index: 40;
+  margin: 0;
+  padding: 3px;
+  list-style: none;
+  max-height: 210px;
+  overflow-y: auto;
+  background: #ffffff;
+  border: 1px solid #b9c9d6;
+  border-radius: 4px;
+  box-shadow: 0 8px 20px rgba(0, 0, 0, 0.2);
+}
+.account-menu[hidden] { display: none; }
+.account-item {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 7px 6px 7px 8px;
+  border-radius: 3px;
+  cursor: pointer;
+}
+.account-item:hover { background: var(--msn-blue-light); }
+.account-item__avatar {
+  width: 26px; height: 26px;
+  flex: 0 0 auto;
+  border-radius: 3px;
+  background: #e9eff4;
+  border: 1px solid #cfd8df;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+}
+.account-item__avatar svg { width: 20px; height: 20px; display: block; }
+.account-item__email {
+  flex: 1 1 auto;
+  min-width: 0;
+  font-size: 0.88rem;
+  color: #333;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  text-align: left;
+}
+.account-remove {
+  flex: 0 0 auto;
+  width: 22px; height: 22px;
+  border: none;
+  background: transparent;
+  color: #9aa7b1;
+  font-size: 1rem;
+  line-height: 1;
+  border-radius: 50%;
+  cursor: pointer;
+}
+.account-remove:hover { background: #f0d4d4; color: #c0392b; }
+
 /* ---------- Entrar como (status) ---------- */
 .signin-as {
   position: relative;

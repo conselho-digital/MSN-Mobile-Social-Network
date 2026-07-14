@@ -16,6 +16,7 @@
     UIManager.init();
     SoundManager.preload();
 
+    bindAccountDropdown();
     restoreRemembered();
     bindRememberOptions();
     bindLoginForm();
@@ -400,45 +401,143 @@
     if (el) el.textContent = text;
   }
 
+  /* ---------- Contas salvas (dropdown do e-mail) ---------- */
+  function getAccounts() {
+    try { return JSON.parse(localStorage.getItem("msn:accounts") || "[]"); }
+    catch (_) { return []; }
+  }
+  function setAccounts(list) {
+    try { localStorage.setItem("msn:accounts", JSON.stringify(list)); } catch (_) {}
+  }
+  function upsertAccount(email, passObf) {
+    const list = getAccounts().filter((a) => a.email !== email);
+    list.unshift({ email: email, pass: passObf || null });
+    setAccounts(list);
+  }
+  function removeAccount(email) {
+    setAccounts(getAccounts().filter((a) => a.email !== email));
+    if (localStorage.getItem("msn:lastEmail") === email) {
+      try { localStorage.removeItem("msn:lastEmail"); } catch (_) {}
+    }
+  }
+
   /* ---------- Preferências de login (após conectar) ----------
-     Salva o e-mail só se "Lembrar-me"; a senha só se "Lembrar senha";
-     e o estado de "Entrar automaticamente". */
+     - "Lembrar-me" ligado: salva a conta na lista (com senha só se
+       "Lembrar senha" ligado).
+     - "Lembrar-me" desligado: remove a conta da lista.
+     - Salva também o estado de "Entrar automaticamente". */
   function savePreferences(email, password) {
     const me = document.getElementById("opt-remember-me");
     const pass = document.getElementById("opt-remember-pass");
     const auto = document.getElementById("opt-auto-signin");
     try {
-      if (me && me.checked) localStorage.setItem("msn:email", email);
-      else localStorage.removeItem("msn:email");
-
-      if (pass && pass.checked) localStorage.setItem("msn:password", obfuscate(password));
-      else localStorage.removeItem("msn:password");
-
+      if (me && me.checked) {
+        upsertAccount(email, pass && pass.checked ? obfuscate(password) : null);
+        localStorage.setItem("msn:lastEmail", email);
+      } else {
+        removeAccount(email);
+      }
       localStorage.setItem("msn:autoSignin", auto && auto.checked ? "true" : "false");
     } catch (_) {}
+    renderAccountMenu();
   }
 
   function restoreRemembered() {
     try {
-      const email = localStorage.getItem("msn:email");
-      const passStored = localStorage.getItem("msn:password");
+      const accounts = getAccounts();
+      const lastEmail = localStorage.getItem("msn:lastEmail");
       const auto = localStorage.getItem("msn:autoSignin") === "true";
-
-      const emailEl = document.getElementById("login-email");
-      const passEl = document.getElementById("login-password");
-      const meEl = document.getElementById("opt-remember-me");
-      const passOptEl = document.getElementById("opt-remember-pass");
+      const acc = accounts.find((a) => a.email === lastEmail) || accounts[0];
+      if (acc) applyAccount(acc);
       const autoEl = document.getElementById("opt-auto-signin");
-
-      if (email && emailEl) { emailEl.value = email; if (meEl) meEl.checked = true; }
-      if (passStored && passEl) {
-        passEl.value = deobfuscate(passStored);
-        if (passOptEl) passOptEl.checked = true;
-        if (meEl) meEl.checked = true;
-      }
       if (autoEl) autoEl.checked = auto;
+      renderAccountMenu();
     } catch (_) {}
   }
+
+  // Preenche o formulário com uma conta salva.
+  function applyAccount(acc) {
+    const emailEl = document.getElementById("login-email");
+    const passEl = document.getElementById("login-password");
+    const meEl = document.getElementById("opt-remember-me");
+    const passOptEl = document.getElementById("opt-remember-pass");
+    if (emailEl) emailEl.value = acc.email;
+    if (meEl) meEl.checked = true;
+    if (acc.pass) {
+      if (passEl) passEl.value = deobfuscate(acc.pass);
+      if (passOptEl) passOptEl.checked = true;
+    } else {
+      if (passEl) passEl.value = "";
+      if (passOptEl) passOptEl.checked = false;
+    }
+  }
+
+  /* ---------- Dropdown de contas ---------- */
+  function bindAccountDropdown() {
+    const arrow = document.getElementById("account-arrow");
+    const menu = document.getElementById("account-menu");
+    if (!arrow || !menu) return;
+
+    const close = () => { menu.hidden = true; arrow.setAttribute("aria-expanded", "false"); };
+
+    arrow.addEventListener("click", (e) => {
+      e.preventDefault();
+      e.stopPropagation();
+      if (menu.hidden) {
+        renderAccountMenu();
+        if (getAccounts().length) { menu.hidden = false; arrow.setAttribute("aria-expanded", "true"); }
+      } else {
+        close();
+      }
+    });
+
+    document.addEventListener("click", (e) => {
+      if (!e.target.closest(".field--combo")) close();
+    });
+
+    menu.addEventListener("click", (e) => {
+      const removeBtn = e.target.closest(".account-remove");
+      if (removeBtn) {
+        e.stopPropagation();
+        removeAccount(removeBtn.dataset.email);
+        renderAccountMenu();
+        if (!getAccounts().length) close();
+        return;
+      }
+      const item = e.target.closest(".account-item");
+      if (item) {
+        const acc = getAccounts().find((a) => a.email === item.dataset.email);
+        if (acc) applyAccount(acc);
+        close();
+      }
+    });
+  }
+
+  function renderAccountMenu() {
+    const menu = document.getElementById("account-menu");
+    if (!menu) return;
+    const list = getAccounts();
+    if (!list.length) { menu.innerHTML = ""; menu.hidden = true; return; }
+    const avatar =
+      '<span class="account-item__avatar"><svg viewBox="0 0 100 100" aria-hidden="true">' +
+      '<circle cx="50" cy="38" r="19" fill="#a7b3bd"/>' +
+      '<path d="M16 96c0-20 15-31 34-31s34 11 34 31z" fill="#a7b3bd"/></svg></span>';
+    menu.innerHTML = list.map((a) =>
+      '<li class="account-item" role="option" data-email="' + escAttr(a.email) + '">' +
+      avatar +
+      '<span class="account-item__email">' + escHtml(a.email) + "</span>" +
+      '<button type="button" class="account-remove" data-email="' + escAttr(a.email) +
+      '" aria-label="Remover conta" title="Remover">&times;</button>' +
+      "</li>"
+    ).join("");
+  }
+
+  function escHtml(s) {
+    return String(s || "").replace(/[&<>"']/g, (c) => ({
+      "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;",
+    }[c]));
+  }
+  function escAttr(s) { return escHtml(s); }
 
   // Ofuscação simples (base64) da senha salva localmente — NÃO é criptografia.
   function obfuscate(s) {

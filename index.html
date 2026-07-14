@@ -64,7 +64,7 @@
 
       <form id="login-form" class="login-form" autocomplete="on" novalidate>
         <div class="login-card">
-          <!-- Combobox de e-mail -->
+          <!-- Combobox de e-mail (com contas salvas) -->
           <div class="field field--combo">
             <input
               id="login-email"
@@ -75,7 +75,8 @@
               autocomplete="username"
               required
             />
-            <button type="button" class="combo-arrow" aria-label="Escolher conta" tabindex="-1"></button>
+            <button type="button" class="combo-arrow" id="account-arrow" aria-label="Escolher conta" aria-haspopup="listbox" aria-expanded="false"></button>
+            <ul id="account-menu" class="account-menu" role="listbox" hidden></ul>
           </div>
 
           <!-- Senha -->
