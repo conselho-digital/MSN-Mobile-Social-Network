@@ -397,13 +397,24 @@
             <span id="my-subnick-text" class="my-subnick__placeholder">&lt;Digite uma mensagem pessoal&gt;</span>
           </button>
 
-          <!-- Menu de status próprio -->
-          <ul id="my-status-menu" class="status-menu status-menu--dash" role="listbox" hidden>
-            <li role="option" data-status="online"    data-label="Disponível"><span class="status-dot status-dot--online"></span>Disponível</li>
-            <li role="option" data-status="busy"       data-label="Ocupado"><span class="status-dot status-dot--busy"></span>Ocupado</li>
-            <li role="option" data-status="away"       data-label="Ausente"><span class="status-dot status-dot--away"></span>Ausente</li>
-            <li role="option" data-status="invisible"  data-label="Invisível"><span class="status-dot status-dot--invisible"></span>Aparecer offline</li>
-          </ul>
+          <!-- Menu do nick (status + ações do perfil) -->
+          <div id="my-menu" class="my-menu" role="menu" hidden>
+            <button type="button" class="my-menu__item my-menu__status" role="menuitemradio" data-status="online"    data-label="Disponível"><span class="status-dot status-dot--online"></span>Disponível</button>
+            <button type="button" class="my-menu__item my-menu__status" role="menuitemradio" data-status="busy"       data-label="Ocupado"><span class="status-dot status-dot--busy"></span>Ocupado</button>
+            <button type="button" class="my-menu__item my-menu__status" role="menuitemradio" data-status="away"       data-label="Ausente"><span class="status-dot status-dot--away"></span>Ausente</button>
+            <button type="button" class="my-menu__item my-menu__status" role="menuitemradio" data-status="invisible"  data-label="Invisível"><span class="status-dot status-dot--invisible"></span>Invisível</button>
+
+            <div class="my-menu__sep"></div>
+            <button type="button" class="my-menu__item" role="menuitem" data-action="signout" id="menu-signout">Sair deste local</button>
+
+            <div class="my-menu__sep"></div>
+            <button type="button" class="my-menu__item" role="menuitem" data-action="change-picture">Alterar imagem para exibição…</button>
+            <button type="button" class="my-menu__item" role="menuitem" data-action="change-scene">Alterar cenário…</button>
+            <button type="button" class="my-menu__item" role="menuitem" data-action="change-name">Alterar nome para exibição…</button>
+
+            <div class="my-menu__sep"></div>
+            <button type="button" class="my-menu__item" role="menuitem" data-action="options">Opções…</button>
+          </div>
         </div>
       </div>
     </div>

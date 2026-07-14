@@ -131,44 +131,96 @@ const Dashboard = (() => {
     );
   }
 
+  /* ---------- Menu do nick: seleção e ações ---------- */
+  function markSelectedStatus() {
+    const s = profile ? profile.status : "online";
+    document.querySelectorAll(".my-menu__status").forEach((it) => {
+      it.classList.toggle("is-selected", it.dataset.status === s);
+    });
+  }
+
+  function handleMenuAction(action) {
+    switch (action) {
+      case "signout":
+        doSignOut();
+        break;
+      case "change-name":
+        editName();
+        break;
+      case "change-picture":
+        infoModal(
+          "Alterar imagem para exibição",
+          "O envio da foto de exibição será adicionado em breve (usando o Supabase Storage)."
+        );
+        break;
+      case "change-scene":
+        infoModal(
+          "Alterar cenário",
+          "A escolha de cenários (fundos do topo) será ativada quando os temas selecionáveis forem adicionados."
+        );
+        break;
+      case "options":
+        infoModal("Opções", "A tela de opções será construída em breve.");
+        break;
+    }
+  }
+
+  function editName() {
+    openModal({
+      title: "Alterar nome para exibição",
+      value: profile ? profile.display_name : "",
+      placeholder: "Seu nome no chat",
+      onOk: async (val) => {
+        if (!val.trim()) return "Digite um nome.";
+        profile.display_name = val.trim();
+        renderProfile();
+        try { await MSNSupabase.updateMyProfile({ display_name: val.trim() }); } catch (_) {}
+      },
+    });
+  }
+
+  async function doSignOut() {
+    try { await MSNSupabase.signOut(); } catch (_) {}
+    try { localStorage.removeItem("msn:email"); } catch (_) {}
+    SoundManager.play("logout");
+    UIManager.showScreen("screen-login");
+  }
+
   /* ---------- Eventos ---------- */
   function bindEvents() {
-    // Menu de status próprio
+    // Menu do nick (status + ações do perfil)
+    const menu = document.getElementById("my-menu");
+    const nameBtn = document.getElementById("my-name-btn");
     const stToggle = document.getElementById("my-status-toggle");
-    const stMenu = document.getElementById("my-status-menu");
-    const closeStatus = () => { stMenu.hidden = true; stToggle.setAttribute("aria-expanded", "false"); };
-    stToggle.addEventListener("click", (e) => {
+    const closeMenu = () => { menu.hidden = true; stToggle.setAttribute("aria-expanded", "false"); };
+    const openMenu = (e) => {
       e.stopPropagation();
-      const open = stMenu.hidden;
-      stMenu.hidden = !open;
+      const open = menu.hidden;
+      if (open) markSelectedStatus();
+      menu.hidden = !open;
       stToggle.setAttribute("aria-expanded", String(open));
-    });
-    stMenu.querySelectorAll("li").forEach((li) => {
-      li.addEventListener("click", async (e) => {
-        e.stopPropagation();
-        const status = li.dataset.status;
-        closeStatus();
+    };
+    nameBtn.addEventListener("click", openMenu);
+    stToggle.addEventListener("click", openMenu);
+    document.addEventListener("click", closeMenu);
+    menu.addEventListener("click", (e) => e.stopPropagation());
+
+    // Itens de status
+    menu.querySelectorAll(".my-menu__status").forEach((item) => {
+      item.addEventListener("click", async () => {
+        closeMenu();
         if (!profile) return;
-        profile.status = status;
+        profile.status = item.dataset.status;
         renderProfile();
-        try { await MSNSupabase.updateMyProfile({ status }); } catch (_) {}
+        try { await MSNSupabase.updateMyProfile({ status: profile.status }); } catch (_) {}
       });
     });
-    document.addEventListener("click", closeStatus);
 
-    // Editar nome
-    document.getElementById("my-name-btn").addEventListener("click", (e) => {
-      if (e.target.closest("#my-status-toggle") || e.target.closest("#my-status-menu")) return;
-      openModal({
-        title: "Nome de exibição",
-        value: profile ? profile.display_name : "",
-        placeholder: "Seu nome no chat",
-        onOk: async (val) => {
-          if (!val.trim()) return "Digite um nome.";
-          profile.display_name = val.trim();
-          renderProfile();
-          try { await MSNSupabase.updateMyProfile({ display_name: val.trim() }); } catch (_) {}
-        },
+    // Ações do menu
+    menu.querySelectorAll("[data-action]").forEach((item) => {
+      item.addEventListener("click", () => {
+        closeMenu();
+        handleMenuAction(item.dataset.action);
       });
     });
 
@@ -226,17 +278,28 @@ const Dashboard = (() => {
       // A janela de conversa será a próxima etapa.
     });
 
-    // Sair
-    document.getElementById("btn-signout").addEventListener("click", async () => {
-      try { await MSNSupabase.signOut(); } catch (_) {}
-      try { localStorage.removeItem("msn:email"); } catch (_) {}
-      SoundManager.play("logout");
-      UIManager.showScreen("screen-login");
-    });
+    // Sair (rodapé)
+    document.getElementById("btn-signout").addEventListener("click", doSignOut);
+
+    // Rótulo do dispositivo em "Sair deste local"
+    const signoutItem = document.getElementById("menu-signout");
+    if (signoutItem) {
+      signoutItem.textContent = "Sair deste local (" + deviceLabel() + ")";
+    }
+  }
+
+  function deviceLabel() {
+    const ua = navigator.userAgent || "";
+    if (/Android/i.test(ua)) return "Android";
+    if (/iPhone|iPad|iPod/i.test(ua)) return "iOS";
+    if (/Windows/i.test(ua)) return "Windows";
+    if (/Mac/i.test(ua)) return "Mac";
+    if (/Linux/i.test(ua)) return "Linux";
+    return "este dispositivo";
   }
 
   /* ---------- Modal reutilizável ---------- */
-  function openModal({ title, value, placeholder, onOk, allowEmpty }) {
+  function openModal({ title, value, placeholder, onOk }) {
     const overlay = document.getElementById("modal-overlay");
     const input = document.getElementById("modal-input");
     const msg = document.getElementById("modal-message");
@@ -244,8 +307,10 @@ const Dashboard = (() => {
     const cancelBtn = document.getElementById("modal-cancel");
 
     document.getElementById("modal-title").textContent = title;
+    input.hidden = false;
     input.value = value || "";
     input.placeholder = placeholder || "";
+    cancelBtn.hidden = false;
     msg.hidden = true;
     overlay.hidden = false;
     setTimeout(() => input.focus(), 30);
@@ -262,7 +327,32 @@ const Dashboard = (() => {
     okBtn.onclick = submit;
     cancelBtn.onclick = close;
     input.onkeydown = (e) => { if (e.key === "Enter") submit(); if (e.key === "Escape") close(); };
-    void allowEmpty; // permitido por padrão via onOk
+  }
+
+  /* ---------- Modal apenas informativo ---------- */
+  function infoModal(title, text) {
+    const overlay = document.getElementById("modal-overlay");
+    const input = document.getElementById("modal-input");
+    const msg = document.getElementById("modal-message");
+    const okBtn = document.getElementById("modal-ok");
+    const cancelBtn = document.getElementById("modal-cancel");
+
+    document.getElementById("modal-title").textContent = title;
+    input.hidden = true;
+    cancelBtn.hidden = true;
+    msg.textContent = text;
+    msg.hidden = false;
+    msg.classList.add("modal__message--info");
+    overlay.hidden = false;
+
+    const close = () => {
+      overlay.hidden = true;
+      okBtn.onclick = null;
+      msg.classList.remove("modal__message--info");
+      input.hidden = false;
+      cancelBtn.hidden = false;
+    };
+    okBtn.onclick = close;
   }
 
   return { show, load };
