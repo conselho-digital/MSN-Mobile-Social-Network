@@ -160,17 +160,10 @@
     }
   }
 
-  function onSignedIn(result) {
-    // O Dashboard ainda será construído. Por enquanto sinalizamos sucesso.
-    const demo = result && result.demo;
+  function onSignedIn() {
+    // Conectado: abre o Dashboard (lista de contatos).
     setConnectingText("Conectado!");
-    UIManager.showScreen("screen-login");
-    UIManager.showMessage(
-      demo
-        ? "Login simulado com sucesso (modo demo). Configure o Supabase em js/supabase-client.js para ativar contas reais. O Dashboard será a próxima etapa."
-        : "Conectado com sucesso! O Dashboard do MSN será a próxima etapa.",
-      "info"
-    );
+    Dashboard.show();
   }
 
   /* ---------- Botão Cancelar ---------- */

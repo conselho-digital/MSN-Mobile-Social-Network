@@ -60,6 +60,74 @@ const MSNSupabase = (() => {
     if (isConfigured()) await client.auth.signOut();
   }
 
+  /* ---------- Perfil ---------- */
+  async function getMyProfile() {
+    if (!isConfigured()) return demoProfile();
+    const { data: { user } } = await client.auth.getUser();
+    if (!user) throw new Error("Sessão expirada. Entre novamente.");
+    const { data, error } = await client
+      .from("profiles").select("*").eq("id", user.id).single();
+    if (error) throw error;
+    return data;
+  }
+
+  async function updateMyProfile(patch) {
+    if (!isConfigured()) return { ...demoProfile(), ...patch };
+    const { data: { user } } = await client.auth.getUser();
+    if (!user) throw new Error("Sessão expirada. Entre novamente.");
+    const { data, error } = await client
+      .from("profiles").update(patch).eq("id", user.id).select().single();
+    if (error) throw error;
+    return data;
+  }
+
+  /* ---------- Contatos ---------- */
+  async function getContacts() {
+    if (!isConfigured()) return demoContacts();
+    const { data: { user } } = await client.auth.getUser();
+    if (!user) return [];
+    const { data: rows, error } = await client
+      .from("contacts").select("contact_id").eq("owner_id", user.id);
+    if (error) throw error;
+    const ids = (rows || []).map((r) => r.contact_id);
+    if (!ids.length) return [];
+    const { data: profs, error: e2 } = await client
+      .from("profiles").select("*").in("id", ids);
+    if (e2) throw e2;
+    return profs || [];
+  }
+
+  // Adiciona um contato buscando pelo nome de exibição.
+  async function addContactByName(displayName) {
+    if (!isConfigured()) return { ok: true, demo: true };
+    const { data: { user } } = await client.auth.getUser();
+    if (!user) throw new Error("Sessão expirada. Entre novamente.");
+
+    const { data: found, error } = await client
+      .from("profiles").select("id, display_name")
+      .ilike("display_name", displayName.trim()).limit(1);
+    if (error) throw error;
+    if (!found || !found.length) throw new Error("Nenhum contato encontrado com esse nome.");
+    if (found[0].id === user.id) throw new Error("Você não pode adicionar a si mesmo.");
+
+    const { error: insErr } = await client
+      .from("contacts").insert({ owner_id: user.id, contact_id: found[0].id });
+    if (insErr && !/duplicate|unique/i.test(insErr.message)) throw insErr;
+    return { ok: true, name: found[0].display_name };
+  }
+
+  /* ---------- Dados de demonstração ---------- */
+  function demoProfile() {
+    return { id: "demo", display_name: "Você", sub_nick: "", status: "online" };
+  }
+  function demoContacts() {
+    return [
+      { id: "d1", display_name: "Ana Clara ♥", sub_nick: "só vim ver as novidades", status: "online" },
+      { id: "d2", display_name: "João Pedro", sub_nick: "ocupado estudando", status: "busy" },
+      { id: "d3", display_name: "mayara", sub_nick: "", status: "offline" },
+    ];
+  }
+
   /* ---------- Modo demo (sem credenciais) ---------- */
   function demoAuth(email, password) {
     return new Promise((resolve, reject) => {
@@ -76,5 +144,9 @@ const MSNSupabase = (() => {
     });
   }
 
-  return { init, isConfigured, signIn, signUp, getSession, signOut, getClient: () => client };
+  return {
+    init, isConfigured, signIn, signUp, getSession, signOut,
+    getMyProfile, updateMyProfile, getContacts, addContactByName,
+    getClient: () => client,
+  };
 })();

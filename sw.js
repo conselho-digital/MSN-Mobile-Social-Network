@@ -12,6 +12,7 @@ const ASSETS = [
   "./js/supabase-client.js",
   "./js/ui-manager.js",
   "./js/sound-manager.js",
+  "./js/dashboard.js",
   "./assets/icons/favicon.png",
   "./assets/icons/icon-192.png",
   "./assets/icons/icon-512.png",

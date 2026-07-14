@@ -584,3 +584,277 @@ body {
 @media (prefers-reduced-motion: reduce) {
   .buddies-orbit__spin, .msn-buddy { animation-duration: 3s; }
 }
+
+/* ============================================================
+   DASHBOARD (lista de contatos)
+   ============================================================ */
+#screen-dashboard { background: #f4f6f8; }
+
+/* ---------- Cabeçalho do perfil (banner "cena" trocável) ---------- */
+.dash-header {
+  flex: 0 0 auto;
+  /* Fundo padrão (preto/verde). Será substituível por um tema/imagem
+     selecionável no futuro via a variável --scene. */
+  --scene: linear-gradient(120deg, #0a0f0a 0%, #12240d 45%, #1f4a17 78%, #37731f 100%);
+  background: var(--scene);
+  background-size: cover;
+  background-position: center;
+  color: #ffffff;
+  padding: 10px 12px;
+}
+.dash-header__top { display: flex; align-items: center; gap: 12px; }
+
+.my-avatar {
+  position: relative;
+  width: 52px; height: 52px;
+  flex: 0 0 auto;
+  border-radius: 4px;
+  padding: 2px;
+  background: linear-gradient(#a6f06a, #3aa11a); /* borda verde (online) */
+  box-shadow: 0 1px 4px rgba(0,0,0,0.4);
+}
+.my-avatar .avatar-generic {
+  width: 100%; height: 100%;
+  border-radius: 3px;
+  display: block;
+  background: #eef4f8;
+}
+.my-avatar__status {
+  position: absolute;
+  right: -3px; bottom: -3px;
+  width: 14px; height: 14px;
+  border: 2px solid #12240d;
+}
+
+.dash-header__info { position: relative; flex: 1 1 auto; min-width: 0; }
+.my-name-row {
+  display: flex;
+  align-items: baseline;
+  flex-wrap: wrap;
+  gap: 5px;
+  max-width: 100%;
+}
+.my-name {
+  padding: 0;
+  border: none;
+  background: transparent;
+  color: #ffffff;
+  font-size: 1.05rem;
+  font-weight: 700;
+  cursor: pointer;
+  text-align: left;
+  text-shadow: 0 1px 2px rgba(0,0,0,0.5);
+  max-width: 100%;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.my-name:hover #my-name-text { text-decoration: underline; }
+.my-status-inline { font-size: 0.85rem; font-weight: 400; }
+.status-select--sm {
+  color: #cfeaff;
+  padding: 0;
+  font-size: 0.85rem;
+}
+.status-select--sm .caret-down { border-top-color: #cfeaff; }
+
+.my-subnick {
+  display: block;
+  margin-top: 3px;
+  padding: 0;
+  border: none;
+  background: transparent;
+  color: #dfeff9;
+  font-size: 0.82rem;
+  cursor: pointer;
+  text-align: left;
+  text-shadow: 0 1px 2px rgba(0,0,0,0.5);
+  max-width: 100%;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.my-subnick:hover { text-decoration: underline; }
+.my-subnick__placeholder { color: #b9d3e6; font-style: italic; }
+
+.status-menu--dash { top: 26px; left: 0; }
+
+/* ---------- Barra de ferramentas ---------- */
+.dash-toolbar {
+  flex: 0 0 auto;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 7px 10px;
+  background: linear-gradient(#fbfcfd, #eef2f5);
+  border-bottom: 1px solid #dde3e8;
+}
+.dash-search {
+  flex: 1 1 auto;
+  height: 32px;
+  padding: 0 12px;
+  font: inherit;
+  font-size: 0.88rem;
+  border: 1px solid var(--field-border);
+  border-radius: 16px;
+  outline: none;
+  background: #fff;
+  color: #333;
+}
+.dash-search:focus { border-color: var(--field-border-focus); box-shadow: 0 0 0 2px rgba(75,160,230,0.2); }
+.dash-tool-btn {
+  flex: 0 0 auto;
+  width: 32px; height: 32px;
+  font-size: 1.1rem;
+  line-height: 1;
+  color: #2f6b1f;
+  background: linear-gradient(#ffffff, #eef2f5);
+  border: 1px solid #cfd8df;
+  border-radius: 5px;
+  cursor: pointer;
+}
+.dash-tool-btn:active { background: linear-gradient(#e6eef4, #f5f8fa); }
+
+/* ---------- Lista de contatos ---------- */
+.contacts {
+  flex: 1 1 auto;
+  overflow-y: auto;
+  -webkit-overflow-scrolling: touch;
+  background: #ffffff;
+  padding: 4px 0 8px;
+}
+.contact-group { border-bottom: 1px solid #f0f2f4; }
+.contact-group__header {
+  width: 100%;
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  padding: 8px 12px;
+  border: none;
+  background: transparent;
+  font: inherit;
+  font-size: 0.86rem;
+  font-weight: 600;
+  color: #3f5a70;
+  cursor: pointer;
+}
+.contact-group__header:hover { background: #f5f9fc; }
+.group-caret {
+  width: 0; height: 0;
+  border-top: 5px solid transparent;
+  border-bottom: 5px solid transparent;
+  border-left: 6px solid #7a8a97;
+  transition: transform 0.15s;
+}
+.contact-group__header[aria-expanded="true"] .group-caret { transform: rotate(90deg); }
+.group-count { color: #9aa7b1; font-weight: 400; }
+.contact-group__header[aria-expanded="false"] + .contact-group__list { display: none; }
+
+.contact-group__list { list-style: none; margin: 0; padding: 0; }
+.contact-item {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 7px 12px 7px 22px;
+  cursor: pointer;
+}
+.contact-item:hover { background: var(--msn-blue-light); }
+.contact-item__avatar {
+  position: relative;
+  width: 38px; height: 38px;
+  flex: 0 0 auto;
+  border-radius: 4px;
+  padding: 2px;
+  background: linear-gradient(#c7d2db, #9aa7b1);
+}
+.contact-item--online .contact-item__avatar { background: linear-gradient(#a6f06a, #3aa11a); }
+.contact-item--busy   .contact-item__avatar { background: linear-gradient(#ff8a8a, #c62828); }
+.contact-item--away   .contact-item__avatar { background: linear-gradient(#ffe08a, #e0a409); }
+.contact-item__avatar .avatar-generic { width: 100%; height: 100%; border-radius: 3px; display: block; }
+.contact-item__body { min-width: 0; flex: 1 1 auto; }
+.contact-item__name {
+  font-size: 0.9rem;
+  color: #2b2b2b;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.contact-item--offline .contact-item__name { color: #8a97a1; }
+.contact-item__sub {
+  font-size: 0.76rem;
+  color: #9aa7b1;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.contacts-empty {
+  text-align: center;
+  color: #8a97a1;
+  font-size: 0.85rem;
+  padding: 30px 24px;
+  line-height: 1.6;
+}
+
+/* ---------- Rodapé do dashboard ---------- */
+.dash-footer {
+  flex: 0 0 auto;
+  display: flex;
+  justify-content: flex-end;
+  padding: 8px 12px calc(8px + env(safe-area-inset-bottom));
+  background: linear-gradient(#f4f6f8, #e7ebef);
+  border-top: 1px solid #dde3e8;
+}
+.dash-signout {
+  padding: 6px 16px;
+  font: inherit;
+  font-size: 0.85rem;
+  color: #34495a;
+  background: linear-gradient(#ffffff, #e6eaee);
+  border: 1px solid #adb6bd;
+  border-radius: 4px;
+  cursor: pointer;
+}
+.dash-signout:hover { background: linear-gradient(#ffffff, #e0f0fb); border-color: #7fb6e6; }
+
+/* ============================================================
+   MODAL (editar nome / mensagem / adicionar contato)
+   ============================================================ */
+.modal-overlay {
+  position: fixed; inset: 0; z-index: 100;
+  display: flex; align-items: center; justify-content: center;
+  padding: 24px;
+  background: rgba(0, 0, 0, 0.35);
+}
+/* Garante que o atributo [hidden] vença o display:flex acima */
+.modal-overlay[hidden] { display: none; }
+.modal {
+  width: 100%;
+  max-width: 320px;
+  background: #ffffff;
+  border: 1px solid #b9c9d6;
+  border-radius: 6px;
+  box-shadow: 0 10px 30px rgba(0,0,0,0.3);
+  padding: 18px 16px 14px;
+}
+.modal__title { margin: 0 0 12px; font-size: 1rem; font-weight: 600; color: #2f4a63; }
+.modal__input {
+  width: 100%;
+  height: 38px;
+  padding: 0 10px;
+  font: inherit;
+  border: 1px solid var(--field-border);
+  border-radius: 4px;
+  outline: none;
+}
+.modal__input:focus { border-color: var(--field-border-focus); box-shadow: 0 0 0 2px rgba(75,160,230,0.2); }
+.modal__message {
+  margin: 8px 0 0; font-size: 0.8rem; color: #b3261e;
+}
+.modal__actions { display: flex; justify-content: flex-end; gap: 8px; margin-top: 16px; }
+.btn-signin--sm { margin: 0; min-width: 78px; padding: 7px 14px; font-size: 0.88rem; }
+.btn-signin--primary {
+  color: #fff;
+  background: linear-gradient(#3d9be0, #1f7fd0);
+  border-color: #1a6fbb;
+}
+.btn-signin--primary:hover { background: linear-gradient(#4aa6e8, #2384d6); }

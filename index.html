@@ -351,11 +351,119 @@
     </footer>
   </section>
 
+  <!-- ==================== DASHBOARD (lista de contatos) ==================== -->
+  <section id="screen-dashboard" class="screen">
+    <!-- Barra de título -->
+    <header class="titlebar">
+      <span class="titlebar__app">
+        <img class="titlebar__icon" src="assets/icons/favicon.png" alt="" />
+        Mobile Social Network
+      </span>
+      <span class="titlebar__buttons" aria-hidden="true">
+        <i class="tb-btn tb-btn--min"></i>
+        <i class="tb-btn tb-btn--max"></i>
+        <i class="tb-btn tb-btn--close"></i>
+      </span>
+    </header>
+
+    <!-- Cabeçalho do perfil próprio -->
+    <div class="dash-header">
+      <div class="dash-header__top">
+        <div class="my-avatar">
+          <svg class="avatar-generic" viewBox="0 0 100 100" aria-hidden="true">
+            <defs>
+              <linearGradient id="avBg3" x1="0" y1="0" x2="0" y2="1">
+                <stop offset="0%" stop-color="#f4f8fb"/><stop offset="100%" stop-color="#d7e3ec"/>
+              </linearGradient>
+              <linearGradient id="avPerson3" x1="0" y1="0" x2="0" y2="1">
+                <stop offset="0%" stop-color="#b9c3cc"/><stop offset="100%" stop-color="#8f9ba6"/>
+              </linearGradient>
+            </defs>
+            <rect width="100" height="100" fill="url(#avBg3)"/>
+            <circle cx="50" cy="38" r="19" fill="url(#avPerson3)"/>
+            <path d="M16 96c0-20 15-31 34-31s34 11 34 31z" fill="url(#avPerson3)"/>
+          </svg>
+          <span class="my-avatar__status status-dot status-dot--online" id="my-status-dot"></span>
+        </div>
+
+        <div class="dash-header__info">
+          <div class="my-name-row">
+            <button type="button" class="my-name" id="my-name-btn" title="Editar nome de exibição">
+              <span id="my-name-text">Carregando…</span>
+            </button>
+            <span class="my-status-inline">(<button type="button" class="status-select status-select--sm" id="my-status-toggle" aria-haspopup="listbox" aria-expanded="false"><span id="my-status-label">Disponível</span> <span class="caret-down"></span></button>)</span>
+          </div>
+          <button type="button" class="my-subnick" id="my-subnick-btn" title="Editar mensagem pessoal">
+            <span id="my-subnick-text" class="my-subnick__placeholder">&lt;Digite uma mensagem pessoal&gt;</span>
+          </button>
+
+          <!-- Menu de status próprio -->
+          <ul id="my-status-menu" class="status-menu status-menu--dash" role="listbox" hidden>
+            <li role="option" data-status="online"    data-label="Disponível"><span class="status-dot status-dot--online"></span>Disponível</li>
+            <li role="option" data-status="busy"       data-label="Ocupado"><span class="status-dot status-dot--busy"></span>Ocupado</li>
+            <li role="option" data-status="away"       data-label="Ausente"><span class="status-dot status-dot--away"></span>Ausente</li>
+            <li role="option" data-status="invisible"  data-label="Invisível"><span class="status-dot status-dot--invisible"></span>Aparecer offline</li>
+          </ul>
+        </div>
+      </div>
+    </div>
+
+    <!-- Barra de ferramentas: busca + adicionar -->
+    <div class="dash-toolbar">
+      <input type="search" id="contact-search" class="dash-search" placeholder="Buscar contatos" />
+      <button type="button" id="btn-add-contact" class="dash-tool-btn" title="Adicionar um contato" aria-label="Adicionar contato">＋</button>
+    </div>
+
+    <!-- Lista de contatos -->
+    <div class="contacts" id="contacts-container">
+      <div class="contact-group" data-group="online">
+        <button type="button" class="contact-group__header" aria-expanded="true">
+          <span class="group-caret"></span>
+          <span class="group-title">Disponível</span>
+          <span class="group-count" id="count-online">(0)</span>
+        </button>
+        <ul class="contact-group__list" id="list-online"></ul>
+      </div>
+
+      <div class="contact-group" data-group="offline">
+        <button type="button" class="contact-group__header" aria-expanded="true">
+          <span class="group-caret"></span>
+          <span class="group-title">Offline</span>
+          <span class="group-count" id="count-offline">(0)</span>
+        </button>
+        <ul class="contact-group__list" id="list-offline"></ul>
+      </div>
+
+      <p class="contacts-empty" id="contacts-empty" hidden>
+        Sua lista está vazia. Toque em <strong>＋</strong> para adicionar um contato.
+      </p>
+    </div>
+
+    <!-- Rodapé do dashboard -->
+    <footer class="dash-footer">
+      <button type="button" id="btn-signout" class="dash-signout">Sair</button>
+    </footer>
+  </section>
+
+  <!-- Diálogo simples (editar nome / subnick / adicionar contato) -->
+  <div id="modal-overlay" class="modal-overlay" hidden>
+    <div class="modal" role="dialog" aria-modal="true">
+      <h2 class="modal__title" id="modal-title">Editar</h2>
+      <input type="text" id="modal-input" class="modal__input" />
+      <p id="modal-message" class="modal__message" hidden></p>
+      <div class="modal__actions">
+        <button type="button" id="modal-cancel" class="btn-signin btn-signin--sm">Cancelar</button>
+        <button type="button" id="modal-ok" class="btn-signin btn-signin--sm btn-signin--primary">OK</button>
+      </div>
+    </div>
+  </div>
+
   <!-- Scripts -->
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
   <script src="js/supabase-client.js"></script>
   <script src="js/sound-manager.js"></script>
   <script src="js/ui-manager.js"></script>
+  <script src="js/dashboard.js"></script>
   <script src="js/app.js"></script>
 </body>
 </html>
