@@ -262,6 +262,14 @@ const Dashboard = (() => {
       renderContacts(e.target.value);
     });
 
+    // Ícones auxiliares (placeholders informativos)
+    const mailBtn = document.getElementById("btn-mail");
+    if (mailBtn) mailBtn.addEventListener("click", () =>
+      infoModal("Novidades", "A caixa de novidades e mensagens será ativada em breve."));
+    const viewBtn = document.getElementById("btn-view-mode");
+    if (viewBtn) viewBtn.addEventListener("click", () =>
+      infoModal("Modo de exibição", "A troca de modos de exibição da lista será adicionada em breve."));
+
     // Colapsar grupos
     document.querySelectorAll(".contact-group__header").forEach((h) => {
       h.addEventListener("click", () => {
@@ -278,8 +286,9 @@ const Dashboard = (() => {
       // A janela de conversa será a próxima etapa.
     });
 
-    // Sair (rodapé)
-    document.getElementById("btn-signout").addEventListener("click", doSignOut);
+    // Sair (rodapé — opcional; sign-out principal fica no menu do nick)
+    const signoutBtn = document.getElementById("btn-signout");
+    if (signoutBtn) signoutBtn.addEventListener("click", doSignOut);
 
     // Rótulo do dispositivo em "Sair deste local"
     const signoutItem = document.getElementById("menu-signout");

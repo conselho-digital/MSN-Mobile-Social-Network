@@ -861,26 +861,100 @@ body {
   line-height: 1.6;
 }
 
-/* ---------- Rodapé do dashboard ---------- */
-.dash-footer {
+/* ---------- Ícone de e-mail no cabeçalho ---------- */
+.dash-mail {
   flex: 0 0 auto;
-  display: flex;
-  justify-content: flex-end;
-  padding: 8px 12px calc(8px + env(safe-area-inset-bottom));
-  background: linear-gradient(#f4f6f8, #e7ebef);
+  align-self: flex-start;
+  width: 40px; height: 32px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0;
+  border: none;
+  background: transparent;
+  cursor: pointer;
+  filter: drop-shadow(0 1px 2px rgba(0,0,0,0.4));
+}
+.dash-mail:hover { transform: translateY(-1px); }
+
+/* ---------- Barra de busca com ícones ---------- */
+.dash-search-wrap { position: relative; flex: 1 1 auto; }
+.dash-search { width: 100%; padding-right: 32px; }
+.dash-search-icon {
+  position: absolute;
+  right: 10px; top: 50%;
+  transform: translateY(-50%);
+  display: inline-flex;
+  pointer-events: none;
+}
+
+/* ---------- Novidades ---------- */
+.dash-news {
+  flex: 0 0 auto;
+  padding: 8px 12px;
+  background: #f4f7fa;
   border-top: 1px solid #dde3e8;
 }
-.dash-signout {
-  padding: 6px 16px;
-  font: inherit;
+.dash-news__head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 4px;
+}
+.dash-news__title { font-size: 0.85rem; font-weight: 600; color: #3f5a70; }
+.dash-news__nav { display: inline-flex; gap: 2px; }
+.news-nav-btn {
+  width: 22px; height: 20px;
+  padding: 0;
+  border: 1px solid #cfd8df;
+  background: linear-gradient(#ffffff, #eef2f5);
+  border-radius: 3px;
+  color: #5a7285;
   font-size: 0.85rem;
-  color: #34495a;
-  background: linear-gradient(#ffffff, #e6eaee);
-  border: 1px solid #adb6bd;
-  border-radius: 4px;
+  line-height: 1;
   cursor: pointer;
 }
-.dash-signout:hover { background: linear-gradient(#ffffff, #e0f0fb); border-color: #7fb6e6; }
+.news-nav-btn:hover { background: linear-gradient(#ffffff, #e0f0fb); }
+.dash-news__item { margin: 0; font-size: 0.82rem; color: #4a5b68; line-height: 1.5; }
+
+/* ---------- Atalhos ---------- */
+.dash-shortcuts {
+  flex: 0 0 auto;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 8px 12px;
+  background: linear-gradient(#eef2f5, #e2e7ec);
+  border-top: 1px solid #dde3e8;
+}
+.shortcut {
+  width: 34px; height: 34px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1.1rem;
+  border: 1px solid #d3dae0;
+  border-radius: 7px;
+  background: linear-gradient(#ffffff, #eef2f5);
+  cursor: pointer;
+}
+.shortcut:active { background: linear-gradient(#e6eef4, #f5f8fa); }
+
+/* ---------- Banner promocional ---------- */
+.dash-promo {
+  flex: 0 0 auto;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin: 0;
+  padding: 10px 14px calc(10px + env(safe-area-inset-bottom));
+  text-decoration: none;
+  color: #ffffff;
+  background: linear-gradient(120deg, #0a66c2 0%, #2a8fe0 55%, #37a06f 100%);
+  box-shadow: inset 0 1px 0 rgba(255,255,255,0.25);
+}
+.dash-promo__logo { width: 30px; height: 30px; }
+.dash-promo__text { font-size: 0.9rem; text-shadow: 0 1px 2px rgba(0,0,0,0.3); }
 
 /* ============================================================
    MODAL (editar nome / mensagem / adicionar contato)
