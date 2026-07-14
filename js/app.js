@@ -22,6 +22,22 @@
     bindCancel();
     bindExtraLinks();
     bindNavigation();
+    bindPasswordToggles();
+  }
+
+  /* ---------- Botões de mostrar/ocultar senha ---------- */
+  function bindPasswordToggles() {
+    document.querySelectorAll(".pw-toggle").forEach((btn) => {
+      btn.addEventListener("click", () => {
+        const field = btn.closest(".field");
+        const input = field && field.querySelector("input");
+        if (!input) return;
+        const show = input.type === "password";
+        input.type = show ? "text" : "password";
+        btn.setAttribute("aria-pressed", String(show));
+        btn.setAttribute("aria-label", show ? "Ocultar senha" : "Mostrar senha");
+      });
+    });
   }
 
   /* ---------- Navegação entre telas ---------- */

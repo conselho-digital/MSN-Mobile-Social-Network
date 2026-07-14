@@ -261,6 +261,29 @@ body {
   position: relative;
   margin-bottom: 8px;
 }
+/* Campo com botão de mostrar/ocultar senha */
+.field--password input { padding-right: 42px; }
+.pw-toggle {
+  position: absolute;
+  right: 4px; top: 50%;
+  transform: translateY(-50%);
+  width: 34px; height: 34px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0;
+  border: none;
+  background: transparent;
+  color: #7a8a97;
+  cursor: pointer;
+  border-radius: 4px;
+}
+.pw-toggle:hover { color: #3f5a70; background: #eef4fb; }
+.pw-toggle svg { fill: currentColor; display: block; }
+.pw-toggle .pw-eye-off { display: none; }
+.pw-toggle[aria-pressed="true"] .pw-eye { display: none; }
+.pw-toggle[aria-pressed="true"] .pw-eye-off { display: block; }
+
 .field--labeled { text-align: left; margin-top: 4px; }
 .field__label {
   display: block;
