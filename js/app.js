@@ -18,8 +18,29 @@
 
     restoreRemembered();
     bindLoginForm();
+    bindSignupForm();
     bindCancel();
     bindExtraLinks();
+    bindNavigation();
+  }
+
+  /* ---------- Navegação entre telas ---------- */
+  function bindNavigation() {
+    const toSignup = document.getElementById("link-signup");
+    if (toSignup) {
+      toSignup.addEventListener("click", (e) => {
+        e.preventDefault();
+        UIManager.clearMessage();
+        UIManager.showScreen("screen-signup");
+      });
+    }
+    const toLogin = document.getElementById("link-back-login");
+    if (toLogin) {
+      toLogin.addEventListener("click", (e) => {
+        e.preventDefault();
+        UIManager.showScreen("screen-login");
+      });
+    }
   }
 
   /* ---------- Formulário de login ---------- */
@@ -43,6 +64,73 @@
       saveRemembered(email);
       await startConnecting(email, password);
     });
+  }
+
+  /* ---------- Formulário de cadastro ---------- */
+  function bindSignupForm() {
+    const form = document.getElementById("signup-form");
+    if (!form) return;
+
+    form.addEventListener("submit", async (e) => {
+      e.preventDefault();
+      if (connecting) return;
+
+      const name = document.getElementById("signup-name").value.trim();
+      const email = document.getElementById("signup-email").value.trim();
+      const password = document.getElementById("signup-password").value;
+      const password2 = document.getElementById("signup-password2").value;
+      const birthdate = document.getElementById("signup-birthdate").value || null;
+
+      // Validações (nome, e-mail e senha são obrigatórios)
+      if (!name) return showSignupMessage("Escolha um nome de exibição.");
+      if (!email) return showSignupMessage("Informe seu e-mail.");
+      if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
+        return showSignupMessage("Digite um e-mail válido.");
+      }
+      if (!password || password.length < 6) {
+        return showSignupMessage("A senha deve ter pelo menos 6 caracteres.");
+      }
+      if (password !== password2) {
+        return showSignupMessage("As senhas não coincidem.");
+      }
+
+      clearSignupMessage();
+      const btn = document.getElementById("btn-signup");
+      btn.disabled = true;
+      btn.textContent = "Criando conta...";
+
+      try {
+        const result = await MSNSupabase.signUp(email, password, name, birthdate);
+        const needsConfirm = result && result.user && !result.session && !result.demo;
+
+        UIManager.showScreen("screen-login");
+        UIManager.showMessage(
+          needsConfirm
+            ? "Conta criada! Confirme seu e-mail para poder entrar."
+            : "Conta criada com sucesso! Agora é só entrar.",
+          "info"
+        );
+        document.getElementById("login-email").value = email;
+        form.reset();
+      } catch (err) {
+        showSignupMessage(friendlyError(err));
+      } finally {
+        btn.disabled = false;
+        btn.textContent = "Criar conta";
+      }
+    });
+  }
+
+  function showSignupMessage(text, type = "error") {
+    const el = document.getElementById("signup-message");
+    if (!el) return;
+    el.textContent = text;
+    el.hidden = false;
+    el.classList.toggle("login-message--info", type === "info");
+  }
+  function clearSignupMessage() {
+    const el = document.getElementById("signup-message");
+    if (el) el.hidden = true;
   }
 
   /* ---------- Fluxo "Entrando..." ---------- */
@@ -129,17 +217,6 @@
         try { localStorage.removeItem("msn:email"); } catch (_) {}
         document.getElementById("login-email").value = "";
         UIManager.showMessage("Conta esquecida neste dispositivo.", "info");
-      });
-    }
-
-    const signup = document.getElementById("link-signup");
-    if (signup) {
-      signup.addEventListener("click", (e) => {
-        e.preventDefault();
-        UIManager.showMessage(
-          "A tela de cadastro será construída na próxima etapa.",
-          "info"
-        );
       });
     }
 

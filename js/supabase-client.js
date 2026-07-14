@@ -37,14 +37,14 @@ const MSNSupabase = (() => {
     return data;
   }
 
-  async function signUp(email, password, displayName) {
+  async function signUp(email, password, displayName, birthdate) {
     if (!isConfigured()) {
       return demoAuth(email, password);
     }
     const { data, error } = await client.auth.signUp({
       email,
       password,
-      options: { data: { display_name: displayName } },
+      options: { data: { display_name: displayName, birthdate: birthdate || null } },
     });
     if (error) throw error;
     return data;

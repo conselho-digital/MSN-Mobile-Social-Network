@@ -21,9 +21,13 @@ create table if not exists public.profiles (
   status        text not null default 'online'
                   check (status in ('online','busy','away','invisible','offline')),
   avatar_url    text,
+  birthdate     date,
   created_at    timestamptz not null default now(),
   updated_at    timestamptz not null default now()
 );
+
+-- Caso a tabela já exista de uma execução anterior, garante a coluna nova.
+alter table public.profiles add column if not exists birthdate date;
 
 comment on table public.profiles is 'Perfis públicos dos usuários do MSN.';
 
@@ -80,11 +84,12 @@ security definer
 set search_path = public
 as $$
 begin
-  insert into public.profiles (id, display_name, sub_nick)
+  insert into public.profiles (id, display_name, sub_nick, birthdate)
   values (
     new.id,
     coalesce(new.raw_user_meta_data ->> 'display_name', split_part(new.email, '@', 1)),
-    coalesce(new.raw_user_meta_data ->> 'sub_nick', '')
+    coalesce(new.raw_user_meta_data ->> 'sub_nick', ''),
+    (nullif(new.raw_user_meta_data ->> 'birthdate', ''))::date
   )
   on conflict (id) do nothing;
   return new;
