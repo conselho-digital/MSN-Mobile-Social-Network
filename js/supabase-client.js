@@ -65,9 +65,26 @@ const MSNSupabase = (() => {
     if (!isConfigured()) return demoProfile();
     const { data: { user } } = await client.auth.getUser();
     if (!user) throw new Error("Sessão expirada. Entre novamente.");
-    const { data, error } = await client
-      .from("profiles").select("*").eq("id", user.id).single();
+
+    let { data, error } = await client
+      .from("profiles").select("*").eq("id", user.id).maybeSingle();
     if (error) throw error;
+
+    // Se o gatilho não criou o perfil, cria agora a partir dos metadados.
+    if (!data) {
+      const meta = user.user_metadata || {};
+      const insert = {
+        id: user.id,
+        display_name: meta.display_name || (user.email ? user.email.split("@")[0] : "Novo usuário"),
+        sub_nick: meta.sub_nick || "",
+        status: "online",
+      };
+      if (meta.birthdate) insert.birthdate = meta.birthdate;
+      const { data: created, error: cerr } = await client
+        .from("profiles").insert(insert).select().single();
+      if (cerr) throw cerr;
+      data = created;
+    }
     return data;
   }
 

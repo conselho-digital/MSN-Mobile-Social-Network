@@ -304,12 +304,27 @@
       </span>
     </header>
 
-    <!-- Banner aurora + foto -->
-    <div class="login-banner">
-      <div class="login-banner__aurora"></div>
-      <div class="dp-frame">
+    <!-- Banner azul (idêntico ao login) -->
+    <div class="login-banner login-banner--blue">
+      <div class="login-banner__sky"></div>
+      <button type="button" class="help-menu" aria-haspopup="true">
+        Ajuda <span class="caret-down caret-down--light"></span>
+      </button>
+      <div class="dp-frame dp-frame--generic">
         <div class="dp-frame__inner">
-          <img src="assets/icons/icon-192.png" alt="Foto de exibição" />
+          <svg class="avatar-generic" viewBox="0 0 100 100" aria-label="Foto de exibição">
+            <defs>
+              <linearGradient id="avBgC" x1="0" y1="0" x2="0" y2="1">
+                <stop offset="0%" stop-color="#f4f8fb"/><stop offset="100%" stop-color="#d7e3ec"/>
+              </linearGradient>
+              <linearGradient id="avPersonC" x1="0" y1="0" x2="0" y2="1">
+                <stop offset="0%" stop-color="#b9c3cc"/><stop offset="100%" stop-color="#8f9ba6"/>
+              </linearGradient>
+            </defs>
+            <rect width="100" height="100" fill="url(#avBgC)"/>
+            <circle cx="50" cy="38" r="19" fill="url(#avPersonC)"/>
+            <path d="M16 96c0-20 15-31 34-31s34 11 34 31z" fill="url(#avPersonC)"/>
+          </svg>
         </div>
       </div>
     </div>

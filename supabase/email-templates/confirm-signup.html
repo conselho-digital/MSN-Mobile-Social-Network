@@ -1,0 +1,86 @@
+<!--
+  ============================================================
+  MSN - Mobile Social Network — Template de e-mail: Confirmar cadastro
+  ------------------------------------------------------------
+  Onde colar:
+    Supabase > Authentication > Emails > Templates > "Confirm signup"
+    Cole este HTML no campo "Message body" e salve.
+
+  Variáveis do Supabase usadas:
+    {{ .ConfirmationURL }}  -> link de confirmação
+    {{ .SiteURL }}          -> URL do site (para o logo)
+    {{ .Email }}            -> e-mail do usuário
+
+  Observação: o logo usa {{ .SiteURL }}/assets/icons/icon-192.png.
+  Configure a "Site URL" em Authentication > URL Configuration para
+  que a imagem carregue corretamente.
+  ============================================================
+-->
+<table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="margin:0;padding:0;background-color:#eaf3fb;font-family:'Segoe UI',Tahoma,Arial,sans-serif;">
+  <tr>
+    <td align="center" style="padding:24px 12px;">
+      <table role="presentation" width="600" cellpadding="0" cellspacing="0" style="max-width:600px;width:100%;background-color:#ffffff;border-radius:10px;overflow:hidden;box-shadow:0 4px 18px rgba(0,0,0,0.12);">
+
+        <!-- Cabeçalho azul (Windows 7 / MSN) -->
+        <tr>
+          <td style="background:linear-gradient(135deg,#3d84cd 0%,#4f93d6 40%,#6ba9e2 70%,#93c4ef 100%);padding:28px 24px;text-align:center;">
+            <img src="{{ .SiteURL }}/assets/icons/icon-192.png" width="72" height="72" alt="MSN" style="display:inline-block;border:0;border-radius:12px;background:#ffffff;padding:4px;" />
+            <h1 style="margin:14px 0 0;color:#ffffff;font-size:22px;font-weight:600;text-shadow:0 1px 2px rgba(0,0,0,0.25);">
+              MSN &mdash; Mobile Social Network
+            </h1>
+          </td>
+        </tr>
+
+        <!-- Corpo -->
+        <tr>
+          <td style="padding:30px 30px 12px;">
+            <h2 style="margin:0 0 8px;color:#2f4a63;font-size:20px;font-weight:600;">
+              Bem-vindo(a)! 🎉
+            </h2>
+            <p style="margin:0 0 16px;color:#4a5b68;font-size:15px;line-height:1.6;">
+              Sua conta no <strong>Mobile Social Network</strong> está quase pronta.
+              Confirme seu e-mail para entrar e começar a conversar com seus amigos
+              no estilo nostálgico do MSN.
+            </p>
+          </td>
+        </tr>
+
+        <!-- Botão -->
+        <tr>
+          <td align="center" style="padding:8px 30px 24px;">
+            <a href="{{ .ConfirmationURL }}"
+               style="display:inline-block;background:linear-gradient(#4aa6e8,#1f7fd0);color:#ffffff;font-size:16px;font-weight:600;text-decoration:none;padding:13px 34px;border-radius:6px;box-shadow:0 2px 6px rgba(31,127,208,0.4);">
+              Confirmar minha conta
+            </a>
+          </td>
+        </tr>
+
+        <!-- Link alternativo -->
+        <tr>
+          <td style="padding:0 30px 24px;">
+            <p style="margin:0 0 6px;color:#8a97a1;font-size:12px;line-height:1.5;">
+              Se o botão não funcionar, copie e cole este endereço no navegador:
+            </p>
+            <p style="margin:0;word-break:break-all;">
+              <a href="{{ .ConfirmationURL }}" style="color:#0b6ac2;font-size:12px;">{{ .ConfirmationURL }}</a>
+            </p>
+          </td>
+        </tr>
+
+        <!-- Rodapé -->
+        <tr>
+          <td style="border-top:1px solid #eef1f4;padding:18px 30px;background-color:#fafcfe;">
+            <p style="margin:0 0 4px;color:#9aa7b1;font-size:12px;line-height:1.5;">
+              Você recebeu este e-mail porque foi feito um cadastro com o endereço
+              <strong>{{ .Email }}</strong>. Se não foi você, pode ignorar esta mensagem.
+            </p>
+            <p style="margin:0;color:#b9c3cc;font-size:11px;">
+              &copy; MSN &mdash; Mobile Social Network
+            </p>
+          </td>
+        </tr>
+
+      </table>
+    </td>
+  </tr>
+</table>
