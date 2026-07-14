@@ -20,12 +20,32 @@ const Dashboard = (() => {
     offline: "linear-gradient(#c7d2db, #9aa7b1)",
   };
 
+  // Cenários (fundo do topo). O primeiro é o padrão.
+  const SCENES = [
+    { id: "green",  name: "Verde",     css: "linear-gradient(120deg,#0a0f0a 0%,#12240d 45%,#1f4a17 78%,#37731f 100%)" },
+    { id: "blue",   name: "Azul",      css: "linear-gradient(120deg,#08203a 0%,#0e3a63 50%,#1f6fb0 100%)" },
+    { id: "aero",   name: "Aero",      css: "linear-gradient(120deg,#0a3a5a 0%,#1f7fb0 50%,#8fd0f0 100%)" },
+    { id: "purple", name: "Roxo",      css: "linear-gradient(120deg,#1a0a2a 0%,#3a1560 55%,#7b3fd0 100%)" },
+    { id: "pink",   name: "Rosa",      css: "linear-gradient(120deg,#2a0a1a 0%,#8a1e55 55%,#e05a9a 100%)" },
+    { id: "sunset", name: "Pôr do sol", css: "linear-gradient(120deg,#3a1010 0%,#a03a1a 50%,#e0902a 100%)" },
+    { id: "teal",   name: "Turquesa",  css: "linear-gradient(120deg,#04201f 0%,#0a4a47 55%,#1f9e94 100%)" },
+    { id: "graphite", name: "Grafite", css: "linear-gradient(120deg,#0a0a0a 0%,#242424 60%,#3d3d3d 100%)" },
+    { id: "royal",  name: "Royal",     css: "linear-gradient(120deg,#0a1444 0%,#1c2f8a 55%,#3f6fe0 100%)" },
+  ];
+  function sceneCss(id) {
+    const s = SCENES.find((x) => x.id === id);
+    return s ? s.css : SCENES[0].css;
+  }
+
   let profile = null;
   let contacts = [];
   let bound = false;
 
-  /* ---------- Avatar genérico (sem colisão de ids) ---------- */
-  function avatarMarkup() {
+  /* ---------- Avatar (foto enviada ou genérico) ---------- */
+  function avatarMarkup(url) {
+    if (url) {
+      return '<img class="avatar-img" src="' + esc(url) + '" alt="" />';
+    }
     return (
       '<svg class="avatar-generic" viewBox="0 0 100 100" aria-hidden="true">' +
       '<rect width="100" height="100" fill="#e9eff4"/>' +
@@ -78,7 +98,17 @@ const Dashboard = (() => {
     dot.className = "my-avatar__status status-dot status-dot--" + status;
 
     const avatar = document.querySelector(".my-avatar");
-    if (avatar) avatar.style.background = AVATAR_BORDER[status] || AVATAR_BORDER.online;
+    if (avatar) {
+      avatar.style.background = AVATAR_BORDER[status] || AVATAR_BORDER.online;
+      // Atualiza a imagem (foto enviada ou avatar genérico), mantendo a bolinha de status.
+      const old = avatar.querySelector(".avatar-generic, .avatar-img");
+      if (old) old.remove();
+      avatar.insertAdjacentHTML("afterbegin", avatarMarkup(profile.avatar_url));
+    }
+
+    // Cenário (fundo do topo)
+    const header = document.querySelector(".dash-header");
+    if (header) header.style.setProperty("--scene", sceneCss(profile.scene));
 
     const subEl = document.getElementById("my-subnick-text");
     if (profile.sub_nick) {
@@ -123,7 +153,7 @@ const Dashboard = (() => {
       : "";
     return (
       '<li class="contact-item ' + stateClass + '" data-id="' + esc(c.id) + '">' +
-      '<div class="contact-item__avatar">' + avatarMarkup() + "</div>" +
+      '<div class="contact-item__avatar">' + avatarMarkup(c.avatar_url) + "</div>" +
       '<div class="contact-item__body">' +
       '<div class="contact-item__name">' + esc(c.display_name) + "</div>" +
       sub +
@@ -148,21 +178,69 @@ const Dashboard = (() => {
         editName();
         break;
       case "change-picture":
-        infoModal(
-          "Alterar imagem para exibição",
-          "O envio da foto de exibição será adicionado em breve (usando o Supabase Storage)."
-        );
+        changePicture();
         break;
       case "change-scene":
-        infoModal(
-          "Alterar cenário",
-          "A escolha de cenários (fundos do topo) será ativada quando os temas selecionáveis forem adicionados."
-        );
+        openScenePicker();
         break;
       case "options":
         infoModal("Opções", "A tela de opções será construída em breve.");
         break;
     }
+  }
+
+  /* ---------- Alterar imagem para exibição (upload) ---------- */
+  function changePicture() {
+    const input = document.getElementById("avatar-input");
+    if (input) input.click();
+  }
+
+  async function onAvatarSelected(e) {
+    const file = e.target.files && e.target.files[0];
+    e.target.value = ""; // permite reenviar o mesmo arquivo
+    if (!file) return;
+    if (!file.type.startsWith("image/")) {
+      return infoModal("Foto de exibição", "Selecione um arquivo de imagem.");
+    }
+    if (file.size > 3 * 1024 * 1024) {
+      return infoModal("Foto de exibição", "A imagem deve ter no máximo 3 MB.");
+    }
+
+    // Prévia imediata
+    const previewUrl = URL.createObjectURL(file);
+    if (profile) { profile.avatar_url = previewUrl; renderProfile(); }
+
+    try {
+      const url = await MSNSupabase.uploadAvatar(file);
+      if (profile) { profile.avatar_url = url; renderProfile(); }
+    } catch (err) {
+      infoModal("Foto de exibição", err.message || "Não foi possível enviar a imagem.");
+    }
+  }
+
+  /* ---------- Alterar cenário (fundo do topo) ---------- */
+  function openScenePicker() {
+    const overlay = document.getElementById("scene-picker");
+    const grid = document.getElementById("scene-grid");
+    const current = (profile && profile.scene) || "green";
+
+    grid.innerHTML = SCENES.map((s) =>
+      '<button type="button" class="scene-swatch' + (s.id === current ? " is-selected" : "") +
+      '" data-scene="' + s.id + '" style="background:' + s.css + '">' +
+      '<span class="scene-swatch__name">' + esc(s.name) + "</span></button>"
+    ).join("");
+
+    grid.querySelectorAll(".scene-swatch").forEach((sw) => {
+      sw.addEventListener("click", async () => {
+        const id = sw.dataset.scene;
+        grid.querySelectorAll(".scene-swatch").forEach((x) => x.classList.remove("is-selected"));
+        sw.classList.add("is-selected");
+        if (profile) { profile.scene = id; renderProfile(); }
+        try { await MSNSupabase.updateMyProfile({ scene: id }); } catch (_) {}
+      });
+    });
+
+    overlay.hidden = false;
   }
 
   function editName() {
@@ -260,6 +338,16 @@ const Dashboard = (() => {
     // Busca
     document.getElementById("contact-search").addEventListener("input", (e) => {
       renderContacts(e.target.value);
+    });
+
+    // Foto de exibição (upload)
+    const avatarInput = document.getElementById("avatar-input");
+    if (avatarInput) avatarInput.addEventListener("change", onAvatarSelected);
+
+    // Fechar seletor de cenário
+    const sceneClose = document.getElementById("scene-close");
+    if (sceneClose) sceneClose.addEventListener("click", () => {
+      document.getElementById("scene-picker").hidden = true;
     });
 
     // Ícones auxiliares (placeholders informativos)

@@ -98,6 +98,26 @@ const MSNSupabase = (() => {
     return data;
   }
 
+  /* ---------- Foto de exibição (avatar) ---------- */
+  async function uploadAvatar(file) {
+    if (!isConfigured()) throw new Error("Configure o Supabase para enviar fotos.");
+    const { data: { user } } = await client.auth.getUser();
+    if (!user) throw new Error("Sessão expirada. Entre novamente.");
+
+    const ext = (file.name.split(".").pop() || "png").toLowerCase();
+    const path = user.id + "/avatar_" + Date.now() + "." + ext;
+
+    const { error } = await client.storage
+      .from("avatars")
+      .upload(path, file, { upsert: true, contentType: file.type || "image/png" });
+    if (error) throw error;
+
+    const { data: pub } = client.storage.from("avatars").getPublicUrl(path);
+    const url = pub.publicUrl;
+    await client.from("profiles").update({ avatar_url: url }).eq("id", user.id);
+    return url;
+  }
+
   /* ---------- Contatos ---------- */
   async function getContacts() {
     if (!isConfigured()) return demoContacts();
@@ -164,6 +184,7 @@ const MSNSupabase = (() => {
   return {
     init, isConfigured, signIn, signUp, getSession, signOut,
     getMyProfile, updateMyProfile, getContacts, addContactByName,
+    uploadAvatar,
     getClient: () => client,
   };
 })();

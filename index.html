@@ -542,6 +542,21 @@
     </div>
   </div>
 
+  <!-- Seletor de cenário (fundo do topo) -->
+  <div id="scene-picker" class="modal-overlay" hidden>
+    <div class="modal" role="dialog" aria-modal="true">
+      <h2 class="modal__title">Alterar cenário</h2>
+      <p class="scene-hint">Escolha o fundo do topo do seu MSN:</p>
+      <div class="scene-grid" id="scene-grid"></div>
+      <div class="modal__actions">
+        <button type="button" id="scene-close" class="btn-signin btn-signin--sm">Fechar</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Input escondido para envio da foto de exibição -->
+  <input type="file" id="avatar-input" accept="image/*" hidden />
+
   <!-- Scripts -->
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
   <script src="js/supabase-client.js"></script>

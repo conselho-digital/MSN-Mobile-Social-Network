@@ -26,8 +26,11 @@ create table if not exists public.profiles (
   updated_at    timestamptz not null default now()
 );
 
--- Caso a tabela já exista de uma execução anterior, garante a coluna nova.
+-- Caso a tabela já exista de uma execução anterior, garante as colunas novas.
 alter table public.profiles add column if not exists birthdate date;
+alter table public.profiles add column if not exists scene text default 'green';
+-- Observação: a foto de exibição usa Supabase Storage — veja
+-- supabase/personalization.sql (bucket "avatars" + políticas).
 
 comment on table public.profiles is 'Perfis públicos dos usuários do MSN.';
 
