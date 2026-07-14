@@ -24,6 +24,62 @@
     bindNavigation();
     bindPasswordToggles();
     bindWindowControls();
+    bindInstallApp();
+  }
+
+  /* ---------- "Adicionar App" (instalar PWA) ---------- */
+  let deferredInstallPrompt = null;
+
+  function bindInstallApp() {
+    const btn = document.getElementById("btn-install-app");
+    if (!btn) return;
+
+    // Guarda o evento que o Chrome/Android dispara quando o PWA é instalável.
+    window.addEventListener("beforeinstallprompt", (e) => {
+      e.preventDefault();
+      deferredInstallPrompt = e;
+    });
+
+    // Se já estiver instalado (rodando standalone), esconde o botão.
+    if (isRunningStandalone()) btn.hidden = true;
+    window.addEventListener("appinstalled", () => {
+      deferredInstallPrompt = null;
+      btn.hidden = true;
+    });
+
+    btn.addEventListener("click", async () => {
+      if (deferredInstallPrompt) {
+        deferredInstallPrompt.prompt();
+        try {
+          const { outcome } = await deferredInstallPrompt.userChoice;
+          if (outcome === "accepted") btn.hidden = true;
+        } catch (_) {}
+        deferredInstallPrompt = null;
+      } else {
+        showInstallInstructions();
+      }
+    });
+  }
+
+  function isRunningStandalone() {
+    return (
+      window.matchMedia("(display-mode: standalone)").matches ||
+      window.navigator.standalone === true
+    );
+  }
+
+  // Fallback para navegadores sem beforeinstallprompt (ex.: iOS/Safari).
+  function showInstallInstructions() {
+    const ua = navigator.userAgent || "";
+    let msg;
+    if (/iPhone|iPad|iPod/i.test(ua)) {
+      msg = "Para instalar no iPhone/iPad: toque em Compartilhar (⬆️) e depois em “Adicionar à Tela de Início”.";
+    } else if (isRunningStandalone()) {
+      msg = "O app já está instalado neste dispositivo. 🎉";
+    } else {
+      msg = "Para instalar: abra o menu do navegador (⋮) e escolha “Instalar app” ou “Adicionar à tela inicial”.";
+    }
+    UIManager.showMessage(msg, "info");
   }
 
   /* ---------- Botões da barra de título (início / girar / fechar) ---------- */

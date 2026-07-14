@@ -277,6 +277,29 @@ body {
 }
 .help-icon .caret-down { border-top-color: #2f7fd0; }
 
+/* Botão "Adicionar App" (instalar PWA) */
+.install-app {
+  align-self: flex-end;
+  margin: 10px 2px 2px;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 6px 12px;
+  font: inherit;
+  font-size: 0.82rem;
+  font-weight: 600;
+  color: #ffffff;
+  background: linear-gradient(#5aa6e8, #1f7fd0);
+  border: 1px solid #1a6fbb;
+  border-radius: 16px;
+  cursor: pointer;
+  box-shadow: 0 1px 3px rgba(0,0,0,0.25), inset 0 1px 0 rgba(255,255,255,0.35);
+}
+.install-app:hover { background: linear-gradient(#66aeec, #2384d6); }
+.install-app:active { background: linear-gradient(#1f7fd0, #1a6fbb); }
+.install-app svg { display: block; }
+.install-app[hidden] { display: none; }
+
 /* Avatar centralizado sobre o fundo claro */
 .signin-avatar { margin: 4px 0 2px; }
 .signin-avatar .dp-frame {
