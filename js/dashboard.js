@@ -259,7 +259,8 @@ const Dashboard = (() => {
 
   async function doSignOut() {
     try { await MSNSupabase.signOut(); } catch (_) {}
-    try { localStorage.removeItem("msn:email"); } catch (_) {}
+    // Ao sair, desliga o auto-login (mas mantém e-mail/senha lembrados).
+    try { localStorage.setItem("msn:autoSignin", "false"); } catch (_) {}
     SoundManager.play("logout");
     UIManager.showScreen("screen-login");
   }

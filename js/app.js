@@ -17,6 +17,7 @@
     SoundManager.preload();
 
     restoreRemembered();
+    bindRememberOptions();
     bindLoginForm();
     bindSignupForm();
     bindCancel();
@@ -25,6 +26,57 @@
     bindPasswordToggles();
     bindWindowControls();
     bindInstallApp();
+    initSession();
+  }
+
+  /* ---------- Sessão (Entrar automaticamente) ----------
+     Se "Entrar automaticamente" estava ligado, reabrir o app vai direto
+     ao Dashboard. Caso contrário, qualquer sessão salva é encerrada e o
+     usuário volta para a tela de login. */
+  async function initSession() {
+    if (!MSNSupabase.isConfigured()) return;
+    let session = null;
+    try { session = await MSNSupabase.getSession(); } catch (_) {}
+    if (!session) return;
+
+    const auto = localStorage.getItem("msn:autoSignin") === "true";
+    if (auto) {
+      Dashboard.show();
+    } else {
+      try { await MSNSupabase.signOut(); } catch (_) {}
+    }
+  }
+
+  /* ---------- Ligação entre os checkboxes de "lembrar" ----------
+     - Marcar "Lembrar-me" marca também "Lembrar minha senha".
+     - Desmarcar "Lembrar-me" desmarca "Lembrar senha" e "Entrar auto.".
+     - Marcar "Lembrar senha" exige "Lembrar-me".
+     (Para lembrar só o e-mail: ligar "Lembrar-me" e desligar "Lembrar senha".) */
+  function bindRememberOptions() {
+    const me = document.getElementById("opt-remember-me");
+    const pass = document.getElementById("opt-remember-pass");
+    const auto = document.getElementById("opt-auto-signin");
+    if (!me || !pass) return;
+
+    me.addEventListener("change", () => {
+      if (me.checked) {
+        pass.checked = true;
+      } else {
+        pass.checked = false;
+        if (auto) auto.checked = false;
+      }
+    });
+
+    pass.addEventListener("change", () => {
+      if (pass.checked) me.checked = true;
+      else if (auto) auto.checked = false;
+    });
+
+    if (auto) {
+      auto.addEventListener("change", () => {
+        if (auto.checked) { me.checked = true; pass.checked = true; }
+      });
+    }
   }
 
   /* ---------- "Adicionar App" (instalar PWA) ---------- */
@@ -207,7 +259,6 @@
       }
 
       UIManager.clearMessage();
-      saveRemembered(email);
       await startConnecting(email, password);
     });
   }
@@ -293,6 +344,9 @@
       const result = await MSNSupabase.signIn(email, password);
       if (cancelRequested) return;
 
+      // Conectou com sucesso: agora sim salvamos as preferências.
+      savePreferences(email, password);
+
       // Guarda status escolhido para uso pós-login
       sessionStorage.setItem("msn:status", status.status);
 
@@ -328,23 +382,52 @@
     if (el) el.textContent = text;
   }
 
-  /* ---------- "Lembrar-me" (e-mail) ---------- */
-  function saveRemembered(email) {
-    const remember = document.getElementById("opt-remember-me");
+  /* ---------- Preferências de login (após conectar) ----------
+     Salva o e-mail só se "Lembrar-me"; a senha só se "Lembrar senha";
+     e o estado de "Entrar automaticamente". */
+  function savePreferences(email, password) {
+    const me = document.getElementById("opt-remember-me");
+    const pass = document.getElementById("opt-remember-pass");
+    const auto = document.getElementById("opt-auto-signin");
     try {
-      if (remember && remember.checked) {
-        localStorage.setItem("msn:email", email);
-      } else {
-        localStorage.removeItem("msn:email");
-      }
+      if (me && me.checked) localStorage.setItem("msn:email", email);
+      else localStorage.removeItem("msn:email");
+
+      if (pass && pass.checked) localStorage.setItem("msn:password", obfuscate(password));
+      else localStorage.removeItem("msn:password");
+
+      localStorage.setItem("msn:autoSignin", auto && auto.checked ? "true" : "false");
     } catch (_) {}
   }
 
   function restoreRemembered() {
     try {
       const email = localStorage.getItem("msn:email");
-      if (email) document.getElementById("login-email").value = email;
+      const passStored = localStorage.getItem("msn:password");
+      const auto = localStorage.getItem("msn:autoSignin") === "true";
+
+      const emailEl = document.getElementById("login-email");
+      const passEl = document.getElementById("login-password");
+      const meEl = document.getElementById("opt-remember-me");
+      const passOptEl = document.getElementById("opt-remember-pass");
+      const autoEl = document.getElementById("opt-auto-signin");
+
+      if (email && emailEl) { emailEl.value = email; if (meEl) meEl.checked = true; }
+      if (passStored && passEl) {
+        passEl.value = deobfuscate(passStored);
+        if (passOptEl) passOptEl.checked = true;
+        if (meEl) meEl.checked = true;
+      }
+      if (autoEl) autoEl.checked = auto;
     } catch (_) {}
+  }
+
+  // Ofuscação simples (base64) da senha salva localmente — NÃO é criptografia.
+  function obfuscate(s) {
+    try { return btoa(unescape(encodeURIComponent(s))); } catch (_) { return ""; }
+  }
+  function deobfuscate(s) {
+    try { return decodeURIComponent(escape(atob(s))); } catch (_) { return ""; }
   }
 
   /* ---------- Links extras ---------- */
