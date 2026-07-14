@@ -1,0 +1,11 @@
+# Dependências de desenvolvimento (usadas só para gerar prévias/ícones)
+node_modules/
+package.json
+package-lock.json
+
+# Prévias geradas localmente
+.preview-*.png
+
+# Sistema
+.DS_Store
+Thumbs.db

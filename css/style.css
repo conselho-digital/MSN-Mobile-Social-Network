@@ -1,0 +1,481 @@
+/* ============================================================
+   MSN - Mobile Social Network
+   Tela de entrada estilo Windows Live Messenger (mobile-first)
+   ============================================================ */
+
+:root {
+  --msn-blue: #0078d7;
+  --msn-blue-dark: #005a9e;
+  --msn-blue-light: #e5f1fb;
+  --link-blue: #0b6ac2;
+  --text-dark: #1b3a57;
+  --field-border: #b9c9d6;
+  --field-border-focus: #4ba0e6;
+  --win-face: #f0f0f0;
+  --win-line: #d9d9d9;
+  --banner-green-1: #0d1f0a;
+  --banner-green-2: #2f6d1e;
+  --banner-green-3: #5aa832;
+  font-size: 16px;
+}
+
+* { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+
+html, body {
+  margin: 0;
+  padding: 0;
+  height: 100%;
+  width: 100%;
+  overflow: hidden;
+}
+
+body {
+  font-family: "Segoe UI", Tahoma, Arial, sans-serif;
+  background: #ffffff;
+  color: #2b2b2b;
+  -webkit-font-smoothing: antialiased;
+  user-select: none;
+}
+
+/* ---------- Sistema de telas ---------- */
+.screen {
+  position: fixed;
+  inset: 0;
+  display: none;
+  flex-direction: column;
+}
+.screen--active { display: flex; }
+
+/* ============================================================
+   BARRA DE TÍTULO (Windows)
+   ============================================================ */
+.titlebar {
+  flex: 0 0 auto;
+  height: 34px;
+  padding: 0 6px 0 10px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  background: linear-gradient(#fdfdfd, #eef1f4);
+  border-bottom: 1px solid #dfe3e8;
+  font-size: 0.8rem;
+  color: #3a3a3a;
+  padding-top: env(safe-area-inset-top);
+  height: calc(34px + env(safe-area-inset-top));
+}
+.titlebar__app { display: inline-flex; align-items: center; gap: 7px; font-weight: 500; }
+.titlebar__icon { width: 16px; height: 16px; }
+.titlebar__buttons { display: inline-flex; align-items: center; gap: 2px; }
+.tb-btn {
+  width: 30px; height: 24px;
+  display: inline-block;
+  position: relative;
+  border-radius: 3px;
+}
+.tb-btn::before {
+  content: ""; position: absolute; inset: 0;
+  background-repeat: no-repeat; background-position: center;
+}
+.tb-btn--min::before { border-bottom: 1.5px solid #555; width: 11px; margin: 14px auto 0; left: 0; right: 0; }
+.tb-btn--max::before { border: 1.4px solid #555; width: 10px; height: 10px; margin: 7px auto; left: 0; right: 0; }
+.tb-btn--close::before {
+  content: "\00d7"; color: #555; font-size: 1.1rem; line-height: 24px; text-align: center;
+}
+
+/* ============================================================
+   BANNER AURORA VERDE + FOTO DE EXIBIÇÃO
+   ============================================================ */
+.login-banner {
+  flex: 0 0 auto;
+  position: relative;
+  height: 150px;
+  background: #0a1508;
+  overflow: visible; /* deixa a moldura da foto ultrapassar a base */
+}
+.login-banner__aurora {
+  position: absolute; inset: 0;
+  overflow: hidden; /* contém o desfoque da aurora dentro do banner */
+  background:
+    radial-gradient(120% 80% at 20% 120%, rgba(120, 220, 70, 0.55), transparent 60%),
+    radial-gradient(90% 70% at 70% 130%, rgba(70, 180, 60, 0.5), transparent 55%),
+    radial-gradient(140% 120% at 50% 160%, rgba(30, 90, 20, 0.9), transparent 70%),
+    linear-gradient(180deg, #0b1a08 0%, #14300d 55%, #21521a 100%);
+}
+.login-banner__aurora::after {
+  content: "";
+  position: absolute; left: 0; right: 0; bottom: 0; height: 60%;
+  background: radial-gradient(80% 120% at 50% 130%, rgba(150, 240, 90, 0.35), transparent 70%);
+  filter: blur(6px);
+}
+
+/* Moldura da foto (display picture) */
+.dp-frame {
+  position: absolute;
+  left: 50%;
+  bottom: -26px;
+  transform: translateX(-50%);
+  width: 92px;
+  height: 92px;
+  padding: 5px;
+  background: linear-gradient(#ffffff, #e7edf2);
+  border: 1px solid #ffffff;
+  border-radius: 4px;
+  box-shadow: 0 3px 8px rgba(0, 0, 0, 0.45), inset 0 0 0 1px rgba(0,0,0,0.05);
+}
+.dp-frame__inner {
+  width: 100%; height: 100%;
+  border: 1px solid #9fb4c4;
+  border-radius: 2px;
+  overflow: hidden;
+  background: #cfe0ef;
+}
+.dp-frame__inner img { width: 100%; height: 100%; object-fit: cover; display: block; }
+
+/* ============================================================
+   CORPO DO LOGIN
+   ============================================================ */
+.login-body {
+  flex: 1 1 auto;
+  overflow-y: auto;
+  -webkit-overflow-scrolling: touch;
+  padding: 44px 26px 10px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+  background: #ffffff;
+}
+
+.welcome {
+  font-size: 1.5rem;
+  font-weight: 400;
+  color: #3a4a55;
+  margin: 4px 0 26px;
+  letter-spacing: 0.2px;
+}
+
+.login-form {
+  width: 100%;
+  max-width: 320px;
+  display: flex;
+  flex-direction: column;
+  align-items: stretch;
+}
+
+/* ---------- Campos ---------- */
+.field {
+  position: relative;
+  margin-bottom: 8px;
+}
+.field input {
+  width: 100%;
+  height: 40px;
+  padding: 0 12px;
+  font-size: 0.95rem;
+  font-family: inherit;
+  color: #333;
+  background: #fff;
+  border: 1px solid var(--field-border);
+  border-radius: 3px;
+  outline: none;
+  transition: border-color 0.15s, box-shadow 0.15s;
+  user-select: text;
+}
+.field input::placeholder { color: #a7a7a7; }
+.field input:focus {
+  border-color: var(--field-border-focus);
+  box-shadow: 0 0 0 2px rgba(75, 160, 230, 0.25);
+}
+.field--combo input { padding-right: 38px; }
+.combo-arrow {
+  position: absolute;
+  right: 1px; top: 1px;
+  width: 34px; height: 38px;
+  border: none;
+  border-left: 1px solid var(--field-border);
+  background: linear-gradient(#fbfbfb, #eaeef1);
+  border-radius: 0 3px 3px 0;
+  cursor: pointer;
+}
+.combo-arrow::after {
+  content: ""; position: absolute;
+  top: 50%; left: 50%;
+  width: 0; height: 0;
+  margin: -2px 0 0 -4px;
+  border-left: 4px solid transparent;
+  border-right: 4px solid transparent;
+  border-top: 5px solid #6b7b88;
+}
+
+/* ---------- Entrar como (status) ---------- */
+.signin-as {
+  position: relative;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  margin: 6px 2px 0;
+  font-size: 0.9rem;
+  color: #4a4a4a;
+}
+.signin-as__label { flex: 0 0 auto; }
+.status-select {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 3px 4px;
+  border: 1px solid transparent;
+  border-radius: 3px;
+  background: transparent;
+  font: inherit;
+  color: #2f6b1f;
+  cursor: pointer;
+}
+.status-select:hover { border-color: #cfe0ef; background: #f3f8fd; }
+.caret-down {
+  width: 0; height: 0;
+  border-left: 4px solid transparent;
+  border-right: 4px solid transparent;
+  border-top: 5px solid #5a7285;
+  margin-left: 2px;
+}
+.options-chevron {
+  margin-left: auto;
+  width: 26px; height: 26px;
+  border: 1px solid #cfd8df;
+  border-radius: 50%;
+  background: linear-gradient(#ffffff, #eef2f5);
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+}
+.chevron {
+  width: 8px; height: 8px;
+  border-right: 1.6px solid #6b7b88;
+  border-bottom: 1.6px solid #6b7b88;
+  transform: rotate(45deg);   /* fechado: aponta para baixo */
+  margin-top: -3px;
+  transition: transform 0.2s, margin-top 0.2s;
+}
+.options-chevron[aria-expanded="true"] .chevron {
+  transform: rotate(-135deg); /* aberto: aponta para cima */
+  margin-top: 3px;
+}
+
+/* Bolinhas de status */
+.status-dot {
+  width: 12px; height: 12px;
+  border-radius: 50%;
+  display: inline-block;
+  flex: 0 0 auto;
+  box-shadow: inset 0 0 0 1px rgba(0,0,0,0.15);
+}
+.status-dot--online    { background: radial-gradient(circle at 35% 30%, #a6f06a, #3aa11a); }
+.status-dot--busy      { background: radial-gradient(circle at 35% 30%, #ff8a8a, #c62828); }
+.status-dot--away      { background: radial-gradient(circle at 35% 30%, #ffe08a, #e0a409); }
+.status-dot--invisible { background: radial-gradient(circle at 35% 30%, #e8edf1, #9aa7b1); }
+
+/* Menu de status */
+.status-menu {
+  position: absolute;
+  top: 30px;
+  left: 62px;
+  z-index: 20;
+  margin: 0;
+  padding: 3px;
+  list-style: none;
+  min-width: 150px;
+  background: #fff;
+  border: 1px solid #b9c9d6;
+  border-radius: 4px;
+  box-shadow: 0 6px 18px rgba(0, 0, 0, 0.2);
+}
+.status-menu li {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 10px;
+  font-size: 0.9rem;
+  color: #333;
+  border-radius: 3px;
+  cursor: pointer;
+}
+.status-menu li:hover { background: var(--msn-blue-light); }
+
+/* ---------- Opções expansíveis ---------- */
+.login-options {
+  margin: 14px 2px 0;
+  padding: 4px 0 2px;
+  text-align: left;
+  animation: fade-in 0.18s ease;
+}
+.checkbox {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 12px;
+  font-size: 0.9rem;
+  color: #3a3a3a;
+  cursor: pointer;
+}
+.checkbox input { position: absolute; opacity: 0; width: 0; height: 0; }
+.checkbox__box {
+  width: 16px; height: 16px;
+  flex: 0 0 auto;
+  border: 1px solid #8a9aa6;
+  border-radius: 2px;
+  background: linear-gradient(#ffffff, #eef2f5);
+  position: relative;
+}
+.checkbox input:checked + .checkbox__box::after {
+  content: "";
+  position: absolute;
+  left: 5px; top: 1px;
+  width: 4px; height: 9px;
+  border: solid #1a7a1a;
+  border-width: 0 2px 2px 0;
+  transform: rotate(45deg);
+}
+.checkbox input:focus-visible + .checkbox__box {
+  box-shadow: 0 0 0 2px rgba(75, 160, 230, 0.4);
+}
+.checkbox__text { flex: 0 0 auto; }
+
+.inline-link {
+  color: var(--link-blue);
+  text-decoration: none;
+  cursor: pointer;
+}
+.inline-link:hover { text-decoration: underline; }
+.inline-link--block { display: inline-block; margin-top: 2px; font-size: 0.9rem; }
+
+/* ---------- Mensagem ---------- */
+.login-message {
+  margin: 14px 0 0;
+  padding: 8px 10px;
+  font-size: 0.85rem;
+  border-radius: 3px;
+  background: #fdecea;
+  color: #b3261e;
+  border: 1px solid #f5c6c2;
+}
+.login-message--info {
+  background: #eaf3fb;
+  color: #1b5a8f;
+  border-color: #bcdcf5;
+}
+
+/* ---------- Botão Entrar ---------- */
+.btn-signin {
+  align-self: center;
+  margin: 22px auto 4px;
+  min-width: 96px;
+  padding: 9px 22px;
+  font-size: 0.95rem;
+  font-family: inherit;
+  color: #1e1e1e;
+  background: linear-gradient(#fbfbfb, #e6eaee);
+  border: 1px solid #adb6bd;
+  border-radius: 4px;
+  cursor: pointer;
+  box-shadow: inset 0 1px 0 #fff;
+  transition: background 0.12s, box-shadow 0.12s;
+}
+.btn-signin:hover { background: linear-gradient(#ffffff, #e0f0fb); border-color: #7fb6e6; }
+.btn-signin:active { background: linear-gradient(#dfe8ef, #eef2f5); box-shadow: inset 0 1px 3px rgba(0,0,0,0.2); }
+.btn-signin:disabled { opacity: 0.6; cursor: default; }
+
+.signup-line {
+  margin: 16px 0 0;
+  font-size: 0.85rem;
+  color: #666;
+}
+
+/* ---------- Rodapé ---------- */
+.login-footer {
+  flex: 0 0 auto;
+  padding: 12px 16px calc(12px + env(safe-area-inset-bottom));
+  text-align: center;
+  font-size: 0.78rem;
+  border-top: 1px solid #eef1f4;
+  background: #fafcfe;
+}
+.login-footer .inline-link { margin: 0 4px; }
+.footer-sep { color: #c3ccd3; }
+
+/* ============================================================
+   TELA DE CONEXÃO (bonequinhos girando)
+   ============================================================ */
+.connecting-body { justify-content: flex-start; }
+.connecting-body .welcome { margin-bottom: 40px; }
+
+/* Órbita: os dois bonequinhos giram um em volta do outro */
+.buddies-orbit {
+  width: 70px;
+  height: 70px;
+  margin: 6px auto 34px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+.buddies-orbit__spin {
+  position: relative;
+  width: 44px;
+  height: 44px;
+  animation: orbit-spin 1.4s linear infinite;
+}
+.msn-buddy {
+  position: absolute;
+  top: 50%;
+  width: 26px;
+  height: 30px;
+  margin-top: -15px;
+  filter: drop-shadow(0 1px 1px rgba(0, 0, 0, 0.25));
+  /* Cada boneco gira ao contrário do conjunto, em torno do seu
+     próprio centro, para permanecer "em pé" durante a órbita. */
+  animation: orbit-counter 1.4s linear infinite;
+  transform-origin: center center;
+}
+.msn-buddy--green { left: 0; }
+.msn-buddy--blue  { right: 0; }
+.msn-buddy svg { display: block; }
+
+/* ============================================================
+   ANIMAÇÕES
+   ============================================================ */
+@keyframes fade-in {
+  from { opacity: 0; transform: translateY(-4px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+@keyframes pulse {
+  0%, 100% { transform: scale(1); }
+  50%      { transform: scale(1.06); }
+}
+/* Conjunto dos dois bonecos girando um em volta do outro */
+@keyframes orbit-spin {
+  from { transform: rotate(0deg); }
+  to   { transform: rotate(360deg); }
+}
+/* Contra-rotação para manter cada boneco "em pé" */
+@keyframes orbit-counter {
+  from { transform: rotate(0deg); }
+  to   { transform: rotate(-360deg); }
+}
+/* Tremida de tela (Nudge) — usada nas conversas */
+@keyframes shake {
+  0%, 100% { transform: translate(0, 0); }
+  10% { transform: translate(-6px, -4px); }
+  20% { transform: translate(6px, 4px); }
+  30% { transform: translate(-5px, 3px); }
+  40% { transform: translate(5px, -3px); }
+  50% { transform: translate(-4px, 4px); }
+  60% { transform: translate(4px, -4px); }
+  70% { transform: translate(-3px, 2px); }
+  80% { transform: translate(3px, -2px); }
+  90% { transform: translate(-2px, 1px); }
+}
+.nudge-shake { animation: shake 0.6s ease-in-out; }
+
+@media (prefers-reduced-motion: reduce) {
+  .buddies-orbit__spin, .msn-buddy { animation-duration: 3s; }
+}

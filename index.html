@@ -1,0 +1,218 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover" />
+  <meta name="theme-color" content="#1c3b1a" />
+  <meta name="apple-mobile-web-app-capable" content="yes" />
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+  <meta name="apple-mobile-web-app-title" content="MSN" />
+  <title>Windows Live Messenger</title>
+  <link rel="icon" type="image/png" href="assets/icons/favicon.png" />
+  <link rel="apple-touch-icon" href="assets/icons/icon-192.png" />
+  <link rel="manifest" href="manifest.json" />
+  <link rel="stylesheet" href="css/style.css" />
+</head>
+<body>
+  <!-- ==================== TELA DE LOGIN ==================== -->
+  <section id="screen-login" class="screen screen--active">
+    <!-- Barra de título estilo Windows -->
+    <header class="titlebar">
+      <span class="titlebar__app">
+        <img class="titlebar__icon" src="assets/icons/favicon.png" alt="" />
+        Windows Live Messenger
+      </span>
+      <span class="titlebar__buttons" aria-hidden="true">
+        <i class="tb-btn tb-btn--min"></i>
+        <i class="tb-btn tb-btn--max"></i>
+        <i class="tb-btn tb-btn--close"></i>
+      </span>
+    </header>
+
+    <!-- Banner aurora verde -->
+    <div class="login-banner">
+      <div class="login-banner__aurora"></div>
+      <div class="dp-frame">
+        <div class="dp-frame__inner">
+          <img id="dp-image" src="assets/icons/icon-192.png" alt="Foto de exibição" />
+        </div>
+      </div>
+    </div>
+
+    <!-- Corpo do login -->
+    <main class="login-body">
+      <h1 class="welcome">Bem-vindo novamente!</h1>
+
+      <form id="login-form" class="login-form" autocomplete="on" novalidate>
+        <!-- Combobox de e-mail -->
+        <div class="field field--combo">
+          <input
+            id="login-email"
+            name="email"
+            type="email"
+            inputmode="email"
+            placeholder="Endereço de e-mail"
+            autocomplete="username"
+            required
+          />
+          <button type="button" class="combo-arrow" aria-label="Escolher conta" tabindex="-1"></button>
+        </div>
+
+        <!-- Senha -->
+        <div class="field">
+          <input
+            id="login-password"
+            name="password"
+            type="password"
+            placeholder="Senha"
+            autocomplete="current-password"
+            required
+          />
+        </div>
+
+        <!-- Entrar como (status) -->
+        <div class="signin-as">
+          <span class="signin-as__label">Entrar como:</span>
+          <button type="button" id="status-toggle" class="status-select" aria-haspopup="listbox" aria-expanded="false">
+            <span class="status-dot status-dot--online" id="status-dot"></span>
+            <span id="status-label">Disponível</span>
+            <span class="caret-down"></span>
+          </button>
+
+          <button type="button" id="options-toggle" class="options-chevron" aria-label="Mais opções" aria-expanded="false">
+            <span class="chevron"></span>
+          </button>
+
+          <!-- Menu de status -->
+          <ul id="status-menu" class="status-menu" role="listbox" hidden>
+            <li role="option" data-status="online"    data-label="Disponível"><span class="status-dot status-dot--online"></span>Disponível</li>
+            <li role="option" data-status="busy"       data-label="Ocupado"><span class="status-dot status-dot--busy"></span>Ocupado</li>
+            <li role="option" data-status="away"       data-label="Ausente"><span class="status-dot status-dot--away"></span>Ausente</li>
+            <li role="option" data-status="invisible"  data-label="Invisível"><span class="status-dot status-dot--invisible"></span>Invisível</li>
+          </ul>
+        </div>
+
+        <!-- Opções expansíveis -->
+        <div id="login-options" class="login-options" hidden>
+          <label class="checkbox">
+            <input type="checkbox" id="opt-remember-me" checked />
+            <span class="checkbox__box"></span>
+            <span class="checkbox__text">Lembrar-me</span>
+            <a href="#" class="inline-link" id="link-forget-me">(Esquecer-me)</a>
+          </label>
+
+          <label class="checkbox">
+            <input type="checkbox" id="opt-remember-pass" checked />
+            <span class="checkbox__box"></span>
+            <span class="checkbox__text">Lembrar minha senha</span>
+          </label>
+
+          <label class="checkbox">
+            <input type="checkbox" id="opt-auto-signin" />
+            <span class="checkbox__box"></span>
+            <span class="checkbox__text">Entrar automaticamente</span>
+          </label>
+
+          <a href="#" class="inline-link inline-link--block" id="link-forgot-pass">Esqueceu sua senha?</a>
+        </div>
+
+        <!-- Mensagem de erro/status -->
+        <p id="login-message" class="login-message" role="alert" hidden></p>
+
+        <!-- Botão Entrar -->
+        <button type="submit" id="btn-signin" class="btn-signin">Entrar</button>
+
+        <!-- Link para cadastro -->
+        <p class="signup-line">
+          Não tem uma conta?
+          <a href="#" class="inline-link" id="link-signup">Cadastre-se</a>
+        </p>
+      </form>
+    </main>
+
+    <!-- Rodapé -->
+    <footer class="login-footer">
+      <a href="#" class="inline-link">Declaração de Privacidade</a>
+      <span class="footer-sep">|</span>
+      <a href="#" class="inline-link">Status do servidor</a>
+    </footer>
+  </section>
+
+  <!-- ==================== TELA DE CONEXÃO (bonequinhos girando) ==================== -->
+  <section id="screen-connecting" class="screen">
+    <!-- Barra de título -->
+    <header class="titlebar">
+      <span class="titlebar__app">
+        <img class="titlebar__icon" src="assets/icons/favicon.png" alt="" />
+        Windows Live Messenger
+      </span>
+      <span class="titlebar__buttons" aria-hidden="true">
+        <i class="tb-btn tb-btn--min"></i>
+        <i class="tb-btn tb-btn--max"></i>
+        <i class="tb-btn tb-btn--close"></i>
+      </span>
+    </header>
+
+    <!-- Banner aurora + foto -->
+    <div class="login-banner">
+      <div class="login-banner__aurora"></div>
+      <div class="dp-frame">
+        <div class="dp-frame__inner">
+          <img src="assets/icons/icon-192.png" alt="Foto de exibição" />
+        </div>
+      </div>
+    </div>
+
+    <!-- Corpo -->
+    <main class="login-body connecting-body">
+      <h1 class="welcome" id="connecting-text">Entrando...</h1>
+
+      <!-- Dois bonequinhos girando um em volta do outro -->
+      <div class="buddies-orbit" aria-hidden="true">
+        <div class="buddies-orbit__spin">
+          <span class="msn-buddy msn-buddy--green">
+            <svg viewBox="0 0 40 46" width="26" height="30">
+              <ellipse cx="20" cy="12" rx="10" ry="10" fill="url(#gGreen)"/>
+              <path d="M6 46c0-11 6-18 14-18s14 7 14 18z" fill="url(#gGreen)"/>
+              <defs>
+                <radialGradient id="gGreen" cx="38%" cy="30%" r="80%">
+                  <stop offset="0%" stop-color="#b6f57c"/>
+                  <stop offset="100%" stop-color="#3aa11a"/>
+                </radialGradient>
+              </defs>
+            </svg>
+          </span>
+          <span class="msn-buddy msn-buddy--blue">
+            <svg viewBox="0 0 40 46" width="26" height="30">
+              <ellipse cx="20" cy="12" rx="10" ry="10" fill="url(#gBlue)"/>
+              <path d="M6 46c0-11 6-18 14-18s14 7 14 18z" fill="url(#gBlue)"/>
+              <defs>
+                <radialGradient id="gBlue" cx="38%" cy="30%" r="80%">
+                  <stop offset="0%" stop-color="#9fd0f7"/>
+                  <stop offset="100%" stop-color="#2b7fd0"/>
+                </radialGradient>
+              </defs>
+            </svg>
+          </span>
+        </div>
+      </div>
+
+      <button type="button" id="btn-cancel" class="btn-signin">Cancelar</button>
+    </main>
+
+    <!-- Rodapé -->
+    <footer class="login-footer">
+      <a href="#" class="inline-link">Declaração de Privacidade</a>
+      <span class="footer-sep">|</span>
+      <a href="#" class="inline-link">Status do servidor</a>
+    </footer>
+  </section>
+
+  <!-- Scripts -->
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script src="js/supabase-client.js"></script>
+  <script src="js/sound-manager.js"></script>
+  <script src="js/ui-manager.js"></script>
+  <script src="js/app.js"></script>
+</body>
+</html>
