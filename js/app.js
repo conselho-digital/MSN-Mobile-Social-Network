@@ -157,10 +157,28 @@
     });
   }
 
-  // "_" → funciona como o botão Início do celular (envia o app ao segundo plano).
-  // No app empacotado (Android/TWA) o próprio sistema trata; na web fazemos o
-  // melhor esforço: sair da tela cheia e tirar o foco da janela.
+  // "_" → funciona como o botão Início do celular (envia o app ao segundo
+  // plano, sem fechar). Isso NÃO é possível na web pura (nenhuma API deixa
+  // uma página ir para a home). Só funciona de verdade no app empacotado,
+  // via uma ponte nativa:
+  //   • Capacitor: App.minimizeApp()  → chama moveTaskToBack() no Android
+  //   • TWA/WebView: uma ponte @JavascriptInterface expondo minimizeApp()
+  // Se nenhuma ponte existir (navegador), fazemos o melhor esforço.
   function goHome() {
+    // 1) Capacitor (plugin @capacitor/app)
+    try {
+      const cap = window.Capacitor;
+      if (cap && cap.Plugins && cap.Plugins.App && cap.Plugins.App.minimizeApp) {
+        cap.Plugins.App.minimizeApp();
+        return;
+      }
+    } catch (_) {}
+    // 2) Ponte nativa customizada (Android WebView/TWA)
+    try {
+      if (window.MSNBridge && window.MSNBridge.minimizeApp) { window.MSNBridge.minimizeApp(); return; }
+      if (window.AndroidBridge && window.AndroidBridge.minimizeApp) { window.AndroidBridge.minimizeApp(); return; }
+    } catch (_) {}
+    // 3) Navegador (sem ponte): melhor esforço
     exitFullscreen();
     try { window.blur(); } catch (_) {}
   }
