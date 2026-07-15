@@ -176,6 +176,28 @@ const Dashboard = (() => {
     }
   }
 
+  /* ---------- Modo de exibição (tamanho das figuras na lista) ----------
+     Preferência local (não é salva no perfil/Supabase), lembrada por
+     dispositivo via localStorage. "md" é o padrão (mesmo visual de
+     sempre — não precisa de classe extra). */
+  const VIEW_MODES = ["lg", "md", "sm", "list"];
+  function setViewMode(mode) {
+    if (VIEW_MODES.indexOf(mode) === -1) mode = "md";
+    const list = document.getElementById("contacts-container");
+    if (list) {
+      VIEW_MODES.forEach((m) => list.classList.remove("contacts--" + m));
+      if (mode !== "md") list.classList.add("contacts--" + mode);
+    }
+    try { localStorage.setItem("msn:viewMode", mode); } catch (_) {}
+  }
+  function loadViewMode() {
+    let mode = "md";
+    try { mode = localStorage.getItem("msn:viewMode") || "md"; } catch (_) {}
+    setViewMode(mode);
+    const radio = document.querySelector('input[name="view-mode"][value="' + mode + '"]');
+    if (radio) radio.checked = true;
+  }
+
   /* ---------- Lista de contatos ---------- */
   function renderContacts(filter = "") {
     const q = filter.trim().toLowerCase();
@@ -657,9 +679,31 @@ const Dashboard = (() => {
     const mailBtn = document.getElementById("btn-mail");
     if (mailBtn) mailBtn.addEventListener("click", () =>
       infoModal("Novidades", "A caixa de novidades e mensagens será ativada em breve."));
+
+    // Modo de exibição (dropdown: tamanho das figuras na lista)
     const viewBtn = document.getElementById("btn-view-mode");
-    if (viewBtn) viewBtn.addEventListener("click", () =>
-      infoModal("Modo de exibição", "A troca de modos de exibição da lista será adicionada em breve."));
+    const viewMenu = document.getElementById("view-mode-menu");
+    if (viewBtn && viewMenu) {
+      const closeViewMenu = () => {
+        viewMenu.hidden = true;
+        viewBtn.setAttribute("aria-expanded", "false");
+      };
+      viewBtn.addEventListener("click", (e) => {
+        e.stopPropagation();
+        const open = viewMenu.hidden;
+        viewMenu.hidden = !open;
+        viewBtn.setAttribute("aria-expanded", String(open));
+      });
+      viewMenu.addEventListener("click", (e) => e.stopPropagation());
+      document.addEventListener("click", closeViewMenu);
+      viewMenu.querySelectorAll('input[name="view-mode"]').forEach((radio) => {
+        radio.addEventListener("change", () => {
+          setViewMode(radio.value);
+          closeViewMenu();
+        });
+      });
+      loadViewMode();
+    }
 
     // Convidar amigos (compartilha o link do site)
     const promoBtn = document.getElementById("dash-promo");

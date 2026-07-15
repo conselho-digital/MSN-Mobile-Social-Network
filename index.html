@@ -505,9 +505,38 @@
           <button type="button" class="add-contact-menu__item" data-action="create-group">Criar um grupo...</button>
         </div>
       </div>
-      <button type="button" id="btn-view-mode" class="dash-tool-btn" title="Modo de exibição" aria-label="Modo de exibição">
-        <svg viewBox="0 0 24 24" width="18" height="18" aria-hidden="true"><rect x="3" y="4" width="4" height="4" fill="#5a7285"/><rect x="9" y="4.5" width="11" height="3" fill="#8a97a1"/><rect x="3" y="10" width="4" height="4" fill="#5a7285"/><rect x="9" y="10.5" width="11" height="3" fill="#8a97a1"/><rect x="3" y="16" width="4" height="4" fill="#5a7285"/><rect x="9" y="16.5" width="11" height="3" fill="#8a97a1"/></svg>
-      </button>
+      <div class="dash-tool-wrap">
+        <button type="button" id="btn-view-mode" class="dash-tool-btn dash-tool-btn--split" title="Modo de exibição" aria-label="Modo de exibição" aria-haspopup="true" aria-expanded="false">
+          <img src="assets/icons/lista.webp" alt="" class="dash-tool-btn__icon" />
+          <span class="caret-down" aria-hidden="true"></span>
+        </button>
+        <div class="view-mode-menu" id="view-mode-menu" hidden>
+          <div class="view-mode-options" role="radiogroup" aria-label="Modo de exibição dos contatos">
+            <label class="view-mode-option">
+              <input type="radio" name="view-mode" value="lg" />
+              <span class="view-mode-option__box view-mode-option__box--lg">
+                <svg viewBox="0 0 100 100" aria-hidden="true"><rect width="100" height="100" fill="#e9eff4"/><circle cx="50" cy="38" r="19" fill="#a7b3bd"/><path d="M16 96c0-20 15-31 34-31s34 11 34 31z" fill="#a7b3bd"/></svg>
+              </span>
+            </label>
+            <label class="view-mode-option">
+              <input type="radio" name="view-mode" value="md" checked />
+              <span class="view-mode-option__box view-mode-option__box--md">
+                <svg viewBox="0 0 100 100" aria-hidden="true"><rect width="100" height="100" fill="#e9eff4"/><circle cx="50" cy="38" r="19" fill="#a7b3bd"/><path d="M16 96c0-20 15-31 34-31s34 11 34 31z" fill="#a7b3bd"/></svg>
+              </span>
+            </label>
+            <label class="view-mode-option">
+              <input type="radio" name="view-mode" value="sm" />
+              <span class="view-mode-option__box view-mode-option__box--sm">
+                <svg viewBox="0 0 100 100" aria-hidden="true"><rect width="100" height="100" fill="#e9eff4"/><circle cx="50" cy="38" r="19" fill="#a7b3bd"/><path d="M16 96c0-20 15-31 34-31s34 11 34 31z" fill="#a7b3bd"/></svg>
+              </span>
+            </label>
+            <label class="view-mode-option">
+              <input type="radio" name="view-mode" value="list" />
+              <span class="view-mode-option__box view-mode-option__box--list"></span>
+            </label>
+          </div>
+        </div>
+      </div>
     </div>
 
     <!-- Lista de contatos -->
