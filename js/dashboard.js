@@ -142,14 +142,11 @@ const Dashboard = (() => {
     document.getElementById("my-name-text").textContent = profile.display_name || "Sem nome";
     document.getElementById("my-status-label").textContent = STATUS_LABEL[status] || "Disponível";
 
-    const dot = document.getElementById("my-status-dot");
-    dot.className = "my-avatar__status status-dot status-dot--" + status;
-
     const avatar = document.querySelector(".my-avatar");
     if (avatar) {
       const tint = document.getElementById("my-avatar-frame-tint");
       if (tint) tint.style.backgroundColor = AVATAR_FRAME_COLOR[status] || AVATAR_FRAME_COLOR.online;
-      // Atualiza a imagem (foto enviada ou avatar genérico), mantendo a bolinha de status.
+      // Atualiza a imagem (foto enviada ou avatar genérico), mantendo a moldura.
       const photoWrap = avatar.querySelector(".my-avatar__photo");
       const old = photoWrap.querySelector(".avatar-generic, .avatar-img");
       if (old) old.remove();

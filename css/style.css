@@ -815,11 +815,10 @@ body {
 }
 .my-avatar__photo {
   position: absolute;
-  inset: 11%;
-  border-radius: 3px;
+  inset: 8%;
+  border-radius: 4px;
   overflow: hidden;
   display: block;
-  box-shadow: 0 1px 4px rgba(0,0,0,0.4);
 }
 .my-avatar__photo .avatar-generic,
 .my-avatar__photo .avatar-img {
@@ -864,12 +863,6 @@ body {
   -webkit-mask-repeat: no-repeat;
   mask-repeat: no-repeat;
   transition: background-color 0.35s ease;
-}
-.my-avatar__status {
-  position: absolute;
-  right: -3px; bottom: -3px;
-  width: 14px; height: 14px;
-  border: 2px solid #12240d;
 }
 .my-avatar:hover .my-avatar__photo .avatar-generic,
 .my-avatar:hover .my-avatar__photo .avatar-img { filter: brightness(0.9); }
@@ -1351,60 +1344,6 @@ body {
   display: inline-flex;
   pointer-events: none;
 }
-
-/* ---------- Novidades ---------- */
-.dash-news {
-  flex: 0 0 auto;
-  padding: 8px 12px;
-  /* Tingido com a cor de tema pareada ao cenário selecionado */
-  background: linear-gradient(180deg, var(--tint-light, #f4f7fa), var(--tint-mid, #eef2f5));
-  border-top: 1px solid #dde3e8;
-}
-.dash-news__head {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  margin-bottom: 4px;
-}
-.dash-news__title { font-size: 0.85rem; font-weight: 600; color: #3f5a70; }
-.dash-news__nav { display: inline-flex; gap: 2px; }
-.news-nav-btn {
-  width: 22px; height: 20px;
-  padding: 0;
-  border: 1px solid #cfd8df;
-  background: linear-gradient(#ffffff, #eef2f5);
-  border-radius: 3px;
-  color: #5a7285;
-  font-size: 0.85rem;
-  line-height: 1;
-  cursor: pointer;
-}
-.news-nav-btn:hover { background: linear-gradient(#ffffff, #e0f0fb); }
-.dash-news__item { margin: 0; font-size: 0.82rem; color: #4a5b68; line-height: 1.5; }
-
-/* ---------- Atalhos ---------- */
-.dash-shortcuts {
-  flex: 0 0 auto;
-  display: flex;
-  align-items: center;
-  gap: 6px;
-  padding: 8px 12px;
-  /* Tingido com a cor de tema pareada ao cenário selecionado */
-  background: linear-gradient(180deg, var(--tint-mid, #eef2f5), var(--tint-strong, #e2e7ec));
-  border-top: 1px solid #dde3e8;
-}
-.shortcut {
-  width: 34px; height: 34px;
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  font-size: 1.1rem;
-  border: 1px solid #d3dae0;
-  border-radius: 7px;
-  background: linear-gradient(#ffffff, #eef2f5);
-  cursor: pointer;
-}
-.shortcut:active { background: linear-gradient(#e6eef4, #f5f8fa); }
 
 /* ---------- Banner promocional ---------- */
 .dash-promo {
