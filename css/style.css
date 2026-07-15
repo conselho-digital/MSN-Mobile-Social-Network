@@ -1098,12 +1098,16 @@ body {
   font-size: 1.1rem;
   line-height: 1;
   color: #2f6b1f;
-  background: linear-gradient(#ffffff, #eef2f5);
-  border: 1px solid #cfd8df;
+  /* Transparente, segue a cor de tema pareada ao cenário selecionado
+     (mesmas variáveis usadas na barra de busca/Novidades) em vez de
+     um fundo branco/cinza fixo. */
+  background: transparent;
+  border: 1px solid var(--tint-strong, #cfd8df);
   border-radius: 5px;
   cursor: pointer;
 }
-.dash-tool-btn:active { background: linear-gradient(#e6eef4, #f5f8fa); }
+.dash-tool-btn:hover { background: var(--tint-mid, rgba(0, 0, 0, 0.05)); }
+.dash-tool-btn:active { background: var(--tint-strong, rgba(0, 0, 0, 0.08)); }
 
 /* Botão "Adicionar", com dropdown (contato / grupo) */
 .dash-tool-wrap { position: relative; flex: 0 0 auto; }
