@@ -23,7 +23,7 @@ const Dashboard = (() => {
   // Cenários (fundo do topo) e cores de tema: catálogo compartilhado
   // em js/scenes.js (usado também pela tela de login).
   const SCENES = MSNScenes.list;
-  const sceneCss = MSNScenes.css;
+  const sceneBg = MSNScenes.bg;
   const sceneTheme = MSNScenes.theme;
   const pastel = MSNScenes.pastel;
 
@@ -96,9 +96,10 @@ const Dashboard = (() => {
       avatar.insertAdjacentHTML("afterbegin", avatarMarkup(profile.avatar_url));
     }
 
-    // Cenário (fundo do topo) + cor de tema pareada (Novidades/atalhos abaixo)
+    // Cenário (fundo do topo, com imagem se enviada) + cor de tema
+    // pareada (Novidades/atalhos abaixo da busca — sem mudanças aqui)
     const header = document.querySelector(".dash-header");
-    if (header) header.style.setProperty("--scene", sceneCss(profile.scene));
+    if (header) header.style.setProperty("--scene", sceneBg(profile.scene));
 
     const screen = document.getElementById("screen-dashboard");
     if (screen) {
@@ -216,29 +217,53 @@ const Dashboard = (() => {
     }
   }
 
-  /* ---------- Alterar cenário (fundo do topo) ---------- */
+  /* ---------- Alterar cenário (fundo do topo, até a barra de busca) ----------
+     Clicar numa miniatura só faz uma prévia (o cabeçalho muda na hora,
+     mas nada é salvo ainda). "Aplicar" salva sem fechar; "OK" salva e
+     fecha; "Fechar"/X descarta a prévia e volta ao cenário salvo. */
+  let stagedScene = null;
+
   function openScenePicker() {
     const overlay = document.getElementById("scene-picker");
     const grid = document.getElementById("scene-grid");
-    const current = (profile && profile.scene) || "green";
+    stagedScene = (profile && profile.scene) || "green";
 
     grid.innerHTML = SCENES.map((s) =>
-      '<button type="button" class="scene-swatch' + (s.id === current ? " is-selected" : "") +
-      '" data-scene="' + s.id + '" style="background:' + s.css + '">' +
+      '<button type="button" class="scene-swatch' + (s.id === stagedScene ? " is-selected" : "") +
+      '" data-scene="' + s.id + '" style="background:' + sceneBg(s.id) + '">' +
       '<span class="scene-swatch__name">' + esc(s.name) + "</span></button>"
     ).join("");
 
     grid.querySelectorAll(".scene-swatch").forEach((sw) => {
-      sw.addEventListener("click", async () => {
-        const id = sw.dataset.scene;
+      sw.addEventListener("click", () => {
+        stagedScene = sw.dataset.scene;
         grid.querySelectorAll(".scene-swatch").forEach((x) => x.classList.remove("is-selected"));
         sw.classList.add("is-selected");
-        if (profile) { profile.scene = id; renderProfile(); }
-        try { await MSNSupabase.updateMyProfile({ scene: id }); } catch (_) {}
+        previewScene(stagedScene);
       });
     });
 
     overlay.hidden = false;
+  }
+
+  // Aplica o cenário só visualmente no cabeçalho, sem salvar.
+  function previewScene(id) {
+    const header = document.querySelector(".dash-header");
+    if (header) header.style.setProperty("--scene", sceneBg(id));
+  }
+
+  // Salva de verdade o cenário escolhido (profile + Supabase).
+  async function commitScene() {
+    if (!profile || !stagedScene || stagedScene === profile.scene) return;
+    profile.scene = stagedScene;
+    renderProfile();
+    try { await MSNSupabase.updateMyProfile({ scene: stagedScene }); } catch (_) {}
+  }
+
+  // Fecha o diálogo; se a prévia não foi aplicada, volta ao cenário salvo.
+  function closeScenePicker() {
+    if (profile) previewScene(profile.scene);
+    document.getElementById("scene-picker").hidden = true;
   }
 
   function editName() {
@@ -372,11 +397,19 @@ const Dashboard = (() => {
     const avatarInput = document.getElementById("avatar-input");
     if (avatarInput) avatarInput.addEventListener("change", onAvatarSelected);
 
-    // Fechar seletor de cenário
-    const sceneClose = document.getElementById("scene-close");
-    if (sceneClose) sceneClose.addEventListener("click", () => {
+    // Seletor de cenário: OK (salva e fecha) / Aplicar (salva, mantém
+    // aberto) / Fechar e X (descartam a prévia e fecham)
+    const sceneOk = document.getElementById("scene-ok");
+    if (sceneOk) sceneOk.addEventListener("click", async () => {
+      await commitScene();
       document.getElementById("scene-picker").hidden = true;
     });
+    const sceneApply = document.getElementById("scene-apply");
+    if (sceneApply) sceneApply.addEventListener("click", commitScene);
+    const sceneClose = document.getElementById("scene-close");
+    if (sceneClose) sceneClose.addEventListener("click", closeScenePicker);
+    const sceneX = document.getElementById("scene-dialog-x");
+    if (sceneX) sceneX.addEventListener("click", closeScenePicker);
 
     // Ícones auxiliares (placeholders informativos)
     const mailBtn = document.getElementById("btn-mail");

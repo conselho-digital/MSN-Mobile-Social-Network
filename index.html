@@ -573,15 +573,30 @@
     </div>
   </div>
 
-  <!-- Seletor de cenário (fundo do topo) -->
-  <div id="scene-picker" class="modal-overlay" hidden>
-    <div class="modal" role="dialog" aria-modal="true">
-      <h2 class="modal__title">Alterar cenário</h2>
-      <p class="scene-hint">Escolha o fundo do topo do seu MSN:</p>
-      <div class="scene-grid" id="scene-grid"></div>
-      <div class="modal__actions">
-        <button type="button" id="scene-close" class="btn-signin btn-signin--sm">Fechar</button>
+  <!-- Seletor de cenário (fundo do topo, até a barra de busca) -->
+  <div id="scene-picker" class="modal-overlay scene-dialog-overlay" hidden>
+    <div class="scene-dialog" role="dialog" aria-modal="true" aria-label="Cenário">
+      <header class="scene-dialog__titlebar">
+        <span class="scene-dialog__titlebar-app">
+          <img src="assets/icons/favicon.png" alt="" />
+          Cenário
+        </span>
+        <button type="button" id="scene-dialog-x" class="scene-dialog__x" aria-label="Fechar">&times;</button>
+      </header>
+
+      <div class="scene-dialog__body">
+        <p class="scene-dialog__intro">
+          As pessoas com quem você conversar verão o cenário escolhido por você.
+        </p>
+        <h3 class="scene-dialog__section">Selecione um cenário</h3>
+        <div class="scene-grid" id="scene-grid"></div>
       </div>
+
+      <footer class="scene-dialog__footer">
+        <button type="button" id="scene-ok" class="btn-signin btn-signin--sm btn-signin--primary">OK</button>
+        <button type="button" id="scene-close" class="btn-signin btn-signin--sm">Fechar</button>
+        <button type="button" id="scene-apply" class="btn-signin btn-signin--sm">Aplicar</button>
+      </footer>
     </div>
   </div>
 
