@@ -29,8 +29,8 @@ const Dashboard = (() => {
   function frameGradient(status) {
     const pair = AVATAR_FRAME_GRADIENT[status] || AVATAR_FRAME_GRADIENT.online;
     return (
-      "linear-gradient(180deg, transparent 0%, transparent 20%, " +
-      pair[0] + " 45%, " + pair[1] + " 100%)"
+      "linear-gradient(180deg, transparent 0%, transparent 8%, " +
+      pair[0] + " 20%, " + pair[1] + " 60%)"
     );
   }
 
