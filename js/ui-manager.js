@@ -60,6 +60,17 @@ const UIManager = (() => {
       panel.hidden = !willOpen;
       btn.setAttribute("aria-expanded", String(willOpen));
     });
+
+    // Na primeiríssima visita (nunca abriu a página antes), o painel já
+    // começa expandido, para a pessoa notar as opções de "Lembrar-me".
+    // Nas visitas seguintes, volta ao padrão recolhido.
+    try {
+      if (!localStorage.getItem("msn:optionsIntroShown")) {
+        panel.hidden = false;
+        btn.setAttribute("aria-expanded", "true");
+        localStorage.setItem("msn:optionsIntroShown", "true");
+      }
+    } catch (_) {}
   }
 
   /* ---------- Mensagens ---------- */
