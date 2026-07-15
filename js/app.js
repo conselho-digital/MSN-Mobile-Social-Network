@@ -26,7 +26,6 @@
     bindExtraLinks();
     bindNavigation();
     bindPasswordToggles();
-    bindWindowControls();
     bindInstallApp();
     bindAutofillGuards();
     initSession();
@@ -200,97 +199,6 @@
       cancelBtn.hidden = false;
       okBtn.onclick = null;
     };
-  }
-
-  /* ---------- Botões da barra de título (início / girar / fechar) ---------- */
-  function bindWindowControls() {
-    document.querySelectorAll(".titlebar__buttons").forEach((bar) => bar.removeAttribute("aria-hidden"));
-    document.querySelectorAll(".tb-btn--min").forEach((b) => {
-      b.setAttribute("role", "button");
-      b.setAttribute("title", "Início");
-      b.setAttribute("aria-label", "Início");
-      b.addEventListener("click", goHome);
-    });
-    document.querySelectorAll(".tb-btn--max").forEach((b) => {
-      b.setAttribute("role", "button");
-      b.setAttribute("title", "Girar a tela");
-      b.setAttribute("aria-label", "Girar a tela");
-      b.addEventListener("click", toggleOrientation);
-    });
-    document.querySelectorAll(".tb-btn--close").forEach((b) => {
-      b.setAttribute("role", "button");
-      b.setAttribute("title", "Fechar");
-      b.setAttribute("aria-label", "Fechar");
-      b.addEventListener("click", closeApp);
-    });
-  }
-
-  // "_" → funciona como o botão Início do celular (envia o app ao segundo
-  // plano, sem fechar). Isso NÃO é possível na web pura (nenhuma API deixa
-  // uma página ir para a home). Só funciona de verdade no app empacotado,
-  // via uma ponte nativa:
-  //   • Capacitor: App.minimizeApp()  → chama moveTaskToBack() no Android
-  //   • TWA/WebView: uma ponte @JavascriptInterface expondo minimizeApp()
-  // Se nenhuma ponte existir (navegador), fazemos o melhor esforço.
-  function goHome() {
-    // 1) Capacitor (plugin @capacitor/app)
-    try {
-      const cap = window.Capacitor;
-      if (cap && cap.Plugins && cap.Plugins.App && cap.Plugins.App.minimizeApp) {
-        cap.Plugins.App.minimizeApp();
-        return;
-      }
-    } catch (_) {}
-    // 2) Ponte nativa customizada (Android WebView/TWA)
-    try {
-      if (window.MSNBridge && window.MSNBridge.minimizeApp) { window.MSNBridge.minimizeApp(); return; }
-      if (window.AndroidBridge && window.AndroidBridge.minimizeApp) { window.AndroidBridge.minimizeApp(); return; }
-    } catch (_) {}
-    // 3) Navegador (sem ponte): melhor esforço
-    exitFullscreen();
-    try { window.blur(); } catch (_) {}
-  }
-
-  // "□" → gira a tela para modo paisagem (e volta para retrato).
-  let isLandscape = false;
-  async function toggleOrientation() {
-    try {
-      if (!document.fullscreenElement && document.documentElement.requestFullscreen) {
-        await document.documentElement.requestFullscreen();
-      }
-    } catch (_) {}
-    try {
-      const orientation = screen.orientation;
-      if (orientation && orientation.lock) {
-        await orientation.lock(isLandscape ? "portrait" : "landscape");
-        isLandscape = !isLandscape;
-      }
-    } catch (_) {
-      // orientation.lock exige tela cheia e suporte do dispositivo (móvel)
-    }
-  }
-
-  // "X" → encerra o app (no TWA/Android fecha a atividade e sai dos recentes).
-  // Na web, tentamos fechar; se o navegador bloquear, mostramos a tela de "encerrado".
-  function closeApp() {
-    exitFullscreen();
-    try { window.close(); } catch (_) {}
-    setTimeout(() => {
-      if (!document.hidden) showClosedScreen();
-    }, 200);
-  }
-
-  function showClosedScreen() {
-    document.body.innerHTML =
-      '<div class="app-closed">' +
-      '<img src="assets/icons/icon-192.png" alt="MSN" width="72" height="72" />' +
-      "<p>Aplicativo encerrado.</p>" +
-      '<button type="button" onclick="location.reload()">Abrir novamente</button>' +
-      "</div>";
-  }
-
-  function exitFullscreen() {
-    try { if (document.exitFullscreen && document.fullscreenElement) document.exitFullscreen(); } catch (_) {}
   }
 
   /* ---------- Botões de mostrar/ocultar senha ---------- */
