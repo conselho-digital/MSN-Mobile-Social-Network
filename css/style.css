@@ -479,22 +479,11 @@ body {
   display: flex;
   align-items: center;
   gap: 8px;
-  padding: 7px 6px 7px 8px;
+  padding: 7px 10px;
   border-radius: 3px;
   cursor: pointer;
 }
 .account-item:hover { background: var(--msn-blue-light); }
-.account-item__avatar {
-  width: 26px; height: 26px;
-  flex: 0 0 auto;
-  border-radius: 3px;
-  background: #e9eff4;
-  border: 1px solid #cfd8df;
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-}
-.account-item__avatar svg { width: 20px; height: 20px; display: block; }
 .account-item__email {
   flex: 1 1 auto;
   min-width: 0;
@@ -504,6 +493,19 @@ body {
   overflow: hidden;
   text-overflow: ellipsis;
   text-align: left;
+}
+/* Destaca o e-mail que corresponde ao que está digitado no campo */
+.account-item--selected .account-item__email {
+  color: var(--link-blue);
+  font-weight: 600;
+}
+/* Última linha: ação para começar do zero com outro e-mail */
+.account-item--different {
+  margin-top: 3px;
+  padding-top: 9px;
+  border-top: 1px solid #eef1f4;
+  color: var(--link-blue);
+  font-size: 0.85rem;
 }
 .account-remove {
   flex: 0 0 auto;

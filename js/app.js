@@ -322,6 +322,15 @@
         return;
       }
 
+      // Se "Lembrar-me" não estiver marcado, a conta é esquecida assim que
+      // a pessoa TENTA entrar com ela — mesmo que o login falhe depois.
+      const meEl = document.getElementById("opt-remember-me");
+      if (!meEl || !meEl.checked) {
+        removeAccount(email);
+        renderAccountMenu();
+        updateWelcomeHeading();
+      }
+
       UIManager.clearMessage();
       await startConnecting(email, password);
     });
@@ -571,6 +580,22 @@
         if (!getAccounts().length) close();
         return;
       }
+      const different = e.target.closest('[data-action="different-account"]');
+      if (different) {
+        const emailEl = document.getElementById("login-email");
+        const passEl = document.getElementById("login-password");
+        const meEl = document.getElementById("opt-remember-me");
+        const passOptEl = document.getElementById("opt-remember-pass");
+        if (emailEl) { emailEl.value = ""; }
+        if (passEl) passEl.value = "";
+        if (meEl) meEl.checked = false;
+        if (passOptEl) passOptEl.checked = false;
+        updateWelcomeHeading();
+        close();
+        if (emailEl) emailEl.focus();
+        return;
+      }
+
       const item = e.target.closest(".account-item");
       if (item) {
         const acc = getAccounts().find((a) => a.email === item.dataset.email);
@@ -585,18 +610,28 @@
     if (!menu) return;
     const list = getAccounts();
     if (!list.length) { menu.innerHTML = ""; menu.hidden = true; return; }
-    const avatar =
-      '<span class="account-item__avatar"><svg viewBox="0 0 100 100" aria-hidden="true">' +
-      '<circle cx="50" cy="38" r="19" fill="#a7b3bd"/>' +
-      '<path d="M16 96c0-20 15-31 34-31s34 11 34 31z" fill="#a7b3bd"/></svg></span>';
-    menu.innerHTML = list.map((a) =>
-      '<li class="account-item" role="option" data-email="' + escAttr(a.email) + '">' +
-      avatar +
-      '<span class="account-item__email">' + escHtml(a.email) + "</span>" +
-      '<button type="button" class="account-remove" data-email="' + escAttr(a.email) +
-      '" aria-label="Remover conta" title="Remover">&times;</button>' +
-      "</li>"
-    ).join("");
+
+    const emailEl = document.getElementById("login-email");
+    const current = emailEl ? emailEl.value.trim().toLowerCase() : "";
+
+    const rows = list.map((a) => {
+      const selected = a.email.toLowerCase() === current;
+      return (
+        '<li class="account-item' + (selected ? " account-item--selected" : "") +
+        '" role="option" data-email="' + escAttr(a.email) + '">' +
+        '<span class="account-item__email">' + escHtml(a.email) + "</span>" +
+        '<button type="button" class="account-remove" data-email="' + escAttr(a.email) +
+        '" aria-label="Remover conta" title="Remover">&times;</button>' +
+        "</li>"
+      );
+    }).join("");
+
+    const differentRow =
+      '<li class="account-item account-item--different" role="option" data-action="different-account">' +
+      "Entrar com um e-mail diferente" +
+      "</li>";
+
+    menu.innerHTML = rows + differentRow;
   }
 
   function escHtml(s) {
