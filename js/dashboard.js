@@ -17,9 +17,10 @@ const Dashboard = (() => {
   // MSNScenes.updateStatusFrame).
   const frameGradient = MSNScenes.frameGradient;
 
-  // Foto de exibição padrão (bonequinho clássico) e galeria de exemplos
-  // prontos ("Selecione uma Imagem para Exibição", igual ao Messenger).
-  const DEFAULT_AVATAR = "assets/avatars/standard.webp";
+  // Foto de exibição padrão (bonequinho clássico, compartilhada com a
+  // tela de login em js/scenes.js) e galeria de exemplos prontos
+  // ("Selecione uma Imagem para Exibição", igual ao Messenger).
+  const DEFAULT_AVATAR = MSNScenes.defaultAvatar;
   const NO_AVATAR_TILE = "assets/avatars/semfoto.webp";
   const AVATAR_GALLERY = Array.from({ length: 30 }, (_, i) => "assets/avatars/profile" + (i + 1) + ".webp");
 
@@ -850,6 +851,13 @@ const Dashboard = (() => {
 
     const avatarBrowse = document.getElementById("avatar-browse");
     if (avatarBrowse && avatarInput) avatarBrowse.addEventListener("click", () => avatarInput.click());
+
+    // "Imagem da Webcam..." — mesmo fluxo de envio do "Procurar...",
+    // mas o input tem capture="user" para abrir a câmera direto.
+    const avatarWebcamInput = document.getElementById("avatar-webcam-input");
+    if (avatarWebcamInput) avatarWebcamInput.addEventListener("change", onAvatarSelected);
+    const avatarWebcam = document.getElementById("avatar-webcam");
+    if (avatarWebcam && avatarWebcamInput) avatarWebcam.addEventListener("click", () => avatarWebcamInput.click());
 
     const avatarOk = document.getElementById("avatar-ok");
     if (avatarOk) avatarOk.addEventListener("click", commitAvatarPicker);

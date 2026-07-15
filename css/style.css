@@ -1600,6 +1600,17 @@ body {
   justify-content: center;
   box-shadow: 0 1px 3px rgba(0, 0, 0, 0.4);
 }
+/* "Imagem da Webcam..." / "Procurar..." lado a lado */
+.avatar-picker__actions {
+  display: flex;
+  gap: 8px;
+  margin-bottom: 16px;
+}
+.avatar-picker__actions .scene-dialog__browse {
+  flex: 1 1 0;
+  margin: 0;
+  text-align: center;
+}
 
 /* ---------- Esquema de cores (independente do cenário) ---------- */
 .scene-dialog__section--colors { margin-top: 4px; }

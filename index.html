@@ -30,19 +30,7 @@
       <div class="signin-avatar">
         <span class="status-frame status-frame--login" id="login-avatar-frame">
           <span class="status-frame__photo">
-            <svg class="avatar-generic" viewBox="0 0 100 100" aria-label="Foto de exibição">
-              <defs>
-                <linearGradient id="avBg" x1="0" y1="0" x2="0" y2="1">
-                  <stop offset="0%" stop-color="#f4f8fb"/><stop offset="100%" stop-color="#d7e3ec"/>
-                </linearGradient>
-                <linearGradient id="avPerson" x1="0" y1="0" x2="0" y2="1">
-                  <stop offset="0%" stop-color="#b9c3cc"/><stop offset="100%" stop-color="#8f9ba6"/>
-                </linearGradient>
-              </defs>
-              <rect width="100" height="100" fill="url(#avBg)"/>
-              <circle cx="50" cy="38" r="19" fill="url(#avPerson)"/>
-              <path d="M16 96c0-20 15-31 34-31s34 11 34 31z" fill="url(#avPerson)"/>
-            </svg>
+            <img class="avatar-img" src="assets/avatars/standard.webp" alt="" />
           </span>
           <span class="status-frame__ring" aria-hidden="true">
             <span class="status-frame__tint" data-status="online" style="background:linear-gradient(180deg, transparent 0%, transparent 8%, #8ee68c 20%, #10eb09 60%)"></span>
@@ -181,19 +169,7 @@
       <div class="signin-avatar">
         <span class="status-frame status-frame--login">
           <span class="status-frame__photo">
-            <svg class="avatar-generic" viewBox="0 0 100 100" aria-label="Foto de exibição">
-              <defs>
-                <linearGradient id="avBg2" x1="0" y1="0" x2="0" y2="1">
-                  <stop offset="0%" stop-color="#f4f8fb"/><stop offset="100%" stop-color="#d7e3ec"/>
-                </linearGradient>
-                <linearGradient id="avPerson2" x1="0" y1="0" x2="0" y2="1">
-                  <stop offset="0%" stop-color="#b9c3cc"/><stop offset="100%" stop-color="#8f9ba6"/>
-                </linearGradient>
-              </defs>
-              <rect width="100" height="100" fill="url(#avBg2)"/>
-              <circle cx="50" cy="38" r="19" fill="url(#avPerson2)"/>
-              <path d="M16 96c0-20 15-31 34-31s34 11 34 31z" fill="url(#avPerson2)"/>
-            </svg>
+            <img class="avatar-img" src="assets/avatars/standard.webp" alt="" />
           </span>
           <span class="status-frame__ring" aria-hidden="true">
             <span class="status-frame__tint" data-status="online" style="background:linear-gradient(180deg, transparent 0%, transparent 8%, #8ee68c 20%, #10eb09 60%)"></span>
@@ -321,19 +297,7 @@
       <div class="signin-avatar">
         <span class="status-frame status-frame--login" id="connecting-avatar-frame">
           <span class="status-frame__photo">
-            <svg class="avatar-generic" viewBox="0 0 100 100" aria-label="Foto de exibição">
-              <defs>
-                <linearGradient id="avBgC" x1="0" y1="0" x2="0" y2="1">
-                  <stop offset="0%" stop-color="#f4f8fb"/><stop offset="100%" stop-color="#d7e3ec"/>
-                </linearGradient>
-                <linearGradient id="avPersonC" x1="0" y1="0" x2="0" y2="1">
-                  <stop offset="0%" stop-color="#b9c3cc"/><stop offset="100%" stop-color="#8f9ba6"/>
-                </linearGradient>
-              </defs>
-              <rect width="100" height="100" fill="url(#avBgC)"/>
-              <circle cx="50" cy="38" r="19" fill="url(#avPersonC)"/>
-              <path d="M16 96c0-20 15-31 34-31s34 11 34 31z" fill="url(#avPersonC)"/>
-            </svg>
+            <img class="avatar-img" src="assets/avatars/standard.webp" alt="" />
           </span>
           <span class="status-frame__ring" aria-hidden="true">
             <span class="status-frame__tint" data-status="online" style="background:linear-gradient(180deg, transparent 0%, transparent 8%, #8ee68c 20%, #10eb09 60%)"></span>
@@ -634,7 +598,10 @@
       <div class="scene-dialog__body">
         <p class="scene-dialog__intro">Escolha como você deseja aparecer no Messenger:</p>
         <div class="avatar-grid" id="avatar-grid"></div>
-        <button type="button" id="avatar-browse" class="scene-dialog__browse">Procurar...</button>
+        <div class="avatar-picker__actions">
+          <button type="button" id="avatar-webcam" class="scene-dialog__browse">Imagem da Webcam...</button>
+          <button type="button" id="avatar-browse" class="scene-dialog__browse">Procurar...</button>
+        </div>
       </div>
 
       <footer class="scene-dialog__footer">
@@ -646,6 +613,9 @@
 
   <!-- Input escondido para envio da foto de exibição -->
   <input type="file" id="avatar-input" accept="image/*" hidden />
+  <!-- capture="user" abre a câmera do dispositivo diretamente (em vez
+       da galeria) nos navegadores mobile que suportam o atributo. -->
+  <input type="file" id="avatar-webcam-input" accept="image/*" capture="user" hidden />
   <input type="file" id="scene-image-input" accept="image/*" hidden />
 
   <!-- Scripts -->

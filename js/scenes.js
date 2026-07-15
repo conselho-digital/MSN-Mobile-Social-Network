@@ -201,9 +201,17 @@ const MSNScenes = (() => {
     next.addEventListener("animationend", onDone);
   }
 
+  // Foto de exibição padrão (bonequinho clássico) — usada como fallback
+  // sempre que um perfil não tem avatar_url, tanto no Dashboard quanto
+  // na tela de login (foto lembrada da última conta usada).
+  const DEFAULT_AVATAR = "assets/avatars/standard.webp";
+  function avatarSrc(url) {
+    return url || DEFAULT_AVATAR;
+  }
+
   return {
     list: SCENES, find, css, bg, theme, image, example, pastel, shade,
     colorSchemes: COLOR_SCHEMES, colorSchemeHex, effectiveTheme,
-    frameGradient, updateStatusFrame,
+    frameGradient, updateStatusFrame, defaultAvatar: DEFAULT_AVATAR, avatarSrc,
   };
 })();

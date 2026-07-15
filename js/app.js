@@ -347,19 +347,22 @@
       const result = await MSNSupabase.signIn(email, password);
       if (cancelRequested) return;
 
-      // Busca o cenário e o esquema de cores salvos no perfil para
-      // lembrar o tema desta conta na tela de login (por conta,
-      // guardado no dispositivo).
+      // Busca o cenário, o esquema de cores e a foto de exibição salvos
+      // no perfil para lembrar o tema e a foto desta conta na tela de
+      // login (por conta, guardado no dispositivo).
       let scene = null;
       let colorScheme = null;
+      let avatarUrl = null;
       try {
         const profile = await MSNSupabase.getMyProfile();
         scene = (profile && profile.scene) || null;
         colorScheme = (profile && profile.color_scheme) || null;
+        avatarUrl = (profile && profile.avatar_url) || null;
       } catch (_) {}
+      applyLoginAvatar(avatarUrl);
 
       // Conectou com sucesso: agora sim salvamos as preferências.
-      savePreferences(email, password, scene, colorScheme);
+      savePreferences(email, password, scene, colorScheme, avatarUrl);
 
       // Guarda status escolhido para uso pós-login
       sessionStorage.setItem("msn:status", status.status);
@@ -404,9 +407,15 @@
   function setAccounts(list) {
     try { localStorage.setItem("msn:accounts", JSON.stringify(list)); } catch (_) {}
   }
-  function upsertAccount(email, passObf, scene, colorScheme) {
+  function upsertAccount(email, passObf, scene, colorScheme, avatarUrl) {
     const list = getAccounts().filter((a) => a.email !== email);
-    list.unshift({ email: email, pass: passObf || null, scene: scene || null, colorScheme: colorScheme || null });
+    list.unshift({
+      email: email,
+      pass: passObf || null,
+      scene: scene || null,
+      colorScheme: colorScheme || null,
+      avatarUrl: avatarUrl || null,
+    });
     setAccounts(list);
   }
   function removeAccount(email) {
@@ -423,13 +432,13 @@
        selecionada no dropdown.
      - "Lembrar-me" desligado: remove a conta da lista.
      - Salva também o estado de "Entrar automaticamente". */
-  function savePreferences(email, password, scene, colorScheme) {
+  function savePreferences(email, password, scene, colorScheme, avatarUrl) {
     const me = document.getElementById("opt-remember-me");
     const pass = document.getElementById("opt-remember-pass");
     const auto = document.getElementById("opt-auto-signin");
     try {
       if (me && me.checked) {
-        upsertAccount(email, pass && pass.checked ? obfuscate(password) : null, scene, colorScheme);
+        upsertAccount(email, pass && pass.checked ? obfuscate(password) : null, scene, colorScheme, avatarUrl);
         localStorage.setItem("msn:lastEmail", email);
       } else {
         removeAccount(email);
@@ -491,6 +500,26 @@
     const match = email ? getAccounts().find((a) => a.email.toLowerCase() === email) : null;
     heading.textContent = match ? "Bem-vindo novamente!" : "Entrar";
     applyLoginTheme(match ? match.scene : null, match ? match.colorScheme : null);
+    applyLoginAvatar(match ? match.avatarUrl : null);
+  }
+
+  /* ---------- Foto de exibição lembrada (por conta) ----------
+     Igual ao cenário/tema: quando uma conta reconhecida está
+     selecionada, mostra a última foto de exibição salva do perfil
+     dessa conta nas telas de login e "Entrando...". Sem conta
+     reconhecida (ou sem foto), volta ao bonequinho padrão. */
+  function applyLoginAvatar(url) {
+    const src = typeof MSNScenes !== "undefined" ? MSNScenes.avatarSrc(url) : url;
+    document
+      .querySelectorAll("#login-avatar-frame .status-frame__photo, #connecting-avatar-frame .status-frame__photo")
+      .forEach((el) => {
+        el.innerHTML = "";
+        const img = document.createElement("img");
+        img.className = "avatar-img";
+        img.alt = "";
+        img.src = src;
+        el.appendChild(img);
+      });
   }
 
   /* ---------- Tema da tela de login (por conta) ----------
