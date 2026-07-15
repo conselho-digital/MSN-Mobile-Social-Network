@@ -166,13 +166,9 @@ const Dashboard = (() => {
       screen.style.setProperty("--tint-strong", pastel(theme, 0.62));
     }
 
-    const subEl = document.getElementById("my-subnick-text");
-    if (profile.sub_nick) {
-      subEl.textContent = profile.sub_nick;
-      subEl.classList.remove("my-subnick__placeholder");
-    } else {
-      subEl.textContent = "<Digite uma mensagem pessoal>";
-      subEl.classList.add("my-subnick__placeholder");
+    const subInput = document.getElementById("my-subnick-input");
+    if (subInput && document.activeElement !== subInput) {
+      subInput.value = profile.sub_nick || "";
     }
   }
 
@@ -648,20 +644,25 @@ const Dashboard = (() => {
       });
     });
 
-    // Editar mensagem pessoal (subnick)
-    document.getElementById("my-subnick-btn").addEventListener("click", () => {
-      openModal({
-        title: "Mensagem pessoal",
-        value: profile ? profile.sub_nick : "",
-        placeholder: "Digite uma mensagem pessoal",
-        allowEmpty: true,
-        onOk: async (val) => {
-          profile.sub_nick = val.trim();
-          renderProfile();
-          try { await MSNSupabase.updateMyProfile({ sub_nick: val.trim() }); } catch (_) {}
-        },
+    // Editar mensagem pessoal (subnick) — direto no campo, sem overlay,
+    // igual à barra de busca: digita e salva ao sair do campo/Enter.
+    const subInput = document.getElementById("my-subnick-input");
+    if (subInput) {
+      const saveSubnick = async () => {
+        const val = subInput.value.trim();
+        if (!profile || val === (profile.sub_nick || "")) return;
+        profile.sub_nick = val;
+        try { await MSNSupabase.updateMyProfile({ sub_nick: val }); } catch (_) {}
+      };
+      subInput.addEventListener("blur", saveSubnick);
+      subInput.addEventListener("keydown", (e) => {
+        if (e.key === "Enter") subInput.blur();
+        else if (e.key === "Escape") {
+          subInput.value = profile ? profile.sub_nick || "" : "";
+          subInput.blur();
+        }
       });
-    });
+    }
 
     // Adicionar (dropdown: contato / grupo)
     const addBtn = document.getElementById("btn-add-contact");

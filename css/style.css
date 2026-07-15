@@ -954,31 +954,36 @@ body {
   display: block;
   margin: 3px -6px 0;
   padding: 1px 6px;
-  border: none;
   border-radius: 5px;
   background: transparent;
   color: #dfeff9;
   font-size: 0.82rem;
-  cursor: pointer;
   text-align: left;
   max-width: calc(100% + 12px);
   transition: background-color 0.1s ease, box-shadow 0.1s ease;
 }
 .my-subnick:hover,
-.my-subnick:focus-visible {
+.my-subnick:focus-within {
   background: rgba(255, 255, 255, 0.16);
   box-shadow: 0 0 0 1px rgba(255, 255, 255, 0.4);
 }
-.my-subnick:hover .my-subnick__text { text-decoration: underline; }
-.my-subnick__text {
+.my-subnick__input {
   display: block;
+  width: 100%;
   max-width: 100%;
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
+  border: none;
+  outline: none;
+  padding: 0;
+  background: transparent;
+  font: inherit;
+  color: inherit;
   text-shadow: 0 1px 2px rgba(0,0,0,0.5);
+  cursor: text;
 }
-.my-subnick__placeholder { color: #b9d3e6; font-style: italic; }
+.my-subnick__input::placeholder { color: #b9d3e6; font-style: italic; }
 
 /* Cenários claros (ex.: "Grafite Urbano", parede de concreto) deixam o
    texto branco ilegível — dashboard.js mede o brilho médio da imagem
@@ -997,12 +1002,12 @@ body {
   box-shadow: 0 0 0 1px rgba(0, 0, 0, 0.25);
 }
 .dash-header.is-light-scene .my-subnick { color: #34454f; }
-.dash-header.is-light-scene .my-subnick__text {
+.dash-header.is-light-scene .my-subnick__input {
   text-shadow: 0 1px 1px rgba(255, 255, 255, 0.75);
 }
-.dash-header.is-light-scene .my-subnick__placeholder { color: #5b6b74; }
+.dash-header.is-light-scene .my-subnick__input::placeholder { color: #5b6b74; }
 .dash-header.is-light-scene .my-subnick:hover,
-.dash-header.is-light-scene .my-subnick:focus-visible {
+.dash-header.is-light-scene .my-subnick:focus-within {
   background: rgba(0, 0, 0, 0.1);
   box-shadow: 0 0 0 1px rgba(0, 0, 0, 0.25);
 }
@@ -1033,7 +1038,7 @@ body {
   transition: opacity 0.12s ease;
 }
 .my-subnick:hover .my-subnick__tooltip,
-.my-subnick:focus-visible .my-subnick__tooltip {
+.my-subnick:focus-within .my-subnick__tooltip {
   opacity: 1;
   visibility: visible;
 }
