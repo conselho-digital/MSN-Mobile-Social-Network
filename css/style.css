@@ -588,6 +588,18 @@ body {
 .status-dot--away      { background: radial-gradient(circle at 35% 30%, #ffe08a, #e0a409); }
 .status-dot--invisible { background: radial-gradient(circle at 35% 30%, #e8edf1, #9aa7b1); }
 
+/* Tela de login: ícone de status quadrado com sombra (em vez de bolinha) */
+.signin-as .status-dot,
+.status-menu .status-dot {
+  width: 13px;
+  height: 13px;
+  border-radius: 3px;
+  box-shadow:
+    0 1px 3px rgba(0, 0, 0, 0.5),
+    inset 0 1px 1px rgba(255, 255, 255, 0.55),
+    inset 0 -1px 1px rgba(0, 0, 0, 0.25);
+}
+
 /* Menu de status */
 .status-menu {
   position: absolute;
