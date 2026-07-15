@@ -977,12 +977,20 @@ body {
   border: none;
   outline: none;
   padding: 0;
+  margin: 0;
   background: transparent;
+  background-color: transparent;
+  box-shadow: none;
+  border-radius: 0;
+  appearance: none;
+  -webkit-appearance: none;
+  -moz-appearance: none;
   font: inherit;
   color: inherit;
   text-shadow: 0 1px 2px rgba(0,0,0,0.5);
   cursor: text;
 }
+.my-subnick__input:focus { background: transparent; box-shadow: none; }
 .my-subnick__input::placeholder { color: #b9d3e6; font-style: italic; }
 
 /* Cenários claros (ex.: "Grafite Urbano", parede de concreto) deixam o
