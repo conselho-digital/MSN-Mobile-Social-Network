@@ -618,15 +618,15 @@ body {
 /* Tela de login: ícones de status (imagens) com sombra, em vez de bolinha */
 .signin-as .status-dot,
 .status-menu .status-dot {
-  width: 14px;
-  height: 14px;
+  width: 10px;
+  height: 10px;
   border-radius: 2px;
   background-color: transparent;
   background-size: contain;
   background-repeat: no-repeat;
   background-position: center;
   image-rendering: pixelated;
-  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.5);
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.5);
 }
 .signin-as .status-dot--online,
 .status-menu .status-dot--online { background-image: url("../assets/icons/available.webp"); }
