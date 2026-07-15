@@ -35,6 +35,53 @@ const Dashboard = (() => {
     return sceneBg(sceneId);
   }
 
+  // ---------- Contraste automático do texto do cabeçalho ----------
+  // O nome/status/mensagem pessoal ficam ilegíveis em cenários claros
+  // (ex.: "Grafite Urbano", parede de concreto). Em vez de fixar cor
+  // por cenário, mede o brilho médio da imagem (canvas) e alterna a
+  // classe "is-light-scene" no cabeçalho — funciona também para
+  // cenários customizados enviados pela pessoa.
+  let brightnessToken = 0;
+  function sampleBrightness(url, cb) {
+    const img = new Image();
+    img.crossOrigin = "anonymous";
+    img.onload = () => {
+      try {
+        const w = 16, h = 16;
+        const canvas = document.createElement("canvas");
+        canvas.width = w;
+        canvas.height = h;
+        const ctx = canvas.getContext("2d");
+        ctx.drawImage(img, 0, 0, w, h);
+        const data = ctx.getImageData(0, 0, w, h).data;
+        let sum = 0, count = 0;
+        for (let i = 0; i < data.length; i += 4) {
+          sum += 0.299 * data[i] + 0.587 * data[i + 1] + 0.114 * data[i + 2];
+          count++;
+        }
+        cb(sum / count);
+      } catch (_) {
+        cb(null); // canvas contaminado (sem CORS) — não dá pra medir
+      }
+    };
+    img.onerror = () => cb(null);
+    img.src = url;
+  }
+  function updateHeaderTextContrast(sceneId, customUrl) {
+    const header = document.querySelector(".dash-header");
+    if (!header) return;
+    const url = sceneId === "custom" && customUrl ? customUrl : MSNScenes.image(sceneId);
+    const token = ++brightnessToken;
+    if (!url) {
+      header.classList.remove("is-light-scene");
+      return;
+    }
+    sampleBrightness(url, (avg) => {
+      if (token !== brightnessToken || avg === null) return;
+      header.classList.toggle("is-light-scene", avg > 150);
+    });
+  }
+
   let profile = null;
   let contacts = [];
   let bound = false;
@@ -109,6 +156,7 @@ const Dashboard = (() => {
     // a cor pareada automaticamente ao cenário se nada foi escolhido.
     const header = document.querySelector(".dash-header");
     if (header) header.style.setProperty("--scene", resolveSceneBg(profile.scene, profile.scene_image_url));
+    updateHeaderTextContrast(profile.scene, profile.scene_image_url);
 
     const screen = document.getElementById("screen-dashboard");
     if (screen) {
@@ -362,6 +410,7 @@ const Dashboard = (() => {
   function previewScene(id) {
     const header = document.querySelector(".dash-header");
     if (header) header.style.setProperty("--scene", resolveSceneBg(id, stagedCustomImageUrl));
+    updateHeaderTextContrast(id, stagedCustomImageUrl);
   }
 
   // Aplica o esquema de cores só visualmente (Novidades/atalhos), sem salvar.

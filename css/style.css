@@ -980,6 +980,33 @@ body {
 }
 .my-subnick__placeholder { color: #b9d3e6; font-style: italic; }
 
+/* Cenários claros (ex.: "Grafite Urbano", parede de concreto) deixam o
+   texto branco ilegível — dashboard.js mede o brilho médio da imagem
+   do cenário (canvas) e alterna esta classe no cabeçalho conforme o
+   resultado, trocando o texto para escuro automaticamente. */
+.dash-header.is-light-scene { color: #23313b; }
+.dash-header.is-light-scene .my-name {
+  color: #23313b;
+  text-shadow: 0 1px 1px rgba(255, 255, 255, 0.75);
+}
+.dash-header.is-light-scene .status-select--sm { color: #3d4f5a; }
+.dash-header.is-light-scene .status-select--sm .caret-down { border-top-color: #3d4f5a; }
+.dash-header.is-light-scene .my-name-row:hover,
+.dash-header.is-light-scene .my-name-row.is-open {
+  background: rgba(0, 0, 0, 0.1);
+  box-shadow: 0 0 0 1px rgba(0, 0, 0, 0.25);
+}
+.dash-header.is-light-scene .my-subnick { color: #34454f; }
+.dash-header.is-light-scene .my-subnick__text {
+  text-shadow: 0 1px 1px rgba(255, 255, 255, 0.75);
+}
+.dash-header.is-light-scene .my-subnick__placeholder { color: #5b6b74; }
+.dash-header.is-light-scene .my-subnick:hover,
+.dash-header.is-light-scene .my-subnick:focus-visible {
+  background: rgba(0, 0, 0, 0.1);
+  box-shadow: 0 0 0 1px rgba(0, 0, 0, 0.25);
+}
+
 /* Balão de dica (aparece no hover/focus da mensagem pessoal) */
 .my-subnick__tooltip {
   position: absolute;
