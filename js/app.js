@@ -81,12 +81,26 @@
     }
   }
 
-  /* ---------- "Adicionar App" (instalar PWA) ---------- */
+  /* ---------- "Adicionar App" (instalar PWA) ----------
+     O botão aparece em todas as telas de entrada (login, cadastro,
+     entrando) sempre que o site está sendo aberto no navegador — mesmo
+     que o app já esteja instalado no aparelho, já que reabrir a URL
+     numa aba comum ainda é útil para quem quer instalar/reinstalar.
+     Ele só some quando o próprio app instalado está rodando (modo
+     standalone), pois aí instalar de novo não faz sentido. */
   let deferredInstallPrompt = null;
 
+  function installButtons() {
+    return Array.from(document.querySelectorAll("[data-install-app]"));
+  }
+
+  function setInstallButtonsHidden(hidden) {
+    installButtons().forEach((btn) => { btn.hidden = hidden; });
+  }
+
   function bindInstallApp() {
-    const btn = document.getElementById("btn-install-app");
-    if (!btn) return;
+    const btns = installButtons();
+    if (!btns.length) return;
 
     // Guarda o evento que o Chrome/Android dispara quando o PWA é instalável.
     window.addEventListener("beforeinstallprompt", (e) => {
@@ -94,24 +108,24 @@
       deferredInstallPrompt = e;
     });
 
-    // Se já estiver instalado (rodando standalone), esconde o botão.
-    if (isRunningStandalone()) btn.hidden = true;
+    // Só esconde quando rodando como o app instalado (standalone).
+    // No navegador comum, o botão permanece visível mesmo que o app
+    // já esteja instalado no aparelho.
+    setInstallButtonsHidden(isRunningStandalone());
     window.addEventListener("appinstalled", () => {
       deferredInstallPrompt = null;
-      btn.hidden = true;
     });
 
-    btn.addEventListener("click", async () => {
-      if (deferredInstallPrompt) {
-        deferredInstallPrompt.prompt();
-        try {
-          const { outcome } = await deferredInstallPrompt.userChoice;
-          if (outcome === "accepted") btn.hidden = true;
-        } catch (_) {}
-        deferredInstallPrompt = null;
-      } else {
-        showInstallInstructions();
-      }
+    btns.forEach((btn) => {
+      btn.addEventListener("click", async () => {
+        if (deferredInstallPrompt) {
+          deferredInstallPrompt.prompt();
+          try { await deferredInstallPrompt.userChoice; } catch (_) {}
+          deferredInstallPrompt = null;
+        } else {
+          showInstallInstructions();
+        }
+      });
     });
   }
 
@@ -123,6 +137,8 @@
   }
 
   // Fallback para navegadores sem beforeinstallprompt (ex.: iOS/Safari).
+  // Usa um modal global (funciona em qualquer tela: login, cadastro ou
+  // entrando), já que nem toda tela tem uma área de mensagem própria.
   function showInstallInstructions() {
     const ua = navigator.userAgent || "";
     let msg;
@@ -133,7 +149,35 @@
     } else {
       msg = "Para instalar: abra o menu do navegador (⋮) e escolha “Instalar app” ou “Adicionar à tela inicial”.";
     }
-    UIManager.showMessage(msg, "info");
+    showGlobalInfo("Adicionar App", msg);
+  }
+
+  // Modal informativo simples, reaproveitando o overlay global (fora das
+  // seções de tela), então funciona não importa qual tela está ativa.
+  function showGlobalInfo(title, text) {
+    const overlay = document.getElementById("modal-overlay");
+    if (!overlay) { UIManager.showMessage(text, "info"); return; }
+
+    const input = document.getElementById("modal-input");
+    const msg = document.getElementById("modal-message");
+    const okBtn = document.getElementById("modal-ok");
+    const cancelBtn = document.getElementById("modal-cancel");
+
+    document.getElementById("modal-title").textContent = title;
+    input.hidden = true;
+    cancelBtn.hidden = true;
+    msg.textContent = text;
+    msg.hidden = false;
+    msg.classList.add("modal__message--info");
+    overlay.hidden = false;
+
+    okBtn.onclick = () => {
+      overlay.hidden = true;
+      msg.classList.remove("modal__message--info");
+      input.hidden = false;
+      cancelBtn.hidden = false;
+      okBtn.onclick = null;
+    };
   }
 
   /* ---------- Botões da barra de título (início / girar / fechar) ---------- */
