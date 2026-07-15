@@ -256,6 +256,25 @@ body {
   margin: 0 auto;
 }
 
+/* Login/Entrando (únicas telas com cenário no topo): tira o avatar do
+   fluxo normal e ancora numa posição fixa em relação ao topo da tela —
+   assim ele fica sempre com metade sobre o banner do cenário (150px de
+   altura) e metade abaixo, dos dois lados. Como "top" de um elemento
+   absoluto conta a partir do topo de .signin-scroll (que começa
+   colado no topo da tela, antes do padding do "notch"), o resultado
+   não varia com a altura do botão "Adicionar App" nem com a área
+   segura do aparelho. O cadastro não tem cenário, então mantém o
+   avatar no fluxo normal (regra acima). */
+#screen-login .signin-avatar,
+#screen-connecting .signin-avatar {
+  position: absolute;
+  top: 98px; /* 150px (altura do cenário) − 52px (metade dos 104px do avatar) */
+  left: 50%;
+  transform: translateX(-50%);
+  margin: 0;
+  z-index: 1;
+}
+
 /* Cartão translúcido sobre o fundo azul */
 .signin-screen .login-card {
   background: rgba(255, 255, 255, 0.55);
@@ -289,7 +308,11 @@ body {
   font-size: 1.5rem;
   font-weight: 400;
   color: var(--login-accent-text, #3a4a55);
-  margin: 4px 0 26px;
+  /* 218px = 98px (topo do avatar) + 104px (altura do avatar) + ~16px de
+     respiro — o avatar virou position:absolute (ver .signin-avatar),
+     então esse espaço em cima é quem garante que o título não fique
+     escondido atrás dele. */
+  margin: 218px 0 26px;
   letter-spacing: 0.2px;
   text-shadow: 0 1px 2px rgba(255, 255, 255, 0.6);
 }
