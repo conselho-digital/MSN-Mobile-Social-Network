@@ -14,18 +14,24 @@ const Dashboard = (() => {
   };
   // Gradiente (claro → escuro) da moldura da foto por status — tinge a
   // moldura em cinza (assets/icons/avatar-frame.webp) via mask-image
-  // (ver CSS .status-frame__tint). Trocar de status dispara a "onda"
-  // diagonal (ver updateStatusFrame / .status-frame__tint--next).
+  // (ver CSS .status-frame__tint). Trocar de status dispara um fade-in
+  // (ver updateStatusFrame / .status-frame__tint--next).
   const AVATAR_FRAME_GRADIENT = {
-    online: ["#a6f06a", "#3aa11a"],
+    online: ["#8ee68c", "#43c93f"],
     busy: ["#ff8a8a", "#c62828"],
     away: ["#ffe08a", "#e0a409"],
     invisible: ["#c7d2db", "#9aa7b1"],
     offline: ["#c7d2db", "#9aa7b1"],
   };
+  // De cima pra baixo: transparente (deixa a moldura cinza/branca do
+  // "vidro" aparecer no topo, em vez de verde/vermelho até em cima),
+  // depois a cor clara, terminando na cor mais saturada embaixo.
   function frameGradient(status) {
     const pair = AVATAR_FRAME_GRADIENT[status] || AVATAR_FRAME_GRADIENT.online;
-    return "linear-gradient(135deg, " + pair[0] + ", " + pair[1] + ")";
+    return (
+      "linear-gradient(180deg, transparent 0%, transparent 20%, " +
+      pair[0] + " 45%, " + pair[1] + " 100%)"
+    );
   }
 
   // Cenários (fundo do topo) e cores de tema: catálogo compartilhado
