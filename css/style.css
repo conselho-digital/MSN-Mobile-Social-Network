@@ -618,8 +618,8 @@ body {
 /* Tela de login: ícones de status (imagens) com sombra, em vez de bolinha */
 .signin-as .status-dot,
 .status-menu .status-dot {
-  width: 10px;
-  height: 10px;
+  width: 8.5px;
+  height: 8.5px;
   border-radius: 2px;
   background-color: transparent;
   background-size: contain;
