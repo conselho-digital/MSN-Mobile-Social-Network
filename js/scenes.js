@@ -114,6 +114,17 @@ const MSNScenes = (() => {
     return "rgb(" + mix(r) + "," + mix(g) + "," + mix(b) + ")";
   }
 
+  // Mistura uma cor hex com preto (0 = cor pura, 1 = preto puro) — usada
+  // para escurecer o acento de tema o suficiente pra virar texto legível
+  // (a cor pura às vezes é clara/média demais pra ler sobre o próprio
+  // fundo tingido com a mesma cor).
+  function shade(hex, blackRatio) {
+    const n = parseInt(hex.slice(1), 16);
+    const r = (n >> 16) & 255, g = (n >> 8) & 255, b = n & 255;
+    const mix = (c) => Math.round(c * (1 - blackRatio));
+    return "rgb(" + mix(r) + "," + mix(g) + "," + mix(b) + ")";
+  }
+
   // ------------------------------------------------------------
   // Esquema de cores: escolha INDEPENDENTE do cenário (a segunda
   // seção do diálogo clássico "Selecione um esquema de cores").
@@ -147,8 +158,52 @@ const MSNScenes = (() => {
     return colorSchemeHex(colorSchemeId) || theme(sceneId);
   }
 
+  // ------------------------------------------------------------
+  // Moldura da foto com cor de status (ver .status-frame* no CSS) —
+  // compartilhada entre o cabeçalho do Dashboard e a foto da tela de
+  // login/cadastro/conectando. A moldura em cinza (assets/icons/
+  // avatar-frame.webp) é tingida por um gradiente claro→escuro; trocar
+  // de status faz um fade-in da cor nova por cima (ver updateStatusFrame).
+  // ------------------------------------------------------------
+  const STATUS_FRAME_GRADIENT = {
+    online: ["#8ee68c", "#10eb09"],
+    busy: ["#ff8a8a", "#c62828"],
+    away: ["#ffe08a", "#e0a409"],
+    invisible: ["#c7d2db", "#9aa7b1"],
+    offline: ["#c7d2db", "#9aa7b1"],
+  };
+  function frameGradient(status) {
+    const pair = STATUS_FRAME_GRADIENT[status] || STATUS_FRAME_GRADIENT.online;
+    return (
+      "linear-gradient(180deg, transparent 0%, transparent 8%, " +
+      pair[0] + " 20%, " + pair[1] + " 60%)"
+    );
+  }
+  // Troca a cor da moldura com um fade-in, em vez de trocar de uma vez.
+  // `ring` é o elemento ".status-frame__ring"; não faz nada se o status
+  // já é o mesmo (evita retriggar a animação à toa a cada render).
+  function updateStatusFrame(ring, status) {
+    const tint = ring.querySelector(".status-frame__tint");
+    const next = ring.querySelector(".status-frame__tint--next");
+    if (!tint || !next || tint.dataset.status === status) return;
+
+    next.style.background = frameGradient(status);
+    next.classList.remove("is-waving");
+    void next.offsetWidth; // força reflow pra poder re-disparar a animação
+    next.classList.add("is-waving");
+
+    const onDone = () => {
+      tint.style.background = frameGradient(status);
+      tint.dataset.status = status;
+      next.classList.remove("is-waving");
+      next.removeEventListener("animationend", onDone);
+    };
+    next.addEventListener("animationend", onDone);
+  }
+
   return {
-    list: SCENES, find, css, bg, theme, image, example, pastel,
+    list: SCENES, find, css, bg, theme, image, example, pastel, shade,
     colorSchemes: COLOR_SCHEMES, colorSchemeHex, effectiveTheme,
+    frameGradient, updateStatusFrame,
   };
 })();

@@ -12,27 +12,10 @@ const Dashboard = (() => {
     invisible: "Invisível",
     offline: "Offline",
   };
-  // Gradiente (claro → escuro) da moldura da foto por status — tinge a
-  // moldura em cinza (assets/icons/avatar-frame.webp) via mask-image
-  // (ver CSS .status-frame__tint). Trocar de status dispara um fade-in
-  // (ver updateStatusFrame / .status-frame__tint--next).
-  const AVATAR_FRAME_GRADIENT = {
-    online: ["#8ee68c", "#10eb09"],
-    busy: ["#ff8a8a", "#c62828"],
-    away: ["#ffe08a", "#e0a409"],
-    invisible: ["#c7d2db", "#9aa7b1"],
-    offline: ["#c7d2db", "#9aa7b1"],
-  };
-  // De cima pra baixo: transparente (deixa a moldura cinza/branca do
-  // "vidro" aparecer no topo, em vez de verde/vermelho até em cima),
-  // depois a cor clara, terminando na cor mais saturada embaixo.
-  function frameGradient(status) {
-    const pair = AVATAR_FRAME_GRADIENT[status] || AVATAR_FRAME_GRADIENT.online;
-    return (
-      "linear-gradient(180deg, transparent 0%, transparent 8%, " +
-      pair[0] + " 20%, " + pair[1] + " 60%)"
-    );
-  }
+  // Gradiente/animação da moldura da foto por status — compartilhado
+  // com a tela de login em js/scenes.js (MSNScenes.frameGradient /
+  // MSNScenes.updateStatusFrame).
+  const frameGradient = MSNScenes.frameGradient;
 
   // Cenários (fundo do topo) e cores de tema: catálogo compartilhado
   // em js/scenes.js (usado também pela tela de login).
@@ -132,28 +115,7 @@ const Dashboard = (() => {
     );
   }
 
-  // Troca a cor da moldura com um fade-in (ver @keyframes statusWave
-  // no CSS), em vez de simplesmente trocar de uma vez.
-  // Não faz nada se o status já é o mesmo (evita retriggar o fade
-  // à toa a cada render).
-  function updateStatusFrame(ring, status) {
-    const tint = ring.querySelector(".status-frame__tint");
-    const next = ring.querySelector(".status-frame__tint--next");
-    if (!tint || !next || tint.dataset.status === status) return;
-
-    next.style.background = frameGradient(status);
-    next.classList.remove("is-waving");
-    void next.offsetWidth; // força reflow pra poder re-disparar a animação
-    next.classList.add("is-waving");
-
-    const onDone = () => {
-      tint.style.background = frameGradient(status);
-      tint.dataset.status = status;
-      next.classList.remove("is-waving");
-      next.removeEventListener("animationend", onDone);
-    };
-    next.addEventListener("animationend", onDone);
-  }
+  const updateStatusFrame = MSNScenes.updateStatusFrame;
 
   function esc(s) {
     return String(s || "").replace(/[&<>"']/g, (c) => ({

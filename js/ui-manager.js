@@ -41,6 +41,9 @@ const UIManager = (() => {
         state.statusLabel = li.dataset.label;
         dot.className = "status-dot status-dot--" + state.status;
         label.textContent = state.statusLabel;
+        // Moldura da foto (mesma do Dashboard) acompanha o status escolhido.
+        const ring = document.querySelector("#login-avatar-frame .status-frame__ring");
+        if (ring) MSNScenes.updateStatusFrame(ring, state.status);
         closeMenu();
       });
     });

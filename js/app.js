@@ -508,7 +508,7 @@
     const root = document.body;
     if (!sceneId || typeof MSNScenes === "undefined") {
       root.removeAttribute("data-login-theme");
-      ["--lg1", "--lg2", "--lg3", "--lg4", "--lg5", "--login-accent", "--login-scene"].forEach((p) =>
+      ["--lg1", "--lg2", "--lg3", "--lg4", "--lg5", "--login-accent", "--login-accent-text", "--login-scene"].forEach((p) =>
         root.style.removeProperty(p)
       );
       return;
@@ -521,14 +521,21 @@
     root.style.setProperty("--lg4", MSNScenes.pastel(hex, 0.9));
     root.style.setProperty("--lg5", MSNScenes.pastel(hex, 0.97));
     root.style.setProperty("--login-accent", hex);
+    // Escurecido: a cor pura do tema (ex.: verde do cenário "Futebol")
+    // pode ficar quase ilegível como texto sobre o próprio fundo
+    // tingido com a mesma cor — usado só no texto (ver .welcome).
+    root.style.setProperty("--login-accent-text", MSNScenes.shade(hex, 0.4));
     root.setAttribute("data-login-theme", sceneId);
 
     // Cenário (imagem) no topo — separado da cor de tema, que continua
     // pintando o degradê do restante da tela. Sem imagem enviada para
     // este cenário ainda, a propriedade some e nada é desenhado ali.
+    // Só a URL aqui — o tamanho/posição/cover ficam no CSS (::before de
+    // #screen-login/#screen-connecting), pra "cover" funcionar de
+    // verdade dentro da faixa de 150px sem esticar a imagem.
     const imgUrl = MSNScenes.image(sceneId);
     if (imgUrl) {
-      root.style.setProperty("--login-scene", "url('" + imgUrl + "') top center / 100% 150px no-repeat");
+      root.style.setProperty("--login-scene", "url('" + imgUrl + "')");
     } else {
       root.style.removeProperty("--login-scene");
     }

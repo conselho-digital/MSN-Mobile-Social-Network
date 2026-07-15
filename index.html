@@ -26,10 +26,10 @@
         Adicionar App
       </button>
 
-      <!-- Avatar -->
+      <!-- Avatar (moldura com cor de status, igual ao Dashboard) -->
       <div class="signin-avatar">
-        <div class="dp-frame dp-frame--generic">
-          <div class="dp-frame__inner">
+        <span class="status-frame status-frame--login" id="login-avatar-frame">
+          <span class="status-frame__photo">
             <svg class="avatar-generic" viewBox="0 0 100 100" aria-label="Foto de exibição">
               <defs>
                 <linearGradient id="avBg" x1="0" y1="0" x2="0" y2="1">
@@ -43,8 +43,13 @@
               <circle cx="50" cy="38" r="19" fill="url(#avPerson)"/>
               <path d="M16 96c0-20 15-31 34-31s34 11 34 31z" fill="url(#avPerson)"/>
             </svg>
-          </div>
-        </div>
+          </span>
+          <span class="status-frame__ring" aria-hidden="true">
+            <span class="status-frame__tint" data-status="online" style="background:linear-gradient(180deg, transparent 0%, transparent 8%, #8ee68c 20%, #10eb09 60%)"></span>
+            <span class="status-frame__tint--next"></span>
+            <img src="assets/avatars/login.webp" class="status-frame__luma" alt="" />
+          </span>
+        </span>
       </div>
 
       <h1 class="welcome" id="login-welcome">Entrar</h1>
@@ -78,7 +83,7 @@
               name="password"
               type="password"
               placeholder="Insira sua senha"
-              autocomplete="off"
+              autocomplete="new-password"
               readonly
               data-lpignore="true"
               data-1p-ignore
@@ -172,10 +177,10 @@
         Adicionar App
       </button>
 
-      <!-- Avatar -->
+      <!-- Avatar (moldura com cor de status, igual ao Dashboard) -->
       <div class="signin-avatar">
-        <div class="dp-frame dp-frame--generic">
-          <div class="dp-frame__inner">
+        <span class="status-frame status-frame--login">
+          <span class="status-frame__photo">
             <svg class="avatar-generic" viewBox="0 0 100 100" aria-label="Foto de exibição">
               <defs>
                 <linearGradient id="avBg2" x1="0" y1="0" x2="0" y2="1">
@@ -189,8 +194,13 @@
               <circle cx="50" cy="38" r="19" fill="url(#avPerson2)"/>
               <path d="M16 96c0-20 15-31 34-31s34 11 34 31z" fill="url(#avPerson2)"/>
             </svg>
-          </div>
-        </div>
+          </span>
+          <span class="status-frame__ring" aria-hidden="true">
+            <span class="status-frame__tint" data-status="online" style="background:linear-gradient(180deg, transparent 0%, transparent 8%, #8ee68c 20%, #10eb09 60%)"></span>
+            <span class="status-frame__tint--next"></span>
+            <img src="assets/avatars/login.webp" class="status-frame__luma" alt="" />
+          </span>
+        </span>
       </div>
 
       <!-- Corpo do cadastro -->
@@ -307,10 +317,10 @@
         Adicionar App
       </button>
 
-      <!-- Avatar (idêntico ao login) -->
+      <!-- Avatar (moldura com cor de status, igual ao Dashboard) -->
       <div class="signin-avatar">
-        <div class="dp-frame dp-frame--generic">
-          <div class="dp-frame__inner">
+        <span class="status-frame status-frame--login" id="connecting-avatar-frame">
+          <span class="status-frame__photo">
             <svg class="avatar-generic" viewBox="0 0 100 100" aria-label="Foto de exibição">
               <defs>
                 <linearGradient id="avBgC" x1="0" y1="0" x2="0" y2="1">
@@ -324,8 +334,13 @@
               <circle cx="50" cy="38" r="19" fill="url(#avPersonC)"/>
               <path d="M16 96c0-20 15-31 34-31s34 11 34 31z" fill="url(#avPersonC)"/>
             </svg>
-          </div>
-        </div>
+          </span>
+          <span class="status-frame__ring" aria-hidden="true">
+            <span class="status-frame__tint" data-status="online" style="background:linear-gradient(180deg, transparent 0%, transparent 8%, #8ee68c 20%, #10eb09 60%)"></span>
+            <span class="status-frame__tint--next"></span>
+            <img src="assets/avatars/login.webp" class="status-frame__luma" alt="" />
+          </span>
+        </span>
       </div>
 
       <h1 class="welcome" id="connecting-text">Entrando...</h1>

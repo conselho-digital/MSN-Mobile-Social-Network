@@ -73,29 +73,6 @@ body {
   filter: blur(6px);
 }
 
-/* Moldura da foto (display picture) */
-.dp-frame {
-  position: absolute;
-  left: 50%;
-  bottom: -26px;
-  transform: translateX(-50%);
-  width: 92px;
-  height: 92px;
-  padding: 5px;
-  background: linear-gradient(#ffffff, #e7edf2);
-  border: 1px solid #ffffff;
-  border-radius: 4px;
-  box-shadow: 0 3px 8px rgba(0, 0, 0, 0.45), inset 0 0 0 1px rgba(0,0,0,0.05);
-}
-.dp-frame__inner {
-  width: 100%; height: 100%;
-  border: 1px solid #9fb4c4;
-  border-radius: 2px;
-  overflow: hidden;
-  background: #cfe0ef;
-}
-.dp-frame__inner img { width: 100%; height: 100%; object-fit: cover; display: block; }
-
 /* ---------- Variante azul (Windows 7) ---------- */
 .login-banner--blue { background: #3f86cf; }
 .login-banner__sky {
@@ -148,22 +125,6 @@ body {
   border-top-color: #ffffff;
 }
 
-/* ---------- Moldura do avatar genérico ---------- */
-.dp-frame--generic {
-  width: 104px;
-  height: 104px;
-  padding: 6px;
-  background: linear-gradient(#ffffff, #d9e2ea);
-  border: 1px solid #ffffff;
-  border-radius: 8px;
-  box-shadow: 0 3px 9px rgba(0, 0, 0, 0.28),
-              inset 0 0 0 1px rgba(120, 150, 175, 0.35);
-}
-.dp-frame--generic .dp-frame__inner {
-  border: 1px solid #a9bccb;
-  border-radius: 5px;
-  background: #eef4f8;
-}
 .avatar-generic { width: 100%; height: 100%; display: block; }
 
 /* ============================================================
@@ -179,12 +140,14 @@ body {
    no dropdown de e-mail) — só no login/entrando, nunca no cadastro. */
 #screen-login,
 #screen-connecting {
-  /* Camadas, de cima para baixo: (1) cenário/imagem da conta — só no
-     topo, altura fixa; (2-3) brilhos decorativos; (4) degradê da cor
-     de tema, cobrindo a tela toda por baixo do cenário. É essa ordem
-     que separa visualmente cenário (topo) de tema (resto da tela). */
+  /* Camadas, de cima para baixo: (1-2) brilhos decorativos; (3)
+     degradê da cor de tema, cobrindo a tela toda. O cenário (imagem
+     da conta) é desenhado à parte, num ::before com altura fixa (ver
+     abaixo) — assim dá pra usar "cover" de verdade nele, sem esticar
+     a imagem (background-size num layer dentro de um "background"
+     com vários layers sempre se baseia no elemento inteiro, nunca só
+     numa faixa de 150px; por isso precisa ser um elemento próprio). */
   background:
-    var(--login-scene, none),
     radial-gradient(140% 45% at 25% 0%, rgba(255,255,255,0.55), transparent 55%),
     radial-gradient(120% 40% at 82% 4%, rgba(255,255,255,0.40), transparent 50%),
     linear-gradient(180deg,
@@ -193,6 +156,21 @@ body {
       var(--lg3, #dcedfb) 42%,
       var(--lg4, #eef6fd) 64%,
       var(--lg5, #ffffff) 88%);
+}
+/* Cenário (imagem) no topo — "cover" de verdade, sem distorcer,
+   preenchendo a faixa de 150px em vez de esticar largura/altura
+   independentemente uma da outra. */
+#screen-login::before,
+#screen-connecting::before {
+  content: "";
+  position: absolute;
+  top: 0; left: 0; right: 0;
+  height: 150px;
+  background-image: var(--login-scene, none);
+  background-size: cover;
+  background-position: center;
+  background-repeat: no-repeat;
+  pointer-events: none;
 }
 .signin-scroll {
   position: relative;
@@ -268,13 +246,13 @@ body {
 .install-app svg { display: block; }
 .install-app[hidden] { display: none; }
 
-/* Avatar centralizado sobre o fundo claro */
+/* Avatar centralizado sobre o fundo claro (mesma moldura do Dashboard) */
 .signin-avatar { margin: 4px 0 2px; }
-.signin-avatar .dp-frame {
-  position: static;
-  transform: none;
-  left: auto;
-  bottom: auto;
+.signin-avatar .status-frame {
+  position: relative;
+  display: block;
+  width: 104px;
+  height: 104px;
   margin: 0 auto;
 }
 
@@ -310,9 +288,10 @@ body {
 .welcome {
   font-size: 1.5rem;
   font-weight: 400;
-  color: var(--login-accent, #3a4a55);
+  color: var(--login-accent-text, #3a4a55);
   margin: 4px 0 26px;
   letter-spacing: 0.2px;
+  text-shadow: 0 1px 2px rgba(255, 255, 255, 0.6);
 }
 
 /* ---------- Cabeçalho "Entrar" (tema azul) ---------- */
@@ -671,15 +650,15 @@ body {
 /* ---------- Botão Entrar ---------- */
 .btn-signin {
   align-self: center;
-  margin: 22px auto 4px;
-  min-width: 96px;
-  padding: 9px 22px;
-  font-size: 0.95rem;
+  margin: 16px auto 4px;
+  min-width: 72px;
+  padding: 4px 18px;
+  font-size: 0.85rem;
   font-family: inherit;
   color: #1e1e1e;
   background: linear-gradient(#fbfbfb, #e6eaee);
-  border: 1px solid #adb6bd;
-  border-radius: 4px;
+  border: 1px solid #7fb6e6;
+  border-radius: 3px;
   cursor: pointer;
   box-shadow: inset 0 1px 0 #fff;
   transition: background 0.12s, box-shadow 0.12s;
@@ -889,6 +868,15 @@ body {
 
 @media (prefers-reduced-motion: reduce) {
   .status-frame__tint--next.is-waving { animation: none; }
+}
+
+/* Moldura específica das telas de login/cadastro/conectando — imagem
+   diferente da usada no Dashboard (assets/avatars/login.webp), com
+   fundo transparente ao redor deixando o cenário aparecer atrás. */
+.status-frame--login .status-frame__tint,
+.status-frame--login .status-frame__tint--next {
+  -webkit-mask-image: url("../assets/avatars/login.webp");
+  mask-image: url("../assets/avatars/login.webp");
 }
 
 .dash-header__info { position: relative; flex: 1 1 auto; min-width: 0; }
