@@ -21,20 +21,38 @@ const Dashboard = (() => {
   };
 
   // Cenários (fundo do topo). O primeiro é o padrão.
+  // Cada cenário também tem uma "theme" (cor de tema) pareada, que tinge
+  // o restante da tela (Novidades, atalhos) abaixo do banner — igual ao
+  // MSN clássico, onde a cor de baixo nem sempre é a mesma do banner
+  // (ex.: cenário rosa combinado com tema verde). Futuramente essa cor de
+  // tema poderá ser escolhida separadamente num menu de cores próprio.
   const SCENES = [
-    { id: "green",  name: "Verde",     css: "linear-gradient(120deg,#0a0f0a 0%,#12240d 45%,#1f4a17 78%,#37731f 100%)" },
-    { id: "blue",   name: "Azul",      css: "linear-gradient(120deg,#08203a 0%,#0e3a63 50%,#1f6fb0 100%)" },
-    { id: "aero",   name: "Aero",      css: "linear-gradient(120deg,#0a3a5a 0%,#1f7fb0 50%,#8fd0f0 100%)" },
-    { id: "purple", name: "Roxo",      css: "linear-gradient(120deg,#1a0a2a 0%,#3a1560 55%,#7b3fd0 100%)" },
-    { id: "pink",   name: "Rosa",      css: "linear-gradient(120deg,#2a0a1a 0%,#8a1e55 55%,#e05a9a 100%)" },
-    { id: "sunset", name: "Pôr do sol", css: "linear-gradient(120deg,#3a1010 0%,#a03a1a 50%,#e0902a 100%)" },
-    { id: "teal",   name: "Turquesa",  css: "linear-gradient(120deg,#04201f 0%,#0a4a47 55%,#1f9e94 100%)" },
-    { id: "graphite", name: "Grafite", css: "linear-gradient(120deg,#0a0a0a 0%,#242424 60%,#3d3d3d 100%)" },
-    { id: "royal",  name: "Royal",     css: "linear-gradient(120deg,#0a1444 0%,#1c2f8a 55%,#3f6fe0 100%)" },
+    { id: "green",  name: "Verde",     css: "linear-gradient(120deg,#0a0f0a 0%,#12240d 45%,#1f4a17 78%,#37731f 100%)", theme: "#3aa11a" },
+    { id: "blue",   name: "Azul",      css: "linear-gradient(120deg,#08203a 0%,#0e3a63 50%,#1f6fb0 100%)", theme: "#1f7fd0" },
+    { id: "aero",   name: "Aero",      css: "linear-gradient(120deg,#0a3a5a 0%,#1f7fb0 50%,#8fd0f0 100%)", theme: "#2bb0e0" },
+    { id: "purple", name: "Roxo",      css: "linear-gradient(120deg,#1a0a2a 0%,#3a1560 55%,#7b3fd0 100%)", theme: "#7b3fd0" },
+    { id: "pink",   name: "Rosa",      css: "linear-gradient(120deg,#2a0a1a 0%,#8a1e55 55%,#e05a9a 100%)", theme: "#3aa11a" },
+    { id: "sunset", name: "Pôr do sol", css: "linear-gradient(120deg,#3a1010 0%,#a03a1a 50%,#e0902a 100%)", theme: "#e0902a" },
+    { id: "teal",   name: "Turquesa",  css: "linear-gradient(120deg,#04201f 0%,#0a4a47 55%,#1f9e94 100%)", theme: "#1f9e94" },
+    { id: "graphite", name: "Grafite", css: "linear-gradient(120deg,#0a0a0a 0%,#242424 60%,#3d3d3d 100%)", theme: "#6b7280" },
+    { id: "royal",  name: "Royal",     css: "linear-gradient(120deg,#0a1444 0%,#1c2f8a 55%,#3f6fe0 100%)", theme: "#3f6fe0" },
   ];
   function sceneCss(id) {
     const s = SCENES.find((x) => x.id === id);
     return s ? s.css : SCENES[0].css;
+  }
+  function sceneTheme(id) {
+    const s = SCENES.find((x) => x.id === id);
+    return (s && s.theme) || SCENES[0].theme;
+  }
+
+  // Mistura uma cor hex com branco (0 = cor pura, 1 = branco puro),
+  // usada para gerar os tons pastéis do tema abaixo do banner.
+  function pastel(hex, whiteRatio) {
+    const n = parseInt(hex.slice(1), 16);
+    const r = (n >> 16) & 255, g = (n >> 8) & 255, b = n & 255;
+    const mix = (c) => Math.round(c + (255 - c) * whiteRatio);
+    return "rgb(" + mix(r) + "," + mix(g) + "," + mix(b) + ")";
   }
 
   let profile = null;
@@ -106,9 +124,17 @@ const Dashboard = (() => {
       avatar.insertAdjacentHTML("afterbegin", avatarMarkup(profile.avatar_url));
     }
 
-    // Cenário (fundo do topo)
+    // Cenário (fundo do topo) + cor de tema pareada (Novidades/atalhos abaixo)
     const header = document.querySelector(".dash-header");
     if (header) header.style.setProperty("--scene", sceneCss(profile.scene));
+
+    const screen = document.getElementById("screen-dashboard");
+    if (screen) {
+      const theme = sceneTheme(profile.scene);
+      screen.style.setProperty("--tint-light", pastel(theme, 0.92));
+      screen.style.setProperty("--tint-mid", pastel(theme, 0.8));
+      screen.style.setProperty("--tint-strong", pastel(theme, 0.62));
+    }
 
     const subEl = document.getElementById("my-subnick-text");
     if (profile.sub_nick) {

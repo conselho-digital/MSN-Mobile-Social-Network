@@ -1097,7 +1097,8 @@ body {
 .dash-news {
   flex: 0 0 auto;
   padding: 8px 12px;
-  background: #f4f7fa;
+  /* Tingido com a cor de tema pareada ao cenário selecionado */
+  background: linear-gradient(180deg, var(--tint-light, #f4f7fa), var(--tint-mid, #eef2f5));
   border-top: 1px solid #dde3e8;
 }
 .dash-news__head {
@@ -1129,7 +1130,8 @@ body {
   align-items: center;
   gap: 6px;
   padding: 8px 12px;
-  background: linear-gradient(#eef2f5, #e2e7ec);
+  /* Tingido com a cor de tema pareada ao cenário selecionado */
+  background: linear-gradient(180deg, var(--tint-mid, #eef2f5), var(--tint-strong, #e2e7ec));
   border-top: 1px solid #dde3e8;
 }
 .shortcut {
