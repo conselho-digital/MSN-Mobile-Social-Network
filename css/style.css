@@ -1380,18 +1380,36 @@ body {
   line-height: 1.5;
 }
 .scene-dialog__section {
-  display: flex;
-  align-items: center;
-  gap: 6px;
-  margin: 0 0 8px;
+  margin: 0;
   font-size: 0.85rem;
   font-weight: 600;
   color: #2f4a63;
 }
 
-/* Ícone pequeno antes do texto do título da seção */
+/* Tabela 2x2: ícone (linhas mescladas) à esquerda, frase em cima e
+   conteúdo (grade de cenários/cores) embaixo, à direita. */
+.scene-dialog__table {
+  width: 100%;
+  border-collapse: collapse;
+  margin-bottom: 4px;
+}
+.scene-dialog__table-icon {
+  width: 34px;
+  padding: 0 8px 8px 0;
+  vertical-align: top;
+}
+.scene-dialog__table-heading {
+  padding: 0 0 8px;
+  vertical-align: middle;
+}
+.scene-dialog__table-content {
+  padding: 0;
+  vertical-align: top;
+}
+
+/* Ícone pequeno à esquerda do título da seção */
 .scene-dialog__section-icon {
-  flex: 0 0 auto;
+  display: block;
   width: 28px;
   height: 28px;
   object-fit: cover;

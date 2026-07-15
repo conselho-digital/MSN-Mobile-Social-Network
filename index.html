@@ -594,12 +594,42 @@
           As pessoas com quem você conversar verão o cenário escolhido por você.
         </p>
 
-        <h3 class="scene-dialog__section"><img src="assets/scenes/cenarioexemplo.webp" alt="" class="scene-dialog__section-icon" />Selecione um cenário</h3>
-        <div class="scene-grid" id="scene-grid"></div>
+        <table class="scene-dialog__table">
+          <tbody>
+            <tr>
+              <td class="scene-dialog__table-icon" rowspan="2">
+                <img src="assets/scenes/cenarioexemplo.webp" alt="" class="scene-dialog__section-icon" />
+              </td>
+              <td class="scene-dialog__table-heading">
+                <h3 class="scene-dialog__section">Selecione um cenário</h3>
+              </td>
+            </tr>
+            <tr>
+              <td class="scene-dialog__table-content">
+                <div class="scene-grid" id="scene-grid"></div>
+              </td>
+            </tr>
+          </tbody>
+        </table>
         <button type="button" id="scene-browse" class="scene-dialog__browse">Procurar...</button>
 
-        <h3 class="scene-dialog__section scene-dialog__section--colors"><img src="assets/scenes/temaexemplo.webp" alt="" class="scene-dialog__section-icon" />Selecione um esquema de cores</h3>
-        <div class="color-scheme-grid" id="color-scheme-grid"></div>
+        <table class="scene-dialog__table">
+          <tbody>
+            <tr>
+              <td class="scene-dialog__table-icon" rowspan="2">
+                <img src="assets/scenes/temaexemplo.webp" alt="" class="scene-dialog__section-icon" />
+              </td>
+              <td class="scene-dialog__table-heading">
+                <h3 class="scene-dialog__section scene-dialog__section--colors">Selecione um esquema de cores</h3>
+              </td>
+            </tr>
+            <tr>
+              <td class="scene-dialog__table-content">
+                <div class="color-scheme-grid" id="color-scheme-grid"></div>
+              </td>
+            </tr>
+          </tbody>
+        </table>
         <div class="color-scheme-more">
           <span class="color-scheme-more__current" id="color-scheme-current" aria-hidden="true"></span>
           <button type="button" id="color-scheme-more-btn" class="color-scheme-more__link">Mais cores...</button>
