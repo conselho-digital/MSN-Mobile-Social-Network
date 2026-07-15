@@ -12,12 +12,15 @@ const Dashboard = (() => {
     invisible: "Invisível",
     offline: "Offline",
   };
-  const AVATAR_BORDER = {
-    online: "linear-gradient(#a6f06a, #3aa11a)",
-    busy: "linear-gradient(#ff8a8a, #c62828)",
-    away: "linear-gradient(#ffe08a, #e0a409)",
-    invisible: "linear-gradient(#c7d2db, #9aa7b1)",
-    offline: "linear-gradient(#c7d2db, #9aa7b1)",
+  // Cor da moldura da foto por status — tinge a moldura em cinza
+  // (assets/icons/avatar-frame.webp) via mix-blend-mode:color (ver CSS
+  // .my-avatar__frame-tint). Trocar essa cor anima suavemente sozinho.
+  const AVATAR_FRAME_COLOR = {
+    online: "#3aa11a",
+    busy: "#c62828",
+    away: "#e0a409",
+    invisible: "#9aa7b1",
+    offline: "#9aa7b1",
   };
 
   // Cenários (fundo do topo) e cores de tema: catálogo compartilhado
@@ -144,11 +147,13 @@ const Dashboard = (() => {
 
     const avatar = document.querySelector(".my-avatar");
     if (avatar) {
-      avatar.style.background = AVATAR_BORDER[status] || AVATAR_BORDER.online;
+      const tint = document.getElementById("my-avatar-frame-tint");
+      if (tint) tint.style.backgroundColor = AVATAR_FRAME_COLOR[status] || AVATAR_FRAME_COLOR.online;
       // Atualiza a imagem (foto enviada ou avatar genérico), mantendo a bolinha de status.
-      const old = avatar.querySelector(".avatar-generic, .avatar-img");
+      const photoWrap = avatar.querySelector(".my-avatar__photo");
+      const old = photoWrap.querySelector(".avatar-generic, .avatar-img");
       if (old) old.remove();
-      avatar.insertAdjacentHTML("afterbegin", avatarMarkup(profile.avatar_url));
+      photoWrap.insertAdjacentHTML("afterbegin", avatarMarkup(profile.avatar_url));
     }
 
     // Cenário (fundo do topo, com imagem se enviada) + cor de tema:

@@ -808,16 +808,22 @@ body {
   flex: 0 0 auto;
   border: none;
   border-radius: 4px;
-  padding: 2px;
-  background: linear-gradient(#a6f06a, #3aa11a); /* borda verde (online) */
-  box-shadow: 0 1px 4px rgba(0,0,0,0.4);
+  padding: 0;
+  background: transparent;
   cursor: pointer;
   font: inherit;
 }
-.my-avatar .avatar-generic,
-.my-avatar .avatar-img {
-  width: 100%; height: 100%;
+.my-avatar__photo {
+  position: absolute;
+  inset: 11%;
   border-radius: 3px;
+  overflow: hidden;
+  display: block;
+  box-shadow: 0 1px 4px rgba(0,0,0,0.4);
+}
+.my-avatar__photo .avatar-generic,
+.my-avatar__photo .avatar-img {
+  width: 100%; height: 100%;
   display: block;
   object-fit: cover;
   background: #eef4f8;
@@ -828,26 +834,45 @@ body {
   object-fit: cover;
   display: block;
 }
+/* Moldura glossy da foto: a imagem em cinza (moldura__frame-luma) dá o
+   brilho/sombreado; a camada de cor por cima (moldura__frame-tint) usa
+   mix-blend-mode:color pra tingir só o anel (recortado com mask-image
+   usando o alfa da própria imagem), preservando aquele efeito vidro.
+   Trocar --frame-color anima suavemente (é só uma cor de fundo),
+   diferente de trocar de imagem em imagem. */
+.my-avatar__frame {
+  position: absolute;
+  inset: 0;
+  isolation: isolate;
+  pointer-events: none;
+}
+.my-avatar__frame-luma {
+  position: absolute;
+  inset: 0;
+  width: 100%; height: 100%;
+  display: block;
+}
+.my-avatar__frame-tint {
+  position: absolute;
+  inset: 0;
+  background: #3aa11a;
+  mix-blend-mode: color;
+  -webkit-mask-image: url("assets/icons/avatar-frame.webp");
+  mask-image: url("assets/icons/avatar-frame.webp");
+  -webkit-mask-size: 100% 100%;
+  mask-size: 100% 100%;
+  -webkit-mask-repeat: no-repeat;
+  mask-repeat: no-repeat;
+  transition: background-color 0.35s ease;
+}
 .my-avatar__status {
   position: absolute;
   right: -3px; bottom: -3px;
   width: 14px; height: 14px;
   border: 2px solid #12240d;
 }
-/* Ícone de lápis: mostra que a foto pode ser alterada ao tocar/clicar */
-.my-avatar__edit {
-  position: absolute;
-  left: -4px; bottom: -4px;
-  width: 20px; height: 20px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  border-radius: 50%;
-  background: #1f7fd0;
-  box-shadow: 0 1px 3px rgba(0,0,0,0.5), 0 0 0 2px rgba(255,255,255,0.85);
-}
-.my-avatar:hover .avatar-generic,
-.my-avatar:hover .avatar-img { filter: brightness(0.9); }
+.my-avatar:hover .my-avatar__photo .avatar-generic,
+.my-avatar:hover .my-avatar__photo .avatar-img { filter: brightness(0.9); }
 
 .dash-header__info { position: relative; flex: 1 1 auto; min-width: 0; }
 
