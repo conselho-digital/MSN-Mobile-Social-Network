@@ -17,6 +17,7 @@
     SoundManager.preload();
 
     bindAccountDropdown();
+    bindWelcomeHeading();
     restoreRemembered();
     bindRememberOptions();
     bindLoginForm();
@@ -440,6 +441,7 @@
       localStorage.setItem("msn:autoSignin", auto && auto.checked ? "true" : "false");
     } catch (_) {}
     renderAccountMenu();
+    updateWelcomeHeading();
   }
 
   function restoreRemembered() {
@@ -452,6 +454,7 @@
       const autoEl = document.getElementById("opt-auto-signin");
       if (autoEl) autoEl.checked = auto;
       renderAccountMenu();
+      updateWelcomeHeading();
     } catch (_) {}
   }
 
@@ -470,6 +473,25 @@
       if (passEl) passEl.value = "";
       if (passOptEl) passOptEl.checked = false;
     }
+    updateWelcomeHeading();
+  }
+
+  /* ---------- "Bem-vindo novamente!" só com uma conta já salva ----------
+     O título mostra "Bem-vindo novamente!" apenas quando o e-mail no
+     campo corresponde a uma conta que já fez login antes (lembrada).
+     Caso contrário (campo vazio ou e-mail novo), mostra "Entrar". */
+  function bindWelcomeHeading() {
+    const emailEl = document.getElementById("login-email");
+    if (emailEl) emailEl.addEventListener("input", updateWelcomeHeading);
+  }
+
+  function updateWelcomeHeading() {
+    const heading = document.getElementById("login-welcome");
+    const emailEl = document.getElementById("login-email");
+    if (!heading || !emailEl) return;
+    const email = emailEl.value.trim().toLowerCase();
+    const known = email && getAccounts().some((a) => a.email.toLowerCase() === email);
+    heading.textContent = known ? "Bem-vindo novamente!" : "Entrar";
   }
 
   /* ---------- Dropdown de contas ---------- */
@@ -501,6 +523,7 @@
         e.stopPropagation();
         removeAccount(removeBtn.dataset.email);
         renderAccountMenu();
+        updateWelcomeHeading();
         if (!getAccounts().length) close();
         return;
       }
