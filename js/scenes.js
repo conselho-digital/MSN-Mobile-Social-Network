@@ -50,6 +50,9 @@ const MSNScenes = (() => {
   ].map((s) => Object.assign(s, {
     css: gradientFor(s.theme),
     image: "assets/scenes/" + s.id + ".webp",
+    // Miniatura de exemplo (mesma cena, recortada bem menor) usada no
+    // ícone da tabela "Selecione um cenário" — assets/scenes/<id>x.webp.
+    example: "assets/scenes/" + s.id + "x.webp",
   }));
 
   function find(id) {
@@ -96,6 +99,12 @@ const MSNScenes = (() => {
     const s = find(id);
     return s && s.image ? resolveUrl(s.image) : null;
   }
+  // Miniatura de exemplo do cenário (assets/scenes/<id>x.webp), mostrada
+  // no ícone da tabela "Selecione um cenário" conforme a seleção atual.
+  function example(id) {
+    const s = find(id);
+    return s && s.example ? resolveUrl(s.example) : null;
+  }
 
   // Mistura uma cor hex com branco (0 = cor pura, 1 = branco puro).
   function pastel(hex, whiteRatio) {
@@ -139,7 +148,7 @@ const MSNScenes = (() => {
   }
 
   return {
-    list: SCENES, find, css, bg, theme, image, pastel,
+    list: SCENES, find, css, bg, theme, image, example, pastel,
     colorSchemes: COLOR_SCHEMES, colorSchemeHex, effectiveTheme,
   };
 })();

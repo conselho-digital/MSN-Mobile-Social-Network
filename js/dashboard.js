@@ -268,7 +268,21 @@ const Dashboard = (() => {
     }
 
     updateCurrentColorSwatch();
+    updateSceneExampleIcon();
     overlay.hidden = false;
+  }
+
+  // Ícone da tabela "Selecione um cenário": mostra uma miniatura de
+  // exemplo (assets/scenes/<id>x.webp) do cenário atualmente
+  // selecionado/prévia, em vez de um ícone fixo genérico.
+  function updateSceneExampleIcon() {
+    const icon = document.getElementById("scene-example-icon");
+    if (!icon) return;
+    if (stagedScene === "custom" && stagedCustomImageUrl) {
+      icon.src = stagedCustomImageUrl;
+    } else {
+      icon.src = MSNScenes.example(stagedScene) || "assets/scenes/cenarioexemplo.webp";
+    }
   }
 
   function customTileHtml(url, selected) {
@@ -286,6 +300,7 @@ const Dashboard = (() => {
         grid.querySelectorAll(".scene-swatch").forEach((x) => x.classList.remove("is-selected"));
         sw.classList.add("is-selected");
         previewScene(stagedScene);
+        updateSceneExampleIcon();
       });
     });
   }
@@ -318,6 +333,7 @@ const Dashboard = (() => {
     stagedScene = "custom";
     stagedCustomImageUrl = previewUrl;
     previewScene("custom");
+    updateSceneExampleIcon();
 
     const grid = document.getElementById("scene-grid");
     const existing = grid.querySelector('.scene-swatch[data-scene="custom"]');
@@ -334,6 +350,7 @@ const Dashboard = (() => {
       const url = await MSNSupabase.uploadSceneImage(file);
       stagedCustomImageUrl = url;
       previewScene("custom");
+      updateSceneExampleIcon();
       const tile = grid.querySelector('.scene-swatch[data-scene="custom"]');
       if (tile) tile.style.background = "url('" + url + "') center/cover no-repeat";
     } catch (err) {
