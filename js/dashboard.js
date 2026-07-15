@@ -696,6 +696,10 @@ const Dashboard = (() => {
     const avatarInput = document.getElementById("avatar-input");
     if (avatarInput) avatarInput.addEventListener("change", onAvatarSelected);
 
+    // Clicar na foto de exibição abre direto o upload de uma nova foto
+    const avatarBtn = document.getElementById("my-avatar-btn");
+    if (avatarBtn) avatarBtn.addEventListener("click", changePicture);
+
     // Seletor de cenário: OK (salva e fecha) / Aplicar (salva, mantém
     // aberto) / Fechar e X (descartam a prévia e fecham)
     const sceneOk = document.getElementById("scene-ok");
