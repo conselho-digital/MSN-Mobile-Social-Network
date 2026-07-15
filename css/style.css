@@ -829,13 +829,12 @@ body {
    em alguns navegadores/WebViews (a moldura ficava branca, sem cor
    nenhuma). mask-image sozinho é bem mais previsível.
 
-   Ao trocar de status, a camada "--next" recebe a nova cor e um
-   clip-path triangular que cresce do canto superior esquerdo até
-   cobrir tudo — uma "onda" diagonal varrendo a cor antiga. Ao final
-   (animationend), essa cor vira a base (--tint) e a "--next" volta
-   ao estado inicial, pronta pra próxima troca. clip-path com o mesmo
-   número de pontos anima de forma confiável entre navegadores,
-   diferente de tentar interpolar dois gradientes diretamente. */
+   Ao trocar de status, a camada "--next" recebe a nova cor e faz um
+   fade-in (opacity 0→1) por cima da cor antiga, cobrindo a moldura
+   inteira aos poucos. Ao final (animationend), essa cor vira a base
+   (--tint) e a "--next" volta a opacity:0, pronta pra próxima troca.
+   Anima via opacity — bem mais confiável entre navegadores do que
+   tentar interpolar dois gradientes diretamente. */
 .status-frame__photo {
   position: absolute;
   inset: 8%;
@@ -868,14 +867,14 @@ body {
   mask-repeat: no-repeat;
 }
 .status-frame__tint--next {
-  clip-path: polygon(-15% -15%, -5% -15%, -15% -5%);
+  opacity: 0;
 }
 .status-frame__tint--next.is-waving {
-  animation: statusWave 0.7s cubic-bezier(0.4, 0, 0.2, 1);
+  animation: statusWave 0.7s ease;
 }
 @keyframes statusWave {
-  from { clip-path: polygon(-15% -15%, -5% -15%, -15% -5%); }
-  to   { clip-path: polygon(-15% -15%, 145% -15%, -15% 145%); }
+  from { opacity: 0; }
+  to   { opacity: 1; }
 }
 .status-frame__luma {
   position: absolute;

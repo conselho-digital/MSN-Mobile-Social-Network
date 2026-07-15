@@ -126,9 +126,9 @@ const Dashboard = (() => {
     );
   }
 
-  // Troca a cor da moldura com uma "onda" diagonal (ver @keyframes
-  // statusWave no CSS), em vez de simplesmente trocar de uma vez.
-  // Não faz nada se o status já é o mesmo (evita retriggar a onda
+  // Troca a cor da moldura com um fade-in (ver @keyframes statusWave
+  // no CSS), em vez de simplesmente trocar de uma vez.
+  // Não faz nada se o status já é o mesmo (evita retriggar o fade
   // à toa a cada render).
   function updateStatusFrame(ring, status) {
     const tint = ring.querySelector(".status-frame__tint");
