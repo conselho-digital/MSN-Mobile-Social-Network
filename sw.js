@@ -1,8 +1,13 @@
 /* ============================================================
    sw.js — Service Worker do MSN (cache local para PWA)
+   ------------------------------------------------------------
+   Estratégia: network-first (tenta a rede primeiro e atualiza o
+   cache; só usa o cache se a rede falhar). Isso garante que uma
+   nova versão publicada apareça assim que o usuário reabrir o
+   app com internet, em vez de ficar presa numa versão antiga.
    ============================================================ */
 
-const CACHE = "msn-mobile-v3";
+const CACHE = "msn-mobile-v4";
 const ASSETS = [
   "./",
   "./index.html",
@@ -41,15 +46,14 @@ self.addEventListener("fetch", (event) => {
   if (url.origin !== self.location.origin) return;
 
   event.respondWith(
-    caches.match(request).then((cached) => {
-      if (cached) return cached;
-      return fetch(request)
-        .then((resp) => {
-          const copy = resp.clone();
-          caches.open(CACHE).then((cache) => cache.put(request, copy)).catch(() => {});
-          return resp;
-        })
-        .catch(() => caches.match("./index.html"));
-    })
+    fetch(request)
+      .then((resp) => {
+        const copy = resp.clone();
+        caches.open(CACHE).then((cache) => cache.put(request, copy)).catch(() => {});
+        return resp;
+      })
+      .catch(() =>
+        caches.match(request).then((cached) => cached || caches.match("./index.html"))
+      )
   );
 });
