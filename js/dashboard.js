@@ -323,13 +323,19 @@ const Dashboard = (() => {
     const menu = document.getElementById("my-menu");
     const nameBtn = document.getElementById("my-name-btn");
     const stToggle = document.getElementById("my-status-toggle");
-    const closeMenu = () => { menu.hidden = true; stToggle.setAttribute("aria-expanded", "false"); };
+    const headerInfo = document.querySelector(".dash-header__info");
+    const closeMenu = () => {
+      menu.hidden = true;
+      stToggle.setAttribute("aria-expanded", "false");
+      if (headerInfo) headerInfo.classList.remove("is-open");
+    };
     const openMenu = (e) => {
       e.stopPropagation();
       const open = menu.hidden;
       if (open) markSelectedStatus();
       menu.hidden = !open;
       stToggle.setAttribute("aria-expanded", String(open));
+      if (headerInfo) headerInfo.classList.toggle("is-open", open);
     };
     nameBtn.addEventListener("click", openMenu);
     stToggle.addEventListener("click", openMenu);
