@@ -13,8 +13,9 @@ const Dashboard = (() => {
     offline: "Offline",
   };
   // Cor da moldura da foto por status — tinge a moldura em cinza
-  // (assets/icons/avatar-frame.webp) via mix-blend-mode:color (ver CSS
-  // .my-avatar__frame-tint). Trocar essa cor anima suavemente sozinho.
+  // (assets/icons/avatar-frame.webp) via mask-image + uma camada de cor
+  // sólida (ver CSS .status-frame__tint). Trocar essa cor anima
+  // suavemente sozinho (é só um background-color).
   const AVATAR_FRAME_COLOR = {
     online: "#3aa11a",
     busy: "#c62828",
@@ -88,6 +89,8 @@ const Dashboard = (() => {
   let profile = null;
   let contacts = [];
   let bound = false;
+  let currentFilter = "";
+  let contactsSubscribed = false;
 
   /* ---------- Avatar (foto enviada ou genérico) ---------- */
   function avatarMarkup(url) {
@@ -100,6 +103,21 @@ const Dashboard = (() => {
       '<circle cx="50" cy="38" r="19" fill="#a7b3bd"/>' +
       '<path d="M16 96c0-20 15-31 34-31s34 11 34 31z" fill="#a7b3bd"/>' +
       "</svg>"
+    );
+  }
+
+  // Moldura com a cor do status (compartilhada entre a foto do cabeçalho
+  // e os avatares da lista de contatos — ver .status-frame* no CSS).
+  function statusFrameMarkup(avatarUrl, status) {
+    const color = AVATAR_FRAME_COLOR[status] || AVATAR_FRAME_COLOR.online;
+    return (
+      '<span class="status-frame__photo" data-avatar-url="' + esc(avatarUrl || "") + '">' +
+      avatarMarkup(avatarUrl) +
+      "</span>" +
+      '<span class="status-frame__ring" aria-hidden="true">' +
+      '<span class="status-frame__tint" style="background-color:' + color + '"></span>' +
+      '<img src="assets/icons/avatar-frame.webp" class="status-frame__luma" alt="" />' +
+      "</span>"
     );
   }
 
@@ -129,10 +147,25 @@ const Dashboard = (() => {
         MSNSupabase.updateMyProfile({ status: chosen }).catch(() => {});
       }
       renderProfile();
-      renderContacts();
+      renderContacts(currentFilter);
+      subscribeContactUpdates();
     } catch (err) {
       console.error("Falha ao carregar o dashboard:", err);
     }
+  }
+
+  // Escuta em tempo real mudanças de status/nome/foto dos contatos já
+  // adicionados, pra lista (e a cor da moldura) atualizar sozinha —
+  // só assina uma vez por sessão.
+  function subscribeContactUpdates() {
+    if (contactsSubscribed) return;
+    contactsSubscribed = true;
+    MSNSupabase.subscribeContacts((updated) => {
+      const c = contacts.find((x) => x.id === updated.id);
+      if (!c) return; // não é um dos nossos contatos, ignora
+      Object.assign(c, updated);
+      renderContacts(currentFilter);
+    });
   }
 
   /* ---------- Perfil próprio ---------- */
@@ -144,13 +177,19 @@ const Dashboard = (() => {
 
     const avatar = document.querySelector(".my-avatar");
     if (avatar) {
-      const tint = document.getElementById("my-avatar-frame-tint");
-      if (tint) tint.style.backgroundColor = AVATAR_FRAME_COLOR[status] || AVATAR_FRAME_COLOR.online;
-      // Atualiza a imagem (foto enviada ou avatar genérico), mantendo a moldura.
-      const photoWrap = avatar.querySelector(".my-avatar__photo");
-      const old = photoWrap.querySelector(".avatar-generic, .avatar-img");
-      if (old) old.remove();
-      photoWrap.insertAdjacentHTML("afterbegin", avatarMarkup(profile.avatar_url));
+      if (!avatar.querySelector(".status-frame__ring")) {
+        // Primeira renderização: monta a moldura inteira.
+        avatar.innerHTML = statusFrameMarkup(profile.avatar_url, status);
+      } else {
+        // Já existe: só atualiza a cor (anima sozinho) e a foto se mudou.
+        const tint = avatar.querySelector(".status-frame__tint");
+        if (tint) tint.style.backgroundColor = AVATAR_FRAME_COLOR[status] || AVATAR_FRAME_COLOR.online;
+        const photoWrap = avatar.querySelector(".status-frame__photo");
+        if (photoWrap && photoWrap.dataset.avatarUrl !== (profile.avatar_url || "")) {
+          photoWrap.innerHTML = avatarMarkup(profile.avatar_url);
+          photoWrap.dataset.avatarUrl = profile.avatar_url || "";
+        }
+      }
     }
 
     // Cenário (fundo do topo, com imagem se enviada) + cor de tema:
@@ -216,25 +255,79 @@ const Dashboard = (() => {
     empty.hidden = contacts.length !== 0;
   }
 
+  // Atualiza os <li> existentes no lugar (em vez de recriar tudo com
+  // innerHTML) sempre que possível — assim a cor da moldura consegue
+  // animar quando o status de um contato muda, ao invés de só "trocar"
+  // de uma vez (nó novo = sem transição pra animar a partir de onde
+  // estava).
   function fillList(id, list) {
     const ul = document.getElementById(id);
-    ul.innerHTML = list.map(contactItem).join("");
+    const existing = new Map();
+    ul.querySelectorAll(".contact-item[data-id]").forEach((li) => existing.set(li.dataset.id, li));
+
+    list.forEach((c) => {
+      const key = String(c.id);
+      let li = existing.get(key);
+      if (li) {
+        updateContactItem(li, c);
+        existing.delete(key);
+      } else {
+        li = contactItem(c);
+      }
+      ul.appendChild(li); // garante a ordem da lista atual
+    });
+
+    // Sobrou no mapa = não está mais na lista (offline mudou de grupo,
+    // contato removido, ou saiu do filtro de busca).
+    existing.forEach((li) => li.remove());
   }
 
   function contactItem(c) {
-    const isOnline = ["online", "busy", "away"].includes(c.status);
-    const stateClass = isOnline ? "contact-item--" + c.status : "contact-item--offline";
-    const sub = c.sub_nick
-      ? '<div class="contact-item__sub">' + esc(c.sub_nick) + "</div>"
-      : "";
-    return (
-      '<li class="contact-item ' + stateClass + '" data-id="' + esc(c.id) + '">' +
-      '<div class="contact-item__avatar">' + avatarMarkup(c.avatar_url) + "</div>" +
+    const li = document.createElement("li");
+    li.dataset.id = c.id;
+    li.innerHTML =
+      '<div class="contact-item__avatar"></div>' +
       '<div class="contact-item__body">' +
-      '<div class="contact-item__name">' + esc(c.display_name) + "</div>" +
-      sub +
-      "</div></li>"
-    );
+      '<div class="contact-item__name"></div>' +
+      "</div>";
+    updateContactItem(li, c);
+    return li;
+  }
+
+  function updateContactItem(li, c) {
+    const isOnline = ["online", "busy", "away"].includes(c.status);
+    li.className = "contact-item " + (isOnline ? "contact-item--" + c.status : "contact-item--offline");
+
+    const avatarBox = li.querySelector(".contact-item__avatar");
+    if (avatarBox) {
+      if (!avatarBox.querySelector(".status-frame__ring")) {
+        avatarBox.innerHTML = statusFrameMarkup(c.avatar_url, c.status);
+      } else {
+        const tint = avatarBox.querySelector(".status-frame__tint");
+        if (tint) tint.style.backgroundColor = AVATAR_FRAME_COLOR[c.status] || AVATAR_FRAME_COLOR.online;
+        const photoWrap = avatarBox.querySelector(".status-frame__photo");
+        if (photoWrap && photoWrap.dataset.avatarUrl !== (c.avatar_url || "")) {
+          photoWrap.innerHTML = avatarMarkup(c.avatar_url);
+          photoWrap.dataset.avatarUrl = c.avatar_url || "";
+        }
+      }
+    }
+
+    const nameEl = li.querySelector(".contact-item__name");
+    if (nameEl) nameEl.textContent = c.display_name;
+
+    const body = li.querySelector(".contact-item__body");
+    let subEl = li.querySelector(".contact-item__sub");
+    if (c.sub_nick) {
+      if (!subEl) {
+        subEl = document.createElement("div");
+        subEl.className = "contact-item__sub";
+        body.appendChild(subEl);
+      }
+      subEl.textContent = c.sub_nick;
+    } else if (subEl) {
+      subEl.remove();
+    }
   }
 
   /* ---------- Menu do nick: seleção e ações ---------- */
@@ -595,6 +688,8 @@ const Dashboard = (() => {
   }
 
   async function doSignOut() {
+    MSNSupabase.unsubscribeContacts();
+    contactsSubscribed = false;
     try { await MSNSupabase.signOut(); } catch (_) {}
     // Ao sair, desliga o auto-login (mas mantém e-mail/senha lembrados).
     try { localStorage.setItem("msn:autoSignin", "false"); } catch (_) {}
@@ -691,7 +786,8 @@ const Dashboard = (() => {
 
     // Busca
     document.getElementById("contact-search").addEventListener("input", (e) => {
-      renderContacts(e.target.value);
+      currentFilter = e.target.value;
+      renderContacts(currentFilter);
     });
 
     // Foto de exibição (upload)

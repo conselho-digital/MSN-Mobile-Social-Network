@@ -813,59 +813,61 @@ body {
   cursor: pointer;
   font: inherit;
 }
-.my-avatar__photo {
+/* ============================================================
+   MOLDURA COM COR DE STATUS (.status-frame)
+   Componente reaproveitado na foto do cabeçalho (.my-avatar) e nos
+   avatares da lista de contatos (.contact-item__avatar).
+   ------------------------------------------------------------
+   Técnica: uma camada de cor sólida (status-frame__tint) recortada
+   no formato do anel via mask-image (usa o alfa de avatar-frame.webp
+   — transparente fora do anel e no vão da foto, opaco só no anel).
+   Por cima, a mesma imagem em cinza (status-frame__luma) entra com
+   opacidade baixa, só pra devolver um pouco do brilho/sombreado
+   "vidro" sem depender de mix-blend-mode — que na prática se mostrou
+   pouco confiável combinado com mask-image em alguns navegadores/
+   WebViews (a moldura ficava branca, sem cor nenhuma). mask-image
+   sozinho é bem mais previsível entre navegadores.
+   Trocar só o background-color do tint anima sozinho (transition). */
+.status-frame__photo {
   position: absolute;
   inset: 8%;
   border-radius: 4px;
   overflow: hidden;
   display: block;
 }
-.my-avatar__photo .avatar-generic,
-.my-avatar__photo .avatar-img {
+.status-frame__photo .avatar-generic,
+.status-frame__photo .avatar-img {
   width: 100%; height: 100%;
   display: block;
   object-fit: cover;
   background: #eef4f8;
 }
-.contact-item__avatar .avatar-img {
-  width: 100%; height: 100%;
-  border-radius: 3px;
-  object-fit: cover;
-  display: block;
-}
-/* Moldura glossy da foto: a imagem em cinza (moldura__frame-luma) dá o
-   brilho/sombreado; a camada de cor por cima (moldura__frame-tint) usa
-   mix-blend-mode:color pra tingir só o anel (recortado com mask-image
-   usando o alfa da própria imagem), preservando aquele efeito vidro.
-   Trocar --frame-color anima suavemente (é só uma cor de fundo),
-   diferente de trocar de imagem em imagem. */
-.my-avatar__frame {
+.status-frame__ring {
   position: absolute;
   inset: 0;
-  isolation: isolate;
   pointer-events: none;
 }
-.my-avatar__frame-luma {
-  position: absolute;
-  inset: 0;
-  width: 100%; height: 100%;
-  display: block;
-}
-.my-avatar__frame-tint {
+.status-frame__tint {
   position: absolute;
   inset: 0;
   background: #3aa11a;
-  mix-blend-mode: color;
-  -webkit-mask-image: url("assets/icons/avatar-frame.webp");
-  mask-image: url("assets/icons/avatar-frame.webp");
+  -webkit-mask-image: url("../assets/icons/avatar-frame.webp");
+  mask-image: url("../assets/icons/avatar-frame.webp");
   -webkit-mask-size: 100% 100%;
   mask-size: 100% 100%;
   -webkit-mask-repeat: no-repeat;
   mask-repeat: no-repeat;
   transition: background-color 0.35s ease;
 }
-.my-avatar:hover .my-avatar__photo .avatar-generic,
-.my-avatar:hover .my-avatar__photo .avatar-img { filter: brightness(0.9); }
+.status-frame__luma {
+  position: absolute;
+  inset: 0;
+  width: 100%; height: 100%;
+  display: block;
+  opacity: 0.55;
+}
+.my-avatar:hover .status-frame__photo .avatar-generic,
+.my-avatar:hover .status-frame__photo .avatar-img { filter: brightness(0.9); }
 
 .dash-header__info { position: relative; flex: 1 1 auto; min-width: 0; }
 
@@ -1234,14 +1236,7 @@ body {
   position: relative;
   width: 38px; height: 38px;
   flex: 0 0 auto;
-  border-radius: 4px;
-  padding: 2px;
-  background: linear-gradient(#c7d2db, #9aa7b1);
 }
-.contact-item--online .contact-item__avatar { background: linear-gradient(#a6f06a, #3aa11a); }
-.contact-item--busy   .contact-item__avatar { background: linear-gradient(#ff8a8a, #c62828); }
-.contact-item--away   .contact-item__avatar { background: linear-gradient(#ffe08a, #e0a409); }
-.contact-item__avatar .avatar-generic { width: 100%; height: 100%; border-radius: 3px; display: block; }
 .contact-item__body { min-width: 0; flex: 1 1 auto; }
 .contact-item__name {
   font-size: 0.9rem;

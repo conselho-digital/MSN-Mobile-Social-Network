@@ -154,6 +154,33 @@ const MSNSupabase = (() => {
     return profs || [];
   }
 
+  // Escuta mudanças em profiles (status, nome, mensagem pessoal, foto)
+  // em tempo real, via Supabase Realtime — assim a lista de contatos
+  // (e a cor da moldura) atualiza sozinha quando alguém troca de
+  // status, sem precisar recarregar a página. onUpdate recebe a linha
+  // inteira atualizada (payload.new); quem chamou decide o que fazer
+  // com ela (dashboard.js filtra pelos ids que já são contatos).
+  let contactsChannel = null;
+  function subscribeContacts(onUpdate) {
+    if (!isConfigured()) return null;
+    unsubscribeContacts();
+    contactsChannel = client
+      .channel("profiles-changes")
+      .on(
+        "postgres_changes",
+        { event: "UPDATE", schema: "public", table: "profiles" },
+        (payload) => onUpdate(payload.new)
+      )
+      .subscribe();
+    return contactsChannel;
+  }
+  function unsubscribeContacts() {
+    if (contactsChannel) {
+      client.removeChannel(contactsChannel);
+      contactsChannel = null;
+    }
+  }
+
   // Adiciona um contato buscando pelo e-mail (identidade do Passport
   // clássico do MSN).
   async function addContactByEmail(email) {
@@ -218,6 +245,7 @@ const MSNSupabase = (() => {
   return {
     init, isConfigured, signIn, signUp, getSession, signOut,
     getMyProfile, updateMyProfile, getContacts, addContactByEmail,
+    subscribeContacts, unsubscribeContacts,
     createGroup,
     uploadAvatar,
     uploadSceneImage,
