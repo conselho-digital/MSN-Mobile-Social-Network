@@ -1380,20 +1380,21 @@ body {
   line-height: 1.5;
 }
 .scene-dialog__section {
+  display: flex;
+  align-items: center;
+  gap: 6px;
   margin: 0 0 8px;
   font-size: 0.85rem;
   font-weight: 600;
   color: #2f4a63;
 }
 
-/* Prévia (imagem fixa no topo do diálogo, antes da grade) */
-.scene-dialog__preview {
-  display: block;
-  width: 100%;
-  height: 72px;
+/* Ícone pequeno logo após o texto do título da seção */
+.scene-dialog__section-icon {
+  width: 18px;
+  height: 18px;
   object-fit: cover;
-  border-radius: 4px;
-  margin: 0 0 14px;
+  border-radius: 2px;
   box-shadow: inset 0 0 0 1px rgba(0, 0, 0, 0.15);
 }
 

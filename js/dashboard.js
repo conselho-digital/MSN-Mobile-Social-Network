@@ -244,7 +244,7 @@ const Dashboard = (() => {
     const overlay = document.getElementById("scene-picker");
     const grid = document.getElementById("scene-grid");
     const colorGrid = document.getElementById("color-scheme-grid");
-    stagedScene = (profile && profile.scene) || "green";
+    stagedScene = (profile && profile.scene) || SCENES[0].id;
     stagedColorScheme = (profile && profile.color_scheme) || null;
     stagedCustomImageUrl = (profile && profile.scene_image_url) || null;
 

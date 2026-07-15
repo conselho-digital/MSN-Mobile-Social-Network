@@ -17,17 +17,40 @@ const MSNScenes = (() => {
   // "image" é opcional: aponta para assets/scenes/<id>.jpg. Se o
   // arquivo ainda não foi enviado, o degradê de "css" aparece no lugar
   // (a imagem é apenas uma camada por cima do degradê — ver bg()).
+  // Galeria de cenários enviada pelo usuário (assets/scenes/cenarioN.webp).
+  // Cada um tem uma cor de tema pareada (usada abaixo da barra de busca)
+  // escolhida a dedo com base no clima/cor dominante da imagem.
+  function gradientFor(theme) {
+    return "linear-gradient(120deg,#0a0a0a 0%," + theme + " 100%)";
+  }
   const SCENES = [
-    { id: "green",  name: "Verde",     css: "linear-gradient(120deg,#0a0f0a 0%,#12240d 45%,#1f4a17 78%,#37731f 100%)", theme: "#3aa11a", image: "assets/scenes/green.jpg" },
-    { id: "blue",   name: "Azul",      css: "linear-gradient(120deg,#08203a 0%,#0e3a63 50%,#1f6fb0 100%)", theme: "#1f7fd0", image: "assets/scenes/blue.jpg" },
-    { id: "aero",   name: "Aero",      css: "linear-gradient(120deg,#0a3a5a 0%,#1f7fb0 50%,#8fd0f0 100%)", theme: "#2bb0e0", image: "assets/scenes/aero.jpg" },
-    { id: "purple", name: "Roxo",      css: "linear-gradient(120deg,#1a0a2a 0%,#3a1560 55%,#7b3fd0 100%)", theme: "#7b3fd0", image: "assets/scenes/purple.jpg" },
-    { id: "pink",   name: "Rosa",      css: "linear-gradient(120deg,#2a0a1a 0%,#8a1e55 55%,#e05a9a 100%)", theme: "#3aa11a", image: "assets/scenes/pink.jpg" },
-    { id: "sunset", name: "Pôr do sol", css: "linear-gradient(120deg,#3a1010 0%,#a03a1a 50%,#e0902a 100%)", theme: "#e0902a", image: "assets/scenes/sunset.jpg" },
-    { id: "teal",   name: "Turquesa",  css: "linear-gradient(120deg,#04201f 0%,#0a4a47 55%,#1f9e94 100%)", theme: "#1f9e94", image: "assets/scenes/teal.jpg" },
-    { id: "graphite", name: "Grafite", css: "linear-gradient(120deg,#0a0a0a 0%,#242424 60%,#3d3d3d 100%)", theme: "#6b7280", image: "assets/scenes/graphite.jpg" },
-    { id: "royal",  name: "Royal",     css: "linear-gradient(120deg,#0a1444 0%,#1c2f8a 55%,#3f6fe0 100%)", theme: "#3f6fe0", image: "assets/scenes/royal.jpg" },
-  ];
+    { id: "cenario1",  name: "Céu Azul",         theme: "#2bb0e0" },
+    { id: "cenario2",  name: "Rendas",           theme: "#a89f8c" },
+    { id: "cenario3",  name: "Amigos no Jardim", theme: "#5cb85c" },
+    { id: "cenario4",  name: "Campo Dourado",    theme: "#e0902a" },
+    { id: "cenario5",  name: "Galhos",           theme: "#e08a3c" },
+    { id: "cenario6",  name: "Futebol",          theme: "#5cb85c" },
+    { id: "cenario7",  name: "Deserto Azul",     theme: "#3f6fe0" },
+    { id: "cenario8",  name: "Bloco Rosa",       theme: "#e07ab8" },
+    { id: "cenario9",  name: "Verde Puro",       theme: "#5cb85c" },
+    { id: "cenario10", name: "Flores Roxas",     theme: "#8f7fd6" },
+    { id: "cenario11", name: "Flor de Cerejeira", theme: "#e69bb5" },
+    { id: "cenario12", name: "Neon Geométrico",  theme: "#d94f7a" },
+    { id: "cenario13", name: "Mandala",          theme: "#a0227a" },
+    { id: "cenario14", name: "Ouro Rosa",        theme: "#e0227a" },
+    { id: "cenario15", name: "Grafite Verde",    theme: "#2e7d32" },
+    { id: "cenario16", name: "Robô Espacial",    theme: "#1f7fd0" },
+    { id: "cenario17", name: "Grafite Urbano",   theme: "#2bb0e0" },
+    { id: "cenario18", name: "Bambu",            theme: "#3aa11a" },
+    { id: "cenario19", name: "Pop Art",          theme: "#e8c547" },
+    { id: "cenario20", name: "Caveira Roxa",     theme: "#7b3fd0" },
+    { id: "cenario21", name: "Terracota",        theme: "#8a5a4a" },
+    { id: "cenario22", name: "Amor",             theme: "#a0303a" },
+    { id: "cenario23", name: "Damasco",          theme: "#4a4a4a" },
+  ].map((s) => Object.assign(s, {
+    css: gradientFor(s.theme),
+    image: "assets/scenes/" + s.id + ".webp",
+  }));
 
   function find(id) {
     return SCENES.find((s) => s.id === id);

@@ -28,7 +28,7 @@ create table if not exists public.profiles (
 
 -- Caso a tabela já exista de uma execução anterior, garante as colunas novas.
 alter table public.profiles add column if not exists birthdate date;
-alter table public.profiles add column if not exists scene text default 'green';
+alter table public.profiles add column if not exists scene text default 'cenario1';
 alter table public.profiles add column if not exists color_scheme text;
 alter table public.profiles add column if not exists scene_image_url text;
 -- Observação: a foto de exibição usa Supabase Storage — veja
@@ -37,6 +37,12 @@ alter table public.profiles add column if not exists scene_image_url text;
 -- (ver supabase/color_scheme.sql). NULL = usa a cor pareada ao cenário.
 -- scene_image_url: cenário customizado enviado pela pessoa (botão
 -- "Procurar..."), usado quando scene = 'custom' (ver custom_scene.sql).
+
+-- A galeria de cenários trocou os antigos ids (green/blue/aero/...)
+-- pelas imagens em assets/scenes/cenarioN.webp — atualiza quem ainda
+-- estiver com o valor antigo para o novo cenário padrão.
+update public.profiles set scene = 'cenario1'
+  where scene in ('green','blue','aero','purple','pink','sunset','teal','graphite','royal');
 
 comment on table public.profiles is 'Perfis públicos dos usuários do MSN.';
 
