@@ -922,6 +922,13 @@ body {
   font-size: 0.85rem;
 }
 .status-select--sm .caret-down { border-top-color: #cfeaff; }
+/* Mesmo tratamento do nome: texto puro, sublinha só no hover — sem a
+   caixa/fundo claro herdado de .status-select (que é da tela de login). */
+.status-select--sm:hover {
+  border-color: transparent;
+  background: transparent;
+}
+.status-select--sm:hover #my-status-label { text-decoration: underline; }
 
 .my-subnick {
   display: block;
