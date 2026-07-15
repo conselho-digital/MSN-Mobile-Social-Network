@@ -818,16 +818,24 @@ body {
    Componente reaproveitado na foto do cabeçalho (.my-avatar) e nos
    avatares da lista de contatos (.contact-item__avatar).
    ------------------------------------------------------------
-   Técnica: uma camada de cor sólida (status-frame__tint) recortada
-   no formato do anel via mask-image (usa o alfa de avatar-frame.webp
-   — transparente fora do anel e no vão da foto, opaco só no anel).
-   Por cima, a mesma imagem em cinza (status-frame__luma) entra com
-   opacidade baixa, só pra devolver um pouco do brilho/sombreado
-   "vidro" sem depender de mix-blend-mode — que na prática se mostrou
-   pouco confiável combinado com mask-image em alguns navegadores/
-   WebViews (a moldura ficava branca, sem cor nenhuma). mask-image
-   sozinho é bem mais previsível entre navegadores.
-   Trocar só o background-color do tint anima sozinho (transition). */
+   Técnica: duas camadas de cor (status-frame__tint = cor atual,
+   status-frame__tint--next = cor de destino), cada uma um gradiente
+   claro→escuro, recortadas no formato do anel via mask-image (usa o
+   alfa de avatar-frame.webp — transparente fora do anel e no vão da
+   foto, opaco só no anel). Por cima, a mesma imagem em cinza
+   (status-frame__luma) entra com opacidade baixa, só pra devolver um
+   pouco do brilho/sombreado "vidro" — sem depender de mix-blend-mode,
+   que na prática se mostrou pouco confiável combinado com mask-image
+   em alguns navegadores/WebViews (a moldura ficava branca, sem cor
+   nenhuma). mask-image sozinho é bem mais previsível.
+
+   Ao trocar de status, a camada "--next" recebe a nova cor e um
+   clip-path triangular que cresce do canto superior esquerdo até
+   cobrir tudo — uma "onda" diagonal varrendo a cor antiga. Ao final
+   (animationend), essa cor vira a base (--tint) e a "--next" volta
+   ao estado inicial, pronta pra próxima troca. clip-path com o mesmo
+   número de pontos anima de forma confiável entre navegadores,
+   diferente de tentar interpolar dois gradientes diretamente. */
 .status-frame__photo {
   position: absolute;
   inset: 8%;
@@ -847,17 +855,27 @@ body {
   inset: 0;
   pointer-events: none;
 }
-.status-frame__tint {
+.status-frame__tint,
+.status-frame__tint--next {
   position: absolute;
   inset: 0;
-  background: #3aa11a;
+  background: linear-gradient(135deg, #a6f06a, #3aa11a);
   -webkit-mask-image: url("../assets/icons/avatar-frame.webp");
   mask-image: url("../assets/icons/avatar-frame.webp");
   -webkit-mask-size: 100% 100%;
   mask-size: 100% 100%;
   -webkit-mask-repeat: no-repeat;
   mask-repeat: no-repeat;
-  transition: background-color 0.35s ease;
+}
+.status-frame__tint--next {
+  clip-path: polygon(-15% -15%, -5% -15%, -15% -5%);
+}
+.status-frame__tint--next.is-waving {
+  animation: statusWave 0.7s cubic-bezier(0.4, 0, 0.2, 1);
+}
+@keyframes statusWave {
+  from { clip-path: polygon(-15% -15%, -5% -15%, -15% -5%); }
+  to   { clip-path: polygon(-15% -15%, 145% -15%, -15% 145%); }
 }
 .status-frame__luma {
   position: absolute;
@@ -868,6 +886,10 @@ body {
 }
 .my-avatar:hover .status-frame__photo .avatar-generic,
 .my-avatar:hover .status-frame__photo .avatar-img { filter: brightness(0.9); }
+
+@media (prefers-reduced-motion: reduce) {
+  .status-frame__tint--next.is-waving { animation: none; }
+}
 
 .dash-header__info { position: relative; flex: 1 1 auto; min-width: 0; }
 

@@ -12,17 +12,21 @@ const Dashboard = (() => {
     invisible: "Invisível",
     offline: "Offline",
   };
-  // Cor da moldura da foto por status — tinge a moldura em cinza
-  // (assets/icons/avatar-frame.webp) via mask-image + uma camada de cor
-  // sólida (ver CSS .status-frame__tint). Trocar essa cor anima
-  // suavemente sozinho (é só um background-color).
-  const AVATAR_FRAME_COLOR = {
-    online: "#3aa11a",
-    busy: "#c62828",
-    away: "#e0a409",
-    invisible: "#9aa7b1",
-    offline: "#9aa7b1",
+  // Gradiente (claro → escuro) da moldura da foto por status — tinge a
+  // moldura em cinza (assets/icons/avatar-frame.webp) via mask-image
+  // (ver CSS .status-frame__tint). Trocar de status dispara a "onda"
+  // diagonal (ver updateStatusFrame / .status-frame__tint--next).
+  const AVATAR_FRAME_GRADIENT = {
+    online: ["#a6f06a", "#3aa11a"],
+    busy: ["#ff8a8a", "#c62828"],
+    away: ["#ffe08a", "#e0a409"],
+    invisible: ["#c7d2db", "#9aa7b1"],
+    offline: ["#c7d2db", "#9aa7b1"],
   };
+  function frameGradient(status) {
+    const pair = AVATAR_FRAME_GRADIENT[status] || AVATAR_FRAME_GRADIENT.online;
+    return "linear-gradient(135deg, " + pair[0] + ", " + pair[1] + ")";
+  }
 
   // Cenários (fundo do topo) e cores de tema: catálogo compartilhado
   // em js/scenes.js (usado também pela tela de login).
@@ -109,16 +113,40 @@ const Dashboard = (() => {
   // Moldura com a cor do status (compartilhada entre a foto do cabeçalho
   // e os avatares da lista de contatos — ver .status-frame* no CSS).
   function statusFrameMarkup(avatarUrl, status) {
-    const color = AVATAR_FRAME_COLOR[status] || AVATAR_FRAME_COLOR.online;
     return (
       '<span class="status-frame__photo" data-avatar-url="' + esc(avatarUrl || "") + '">' +
       avatarMarkup(avatarUrl) +
       "</span>" +
       '<span class="status-frame__ring" aria-hidden="true">' +
-      '<span class="status-frame__tint" style="background-color:' + color + '"></span>' +
+      '<span class="status-frame__tint" style="background:' + frameGradient(status) +
+      '" data-status="' + esc(status) + '"></span>' +
+      '<span class="status-frame__tint--next"></span>' +
       '<img src="assets/icons/avatar-frame.webp" class="status-frame__luma" alt="" />' +
       "</span>"
     );
+  }
+
+  // Troca a cor da moldura com uma "onda" diagonal (ver @keyframes
+  // statusWave no CSS), em vez de simplesmente trocar de uma vez.
+  // Não faz nada se o status já é o mesmo (evita retriggar a onda
+  // à toa a cada render).
+  function updateStatusFrame(ring, status) {
+    const tint = ring.querySelector(".status-frame__tint");
+    const next = ring.querySelector(".status-frame__tint--next");
+    if (!tint || !next || tint.dataset.status === status) return;
+
+    next.style.background = frameGradient(status);
+    next.classList.remove("is-waving");
+    void next.offsetWidth; // força reflow pra poder re-disparar a animação
+    next.classList.add("is-waving");
+
+    const onDone = () => {
+      tint.style.background = frameGradient(status);
+      tint.dataset.status = status;
+      next.classList.remove("is-waving");
+      next.removeEventListener("animationend", onDone);
+    };
+    next.addEventListener("animationend", onDone);
   }
 
   function esc(s) {
@@ -177,13 +205,13 @@ const Dashboard = (() => {
 
     const avatar = document.querySelector(".my-avatar");
     if (avatar) {
-      if (!avatar.querySelector(".status-frame__ring")) {
+      const ring = avatar.querySelector(".status-frame__ring");
+      if (!ring) {
         // Primeira renderização: monta a moldura inteira.
         avatar.innerHTML = statusFrameMarkup(profile.avatar_url, status);
       } else {
-        // Já existe: só atualiza a cor (anima sozinho) e a foto se mudou.
-        const tint = avatar.querySelector(".status-frame__tint");
-        if (tint) tint.style.backgroundColor = AVATAR_FRAME_COLOR[status] || AVATAR_FRAME_COLOR.online;
+        // Já existe: só atualiza a cor (com a onda) e a foto se mudou.
+        updateStatusFrame(ring, status);
         const photoWrap = avatar.querySelector(".status-frame__photo");
         if (photoWrap && photoWrap.dataset.avatarUrl !== (profile.avatar_url || "")) {
           photoWrap.innerHTML = avatarMarkup(profile.avatar_url);
@@ -300,11 +328,11 @@ const Dashboard = (() => {
 
     const avatarBox = li.querySelector(".contact-item__avatar");
     if (avatarBox) {
-      if (!avatarBox.querySelector(".status-frame__ring")) {
+      const ring = avatarBox.querySelector(".status-frame__ring");
+      if (!ring) {
         avatarBox.innerHTML = statusFrameMarkup(c.avatar_url, c.status);
       } else {
-        const tint = avatarBox.querySelector(".status-frame__tint");
-        if (tint) tint.style.backgroundColor = AVATAR_FRAME_COLOR[c.status] || AVATAR_FRAME_COLOR.online;
+        updateStatusFrame(ring, c.status);
         const photoWrap = avatarBox.querySelector(".status-frame__photo");
         if (photoWrap && photoWrap.dataset.avatarUrl !== (c.avatar_url || "")) {
           photoWrap.innerHTML = avatarMarkup(c.avatar_url);
