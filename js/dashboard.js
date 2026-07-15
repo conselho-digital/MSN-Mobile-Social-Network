@@ -17,7 +17,7 @@ const Dashboard = (() => {
   // (ver CSS .status-frame__tint). Trocar de status dispara um fade-in
   // (ver updateStatusFrame / .status-frame__tint--next).
   const AVATAR_FRAME_GRADIENT = {
-    online: ["#8ee68c", "#43c93f"],
+    online: ["#8ee68c", "#10eb09"],
     busy: ["#ff8a8a", "#c62828"],
     away: ["#ffe08a", "#e0a409"],
     invisible: ["#c7d2db", "#9aa7b1"],
