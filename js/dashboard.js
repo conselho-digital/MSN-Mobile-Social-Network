@@ -20,40 +20,12 @@ const Dashboard = (() => {
     offline: "linear-gradient(#c7d2db, #9aa7b1)",
   };
 
-  // Cenários (fundo do topo). O primeiro é o padrão.
-  // Cada cenário também tem uma "theme" (cor de tema) pareada, que tinge
-  // o restante da tela (Novidades, atalhos) abaixo do banner — igual ao
-  // MSN clássico, onde a cor de baixo nem sempre é a mesma do banner
-  // (ex.: cenário rosa combinado com tema verde). Futuramente essa cor de
-  // tema poderá ser escolhida separadamente num menu de cores próprio.
-  const SCENES = [
-    { id: "green",  name: "Verde",     css: "linear-gradient(120deg,#0a0f0a 0%,#12240d 45%,#1f4a17 78%,#37731f 100%)", theme: "#3aa11a" },
-    { id: "blue",   name: "Azul",      css: "linear-gradient(120deg,#08203a 0%,#0e3a63 50%,#1f6fb0 100%)", theme: "#1f7fd0" },
-    { id: "aero",   name: "Aero",      css: "linear-gradient(120deg,#0a3a5a 0%,#1f7fb0 50%,#8fd0f0 100%)", theme: "#2bb0e0" },
-    { id: "purple", name: "Roxo",      css: "linear-gradient(120deg,#1a0a2a 0%,#3a1560 55%,#7b3fd0 100%)", theme: "#7b3fd0" },
-    { id: "pink",   name: "Rosa",      css: "linear-gradient(120deg,#2a0a1a 0%,#8a1e55 55%,#e05a9a 100%)", theme: "#3aa11a" },
-    { id: "sunset", name: "Pôr do sol", css: "linear-gradient(120deg,#3a1010 0%,#a03a1a 50%,#e0902a 100%)", theme: "#e0902a" },
-    { id: "teal",   name: "Turquesa",  css: "linear-gradient(120deg,#04201f 0%,#0a4a47 55%,#1f9e94 100%)", theme: "#1f9e94" },
-    { id: "graphite", name: "Grafite", css: "linear-gradient(120deg,#0a0a0a 0%,#242424 60%,#3d3d3d 100%)", theme: "#6b7280" },
-    { id: "royal",  name: "Royal",     css: "linear-gradient(120deg,#0a1444 0%,#1c2f8a 55%,#3f6fe0 100%)", theme: "#3f6fe0" },
-  ];
-  function sceneCss(id) {
-    const s = SCENES.find((x) => x.id === id);
-    return s ? s.css : SCENES[0].css;
-  }
-  function sceneTheme(id) {
-    const s = SCENES.find((x) => x.id === id);
-    return (s && s.theme) || SCENES[0].theme;
-  }
-
-  // Mistura uma cor hex com branco (0 = cor pura, 1 = branco puro),
-  // usada para gerar os tons pastéis do tema abaixo do banner.
-  function pastel(hex, whiteRatio) {
-    const n = parseInt(hex.slice(1), 16);
-    const r = (n >> 16) & 255, g = (n >> 8) & 255, b = n & 255;
-    const mix = (c) => Math.round(c + (255 - c) * whiteRatio);
-    return "rgb(" + mix(r) + "," + mix(g) + "," + mix(b) + ")";
-  }
+  // Cenários (fundo do topo) e cores de tema: catálogo compartilhado
+  // em js/scenes.js (usado também pela tela de login).
+  const SCENES = MSNScenes.list;
+  const sceneCss = MSNScenes.css;
+  const sceneTheme = MSNScenes.theme;
+  const pastel = MSNScenes.pastel;
 
   let profile = null;
   let contacts = [];

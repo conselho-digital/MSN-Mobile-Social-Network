@@ -417,8 +417,16 @@
       const result = await MSNSupabase.signIn(email, password);
       if (cancelRequested) return;
 
+      // Busca o cenário salvo no perfil para lembrar o tema desta conta
+      // na tela de login (por conta, guardado no dispositivo).
+      let scene = null;
+      try {
+        const profile = await MSNSupabase.getMyProfile();
+        scene = (profile && profile.scene) || null;
+      } catch (_) {}
+
       // Conectou com sucesso: agora sim salvamos as preferências.
-      savePreferences(email, password);
+      savePreferences(email, password, scene);
 
       // Guarda status escolhido para uso pós-login
       sessionStorage.setItem("msn:status", status.status);
@@ -463,9 +471,9 @@
   function setAccounts(list) {
     try { localStorage.setItem("msn:accounts", JSON.stringify(list)); } catch (_) {}
   }
-  function upsertAccount(email, passObf) {
+  function upsertAccount(email, passObf, scene) {
     const list = getAccounts().filter((a) => a.email !== email);
-    list.unshift({ email: email, pass: passObf || null });
+    list.unshift({ email: email, pass: passObf || null, scene: scene || null });
     setAccounts(list);
   }
   function removeAccount(email) {
@@ -477,16 +485,18 @@
 
   /* ---------- Preferências de login (após conectar) ----------
      - "Lembrar-me" ligado: salva a conta na lista (com senha só se
-       "Lembrar senha" ligado).
+       "Lembrar senha" ligado), junto com o cenário/tema do perfil —
+       para reaplicar a cor na tela de login quando essa conta for
+       selecionada no dropdown.
      - "Lembrar-me" desligado: remove a conta da lista.
      - Salva também o estado de "Entrar automaticamente". */
-  function savePreferences(email, password) {
+  function savePreferences(email, password, scene) {
     const me = document.getElementById("opt-remember-me");
     const pass = document.getElementById("opt-remember-pass");
     const auto = document.getElementById("opt-auto-signin");
     try {
       if (me && me.checked) {
-        upsertAccount(email, pass && pass.checked ? obfuscate(password) : null);
+        upsertAccount(email, pass && pass.checked ? obfuscate(password) : null, scene);
         localStorage.setItem("msn:lastEmail", email);
       } else {
         removeAccount(email);
@@ -532,7 +542,9 @@
   /* ---------- "Bem-vindo novamente!" só com uma conta já salva ----------
      O título mostra "Bem-vindo novamente!" apenas quando o e-mail no
      campo corresponde a uma conta que já fez login antes (lembrada).
-     Caso contrário (campo vazio ou e-mail novo), mostra "Entrar". */
+     Caso contrário (campo vazio ou e-mail novo), mostra "Entrar".
+     A mesma verificação também decide se o cenário/tema salvo dessa
+     conta é aplicado na tela de login (ver applyLoginTheme). */
   function bindWelcomeHeading() {
     const emailEl = document.getElementById("login-email");
     if (emailEl) emailEl.addEventListener("input", updateWelcomeHeading);
@@ -543,8 +555,38 @@
     const emailEl = document.getElementById("login-email");
     if (!heading || !emailEl) return;
     const email = emailEl.value.trim().toLowerCase();
-    const known = email && getAccounts().some((a) => a.email.toLowerCase() === email);
-    heading.textContent = known ? "Bem-vindo novamente!" : "Entrar";
+    const match = email ? getAccounts().find((a) => a.email.toLowerCase() === email) : null;
+    heading.textContent = match ? "Bem-vindo novamente!" : "Entrar";
+    applyLoginTheme(match ? match.scene : null);
+  }
+
+  /* ---------- Tema da tela de login (por conta) ----------
+     Quando uma conta reconhecida está selecionada, a tela de login usa
+     o cenário/tema salvo do perfil dessa conta (fundo tingido e título
+     colorido), guardado localmente no dispositivo. Sem conta reconhecida,
+     volta ao azul padrão. */
+  let currentLoginScene = undefined;
+  function applyLoginTheme(sceneId) {
+    if (sceneId === currentLoginScene) return;
+    currentLoginScene = sceneId;
+
+    const root = document.body;
+    if (!sceneId || typeof MSNScenes === "undefined") {
+      root.removeAttribute("data-login-theme");
+      ["--lg1", "--lg2", "--lg3", "--lg4", "--lg5", "--login-accent"].forEach((p) =>
+        root.style.removeProperty(p)
+      );
+      return;
+    }
+
+    const hex = MSNScenes.theme(sceneId);
+    root.style.setProperty("--lg1", MSNScenes.pastel(hex, 0.55));
+    root.style.setProperty("--lg2", MSNScenes.pastel(hex, 0.68));
+    root.style.setProperty("--lg3", MSNScenes.pastel(hex, 0.8));
+    root.style.setProperty("--lg4", MSNScenes.pastel(hex, 0.9));
+    root.style.setProperty("--lg5", MSNScenes.pastel(hex, 0.97));
+    root.style.setProperty("--login-accent", hex);
+    root.setAttribute("data-login-theme", sceneId);
   }
 
   /* ---------- Dropdown de contas ---------- */

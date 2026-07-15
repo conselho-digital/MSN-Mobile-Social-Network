@@ -7,12 +7,13 @@
    app com internet, em vez de ficar presa numa versão antiga.
    ============================================================ */
 
-const CACHE = "msn-mobile-v4";
+const CACHE = "msn-mobile-v5";
 const ASSETS = [
   "./",
   "./index.html",
   "./manifest.json",
   "./css/style.css",
+  "./js/scenes.js",
   "./js/app.js",
   "./js/supabase-client.js",
   "./js/ui-manager.js",

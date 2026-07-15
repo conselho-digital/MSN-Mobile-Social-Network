@@ -239,6 +239,20 @@ body {
     radial-gradient(120% 40% at 82% 4%, rgba(255,255,255,0.40), transparent 50%),
     linear-gradient(180deg, #b0d6f1 0%, #c9e2f7 20%, #dcedfb 42%, #eef6fd 64%, #ffffff 88%);
 }
+/* Tema por conta (aplicado via JS quando uma conta salva é selecionada
+   no dropdown de e-mail) — só no login/entrando, nunca no cadastro. */
+#screen-login,
+#screen-connecting {
+  background:
+    radial-gradient(140% 45% at 25% 0%, rgba(255,255,255,0.55), transparent 55%),
+    radial-gradient(120% 40% at 82% 4%, rgba(255,255,255,0.40), transparent 50%),
+    linear-gradient(180deg,
+      var(--lg1, #b0d6f1) 0%,
+      var(--lg2, #c9e2f7) 20%,
+      var(--lg3, #dcedfb) 42%,
+      var(--lg4, #eef6fd) 64%,
+      var(--lg5, #ffffff) 88%);
+}
 .signin-scroll {
   position: relative;
   flex: 1 1 auto;
@@ -249,6 +263,19 @@ body {
   align-items: center;
   text-align: center;
   padding: 0 26px 10px;
+}
+/* Textura decorativa sutil no topo quando uma conta temática está ativa */
+[data-login-theme] .signin-scroll::before {
+  content: "";
+  position: absolute;
+  top: 0; left: 0; right: 0;
+  height: 100px;
+  background-image: radial-gradient(circle, var(--login-accent, transparent) 1px, transparent 1.6px);
+  background-size: 16px 16px;
+  opacity: 0.15;
+  -webkit-mask-image: linear-gradient(180deg, #000 0%, transparent 100%);
+  mask-image: linear-gradient(180deg, #000 0%, transparent 100%);
+  pointer-events: none;
 }
 
 /* Ícone de ajuda "?" no canto superior direito */
@@ -342,7 +369,7 @@ body {
 .welcome {
   font-size: 1.5rem;
   font-weight: 400;
-  color: #3a4a55;
+  color: var(--login-accent, #3a4a55);
   margin: 4px 0 26px;
   letter-spacing: 0.2px;
 }
