@@ -29,8 +29,11 @@ create table if not exists public.profiles (
 -- Caso a tabela já exista de uma execução anterior, garante as colunas novas.
 alter table public.profiles add column if not exists birthdate date;
 alter table public.profiles add column if not exists scene text default 'green';
+alter table public.profiles add column if not exists color_scheme text;
 -- Observação: a foto de exibição usa Supabase Storage — veja
 -- supabase/personalization.sql (bucket "avatars" + políticas).
+-- color_scheme: esquema de cores escolhido separadamente do cenário
+-- (ver supabase/color_scheme.sql). NULL = usa a cor pareada ao cenário.
 
 comment on table public.profiles is 'Perfis públicos dos usuários do MSN.';
 

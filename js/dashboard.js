@@ -24,7 +24,6 @@ const Dashboard = (() => {
   // em js/scenes.js (usado também pela tela de login).
   const SCENES = MSNScenes.list;
   const sceneBg = MSNScenes.bg;
-  const sceneTheme = MSNScenes.theme;
   const pastel = MSNScenes.pastel;
 
   let profile = null;
@@ -96,14 +95,15 @@ const Dashboard = (() => {
       avatar.insertAdjacentHTML("afterbegin", avatarMarkup(profile.avatar_url));
     }
 
-    // Cenário (fundo do topo, com imagem se enviada) + cor de tema
-    // pareada (Novidades/atalhos abaixo da busca — sem mudanças aqui)
+    // Cenário (fundo do topo, com imagem se enviada) + cor de tema:
+    // usa o esquema de cores escolhido manualmente (color_scheme), ou
+    // a cor pareada automaticamente ao cenário se nada foi escolhido.
     const header = document.querySelector(".dash-header");
     if (header) header.style.setProperty("--scene", sceneBg(profile.scene));
 
     const screen = document.getElementById("screen-dashboard");
     if (screen) {
-      const theme = sceneTheme(profile.scene);
+      const theme = MSNScenes.effectiveTheme(profile.scene, profile.color_scheme);
       screen.style.setProperty("--tint-light", pastel(theme, 0.92));
       screen.style.setProperty("--tint-mid", pastel(theme, 0.8));
       screen.style.setProperty("--tint-strong", pastel(theme, 0.62));
@@ -217,16 +217,23 @@ const Dashboard = (() => {
     }
   }
 
-  /* ---------- Alterar cenário (fundo do topo, até a barra de busca) ----------
-     Clicar numa miniatura só faz uma prévia (o cabeçalho muda na hora,
-     mas nada é salvo ainda). "Aplicar" salva sem fechar; "OK" salva e
-     fecha; "Fechar"/X descarta a prévia e volta ao cenário salvo. */
+  /* ---------- Alterar cenário + esquema de cores ----------
+     Duas escolhas independentes no mesmo diálogo, como no clássico:
+     - Cenário: fundo do topo (até a barra de busca).
+     - Esquema de cores: cor que tinge o resto da tela. Se nada for
+       escolhido aqui, continua usando a cor pareada ao cenário.
+     Clicar só faz uma prévia (nada salvo ainda). "Aplicar" salva sem
+     fechar; "OK" salva e fecha; "Fechar"/X descarta e volta ao que
+     estava salvo. */
   let stagedScene = null;
+  let stagedColorScheme = null;
 
   function openScenePicker() {
     const overlay = document.getElementById("scene-picker");
     const grid = document.getElementById("scene-grid");
+    const colorGrid = document.getElementById("color-scheme-grid");
     stagedScene = (profile && profile.scene) || "green";
+    stagedColorScheme = (profile && profile.color_scheme) || null;
 
     grid.innerHTML = SCENES.map((s) =>
       '<button type="button" class="scene-swatch' + (s.id === stagedScene ? " is-selected" : "") +
@@ -243,6 +250,24 @@ const Dashboard = (() => {
       });
     });
 
+    if (colorGrid) {
+      colorGrid.innerHTML = MSNScenes.colorSchemes.map((c) =>
+        '<button type="button" class="color-swatch' + (c.id === stagedColorScheme ? " is-selected" : "") +
+        '" data-color-scheme="' + c.id + '" style="background:' + c.hex +
+        '" aria-label="' + esc(c.id) + '"></button>'
+      ).join("");
+
+      colorGrid.querySelectorAll(".color-swatch").forEach((sw) => {
+        sw.addEventListener("click", () => {
+          // Clicar na cor já selecionada desmarca (volta ao par automático).
+          stagedColorScheme = sw.dataset.colorScheme === stagedColorScheme ? null : sw.dataset.colorScheme;
+          colorGrid.querySelectorAll(".color-swatch").forEach((x) => x.classList.remove("is-selected"));
+          if (stagedColorScheme) sw.classList.add("is-selected");
+          previewColorScheme(stagedColorScheme);
+        });
+      });
+    }
+
     overlay.hidden = false;
   }
 
@@ -252,17 +277,35 @@ const Dashboard = (() => {
     if (header) header.style.setProperty("--scene", sceneBg(id));
   }
 
-  // Salva de verdade o cenário escolhido (profile + Supabase).
-  async function commitScene() {
-    if (!profile || !stagedScene || stagedScene === profile.scene) return;
-    profile.scene = stagedScene;
-    renderProfile();
-    try { await MSNSupabase.updateMyProfile({ scene: stagedScene }); } catch (_) {}
+  // Aplica o esquema de cores só visualmente (Novidades/atalhos), sem salvar.
+  function previewColorScheme(colorSchemeId) {
+    const screen = document.getElementById("screen-dashboard");
+    if (!screen) return;
+    const theme = MSNScenes.effectiveTheme(stagedScene, colorSchemeId);
+    screen.style.setProperty("--tint-light", pastel(theme, 0.92));
+    screen.style.setProperty("--tint-mid", pastel(theme, 0.8));
+    screen.style.setProperty("--tint-strong", pastel(theme, 0.62));
   }
 
-  // Fecha o diálogo; se a prévia não foi aplicada, volta ao cenário salvo.
+  // Salva de verdade o cenário e o esquema de cores escolhidos.
+  async function commitScene() {
+    if (!profile) return;
+    const patch = {};
+    if (stagedScene && stagedScene !== profile.scene) patch.scene = stagedScene;
+    if (stagedColorScheme !== profile.color_scheme) patch.color_scheme = stagedColorScheme;
+    if (!Object.keys(patch).length) return;
+
+    Object.assign(profile, patch);
+    renderProfile();
+    try { await MSNSupabase.updateMyProfile(patch); } catch (_) {}
+  }
+
+  // Fecha o diálogo; se a prévia não foi aplicada, volta ao que estava salvo.
   function closeScenePicker() {
-    if (profile) previewScene(profile.scene);
+    if (profile) {
+      previewScene(profile.scene);
+      previewColorScheme(profile.color_scheme);
+    }
     document.getElementById("scene-picker").hidden = true;
   }
 

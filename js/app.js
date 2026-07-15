@@ -439,16 +439,19 @@
       const result = await MSNSupabase.signIn(email, password);
       if (cancelRequested) return;
 
-      // Busca o cenário salvo no perfil para lembrar o tema desta conta
-      // na tela de login (por conta, guardado no dispositivo).
+      // Busca o cenário e o esquema de cores salvos no perfil para
+      // lembrar o tema desta conta na tela de login (por conta,
+      // guardado no dispositivo).
       let scene = null;
+      let colorScheme = null;
       try {
         const profile = await MSNSupabase.getMyProfile();
         scene = (profile && profile.scene) || null;
+        colorScheme = (profile && profile.color_scheme) || null;
       } catch (_) {}
 
       // Conectou com sucesso: agora sim salvamos as preferências.
-      savePreferences(email, password, scene);
+      savePreferences(email, password, scene, colorScheme);
 
       // Guarda status escolhido para uso pós-login
       sessionStorage.setItem("msn:status", status.status);
@@ -493,9 +496,9 @@
   function setAccounts(list) {
     try { localStorage.setItem("msn:accounts", JSON.stringify(list)); } catch (_) {}
   }
-  function upsertAccount(email, passObf, scene) {
+  function upsertAccount(email, passObf, scene, colorScheme) {
     const list = getAccounts().filter((a) => a.email !== email);
-    list.unshift({ email: email, pass: passObf || null, scene: scene || null });
+    list.unshift({ email: email, pass: passObf || null, scene: scene || null, colorScheme: colorScheme || null });
     setAccounts(list);
   }
   function removeAccount(email) {
@@ -512,13 +515,13 @@
        selecionada no dropdown.
      - "Lembrar-me" desligado: remove a conta da lista.
      - Salva também o estado de "Entrar automaticamente". */
-  function savePreferences(email, password, scene) {
+  function savePreferences(email, password, scene, colorScheme) {
     const me = document.getElementById("opt-remember-me");
     const pass = document.getElementById("opt-remember-pass");
     const auto = document.getElementById("opt-auto-signin");
     try {
       if (me && me.checked) {
-        upsertAccount(email, pass && pass.checked ? obfuscate(password) : null, scene);
+        upsertAccount(email, pass && pass.checked ? obfuscate(password) : null, scene, colorScheme);
         localStorage.setItem("msn:lastEmail", email);
       } else {
         removeAccount(email);
@@ -579,18 +582,20 @@
     const email = emailEl.value.trim().toLowerCase();
     const match = email ? getAccounts().find((a) => a.email.toLowerCase() === email) : null;
     heading.textContent = match ? "Bem-vindo novamente!" : "Entrar";
-    applyLoginTheme(match ? match.scene : null);
+    applyLoginTheme(match ? match.scene : null, match ? match.colorScheme : null);
   }
 
   /* ---------- Tema da tela de login (por conta) ----------
      Quando uma conta reconhecida está selecionada, a tela de login usa
      o cenário/tema salvo do perfil dessa conta (fundo tingido e título
      colorido), guardado localmente no dispositivo. Sem conta reconhecida,
-     volta ao azul padrão. */
-  let currentLoginScene = undefined;
-  function applyLoginTheme(sceneId) {
-    if (sceneId === currentLoginScene) return;
-    currentLoginScene = sceneId;
+     volta ao azul padrão. O esquema de cores (se escolhido à parte no
+     Dashboard) tem prioridade sobre a cor pareada ao cenário. */
+  let currentLoginKey = undefined;
+  function applyLoginTheme(sceneId, colorSchemeId) {
+    const key = sceneId + "|" + (colorSchemeId || "");
+    if (key === currentLoginKey) return;
+    currentLoginKey = key;
 
     const root = document.body;
     if (!sceneId || typeof MSNScenes === "undefined") {
@@ -601,7 +606,7 @@
       return;
     }
 
-    const hex = MSNScenes.theme(sceneId);
+    const hex = MSNScenes.effectiveTheme(sceneId, colorSchemeId);
     root.style.setProperty("--lg1", MSNScenes.pastel(hex, 0.55));
     root.style.setProperty("--lg2", MSNScenes.pastel(hex, 0.68));
     root.style.setProperty("--lg3", MSNScenes.pastel(hex, 0.8));

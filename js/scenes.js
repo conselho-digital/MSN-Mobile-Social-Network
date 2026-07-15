@@ -82,5 +82,38 @@ const MSNScenes = (() => {
     return "rgb(" + mix(r) + "," + mix(g) + "," + mix(b) + ")";
   }
 
-  return { list: SCENES, find, css, bg, theme, image, pastel };
+  // ------------------------------------------------------------
+  // Esquema de cores: escolha INDEPENDENTE do cenário (a segunda
+  // seção do diálogo clássico "Selecione um esquema de cores").
+  // Guardado em profiles.color_scheme. Enquanto for null, o app usa
+  // a cor pareada automaticamente ao cenário (theme(id) acima).
+  // ------------------------------------------------------------
+  const COLOR_SCHEMES = [
+    { id: "graphite", hex: "#3d3d3d" },
+    { id: "blue",     hex: "#4a90d9" },
+    { id: "lavender", hex: "#8f7fd6" },
+    { id: "teal",     hex: "#3fc1c9" },
+    { id: "green",    hex: "#5cb85c" },
+    { id: "yellow",   hex: "#e8c547" },
+    { id: "orange",   hex: "#e08a3c" },
+    { id: "salmon",   hex: "#e07a7a" },
+    { id: "pink",     hex: "#e07ab8" },
+    { id: "magenta",  hex: "#b05ce0" },
+    { id: "mint",     hex: "#8fe0a0" },
+    { id: "silver",   hex: "#c8ced4" },
+  ];
+  function colorSchemeHex(id) {
+    const c = COLOR_SCHEMES.find((x) => x.id === id);
+    return c ? c.hex : null;
+  }
+  // Cor de tema efetiva: o esquema de cores escolhido manualmente, se
+  // houver; senão a cor pareada automaticamente ao cenário.
+  function effectiveTheme(sceneId, colorSchemeId) {
+    return colorSchemeHex(colorSchemeId) || theme(sceneId);
+  }
+
+  return {
+    list: SCENES, find, css, bg, theme, image, pastel,
+    colorSchemes: COLOR_SCHEMES, colorSchemeHex, effectiveTheme,
+  };
 })();
