@@ -30,10 +30,13 @@ create table if not exists public.profiles (
 alter table public.profiles add column if not exists birthdate date;
 alter table public.profiles add column if not exists scene text default 'green';
 alter table public.profiles add column if not exists color_scheme text;
+alter table public.profiles add column if not exists scene_image_url text;
 -- Observação: a foto de exibição usa Supabase Storage — veja
 -- supabase/personalization.sql (bucket "avatars" + políticas).
 -- color_scheme: esquema de cores escolhido separadamente do cenário
 -- (ver supabase/color_scheme.sql). NULL = usa a cor pareada ao cenário.
+-- scene_image_url: cenário customizado enviado pela pessoa (botão
+-- "Procurar..."), usado quando scene = 'custom' (ver custom_scene.sql).
 
 comment on table public.profiles is 'Perfis públicos dos usuários do MSN.';
 

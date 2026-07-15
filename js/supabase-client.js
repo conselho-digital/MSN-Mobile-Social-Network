@@ -118,6 +118,25 @@ const MSNSupabase = (() => {
     return url;
   }
 
+  /* ---------- Cenário customizado (botão "Procurar...") ---------- */
+  async function uploadSceneImage(file) {
+    if (!isConfigured()) throw new Error("Configure o Supabase para enviar imagens.");
+    const { data: { user } } = await client.auth.getUser();
+    if (!user) throw new Error("Sessão expirada. Entre novamente.");
+
+    const ext = (file.name.split(".").pop() || "jpg").toLowerCase();
+    const path = user.id + "/scene_" + Date.now() + "." + ext;
+
+    const { error } = await client.storage
+      .from("scenes")
+      .upload(path, file, { upsert: true, contentType: file.type || "image/jpeg" });
+    if (error) throw error;
+
+    const { data: pub } = client.storage.from("scenes").getPublicUrl(path);
+    const url = pub.publicUrl;
+    return url;
+  }
+
   /* ---------- Contatos ---------- */
   async function getContacts() {
     if (!isConfigured()) return demoContacts();
@@ -185,6 +204,7 @@ const MSNSupabase = (() => {
     init, isConfigured, signIn, signUp, getSession, signOut,
     getMyProfile, updateMyProfile, getContacts, addContactByName,
     uploadAvatar,
+    uploadSceneImage,
     getClient: () => client,
   };
 })();

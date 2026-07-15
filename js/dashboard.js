@@ -26,6 +26,15 @@ const Dashboard = (() => {
   const sceneBg = MSNScenes.bg;
   const pastel = MSNScenes.pastel;
 
+  // Cenário "custom" (enviado pela pessoa via "Procurar...") não está
+  // no catálogo fixo — usa a URL enviada em vez de procurar por id.
+  function resolveSceneBg(sceneId, customUrl) {
+    if (sceneId === "custom" && customUrl) {
+      return "url('" + customUrl + "') center/cover no-repeat, " + SCENES[0].css;
+    }
+    return sceneBg(sceneId);
+  }
+
   let profile = null;
   let contacts = [];
   let bound = false;
@@ -99,7 +108,7 @@ const Dashboard = (() => {
     // usa o esquema de cores escolhido manualmente (color_scheme), ou
     // a cor pareada automaticamente ao cenário se nada foi escolhido.
     const header = document.querySelector(".dash-header");
-    if (header) header.style.setProperty("--scene", sceneBg(profile.scene));
+    if (header) header.style.setProperty("--scene", resolveSceneBg(profile.scene, profile.scene_image_url));
 
     const screen = document.getElementById("screen-dashboard");
     if (screen) {
@@ -219,14 +228,17 @@ const Dashboard = (() => {
 
   /* ---------- Alterar cenário + esquema de cores ----------
      Duas escolhas independentes no mesmo diálogo, como no clássico:
-     - Cenário: fundo do topo (até a barra de busca).
-     - Esquema de cores: cor que tinge o resto da tela. Se nada for
-       escolhido aqui, continua usando a cor pareada ao cenário.
+     - Cenário: fundo do topo (até a barra de busca) — uma das opções
+       prontas, ou uma imagem própria enviada via "Procurar...".
+     - Esquema de cores: cor que tinge o resto da tela — uma das 8
+       prontas, ou qualquer cor via "Mais cores..." (seletor nativo).
+       Se nada for escolhido, continua usando a cor pareada ao cenário.
      Clicar só faz uma prévia (nada salvo ainda). "Aplicar" salva sem
      fechar; "OK" salva e fecha; "Fechar"/X descarta e volta ao que
      estava salvo. */
   let stagedScene = null;
   let stagedColorScheme = null;
+  let stagedCustomImageUrl = null;
 
   function openScenePicker() {
     const overlay = document.getElementById("scene-picker");
@@ -234,13 +246,40 @@ const Dashboard = (() => {
     const colorGrid = document.getElementById("color-scheme-grid");
     stagedScene = (profile && profile.scene) || "green";
     stagedColorScheme = (profile && profile.color_scheme) || null;
+    stagedCustomImageUrl = (profile && profile.scene_image_url) || null;
 
     grid.innerHTML = SCENES.map((s) =>
       '<button type="button" class="scene-swatch' + (s.id === stagedScene ? " is-selected" : "") +
       '" data-scene="' + s.id + '" style="background:' + sceneBg(s.id) + '">' +
       '<span class="scene-swatch__name">' + esc(s.name) + "</span></button>"
     ).join("");
+    if (stagedScene === "custom" && stagedCustomImageUrl) {
+      grid.insertAdjacentHTML("afterbegin", customTileHtml(stagedCustomImageUrl, true));
+    }
+    bindSceneTileClicks(grid);
 
+    if (colorGrid) {
+      colorGrid.innerHTML = MSNScenes.colorSchemes.map((c) =>
+        '<button type="button" class="color-swatch' + (c.id === stagedColorScheme ? " is-selected" : "") +
+        '" data-color-scheme="' + c.id + '" style="background:' + c.hex +
+        '" aria-label="' + esc(c.id) + '"></button>'
+      ).join("");
+      bindColorSwatchClicks(colorGrid);
+    }
+
+    updateCurrentColorSwatch();
+    overlay.hidden = false;
+  }
+
+  function customTileHtml(url, selected) {
+    return (
+      '<button type="button" class="scene-swatch' + (selected ? " is-selected" : "") +
+      '" data-scene="custom" style="background:url(\'' + url + "') center/cover no-repeat\">" +
+      '<span class="scene-swatch__name">Personalizado</span></button>'
+    );
+  }
+
+  function bindSceneTileClicks(grid) {
     grid.querySelectorAll(".scene-swatch").forEach((sw) => {
       sw.addEventListener("click", () => {
         stagedScene = sw.dataset.scene;
@@ -249,42 +288,81 @@ const Dashboard = (() => {
         previewScene(stagedScene);
       });
     });
+  }
 
-    if (colorGrid) {
-      colorGrid.innerHTML = MSNScenes.colorSchemes.map((c) =>
-        '<button type="button" class="color-swatch' + (c.id === stagedColorScheme ? " is-selected" : "") +
-        '" data-color-scheme="' + c.id + '" style="background:' + c.hex +
-        '" aria-label="' + esc(c.id) + '"></button>'
-      ).join("");
-
-      colorGrid.querySelectorAll(".color-swatch").forEach((sw) => {
-        sw.addEventListener("click", () => {
-          // Clicar na cor já selecionada desmarca (volta ao par automático).
-          stagedColorScheme = sw.dataset.colorScheme === stagedColorScheme ? null : sw.dataset.colorScheme;
-          colorGrid.querySelectorAll(".color-swatch").forEach((x) => x.classList.remove("is-selected"));
-          if (stagedColorScheme) sw.classList.add("is-selected");
-          previewColorScheme(stagedColorScheme);
-        });
+  function bindColorSwatchClicks(colorGrid) {
+    colorGrid.querySelectorAll(".color-swatch").forEach((sw) => {
+      sw.addEventListener("click", () => {
+        // Clicar na cor já selecionada desmarca (volta ao par automático).
+        stagedColorScheme = sw.dataset.colorScheme === stagedColorScheme ? null : sw.dataset.colorScheme;
+        colorGrid.querySelectorAll(".color-swatch").forEach((x) => x.classList.remove("is-selected"));
+        if (stagedColorScheme) sw.classList.add("is-selected");
+        previewColorScheme(stagedColorScheme);
       });
+    });
+  }
+
+  // Envio de um cenário próprio ("Procurar...").
+  async function onSceneImageSelected(e) {
+    const file = e.target.files && e.target.files[0];
+    e.target.value = "";
+    if (!file) return;
+    if (!file.type.startsWith("image/")) {
+      return infoModal("Cenário", "Selecione um arquivo de imagem.");
+    }
+    if (file.size > 4 * 1024 * 1024) {
+      return infoModal("Cenário", "A imagem deve ter no máximo 4 MB.");
     }
 
-    overlay.hidden = false;
+    const previewUrl = URL.createObjectURL(file);
+    stagedScene = "custom";
+    stagedCustomImageUrl = previewUrl;
+    previewScene("custom");
+
+    const grid = document.getElementById("scene-grid");
+    const existing = grid.querySelector('.scene-swatch[data-scene="custom"]');
+    grid.querySelectorAll(".scene-swatch").forEach((x) => x.classList.remove("is-selected"));
+    if (existing) {
+      existing.style.background = "url('" + previewUrl + "') center/cover no-repeat";
+      existing.classList.add("is-selected");
+    } else {
+      grid.insertAdjacentHTML("afterbegin", customTileHtml(previewUrl, true));
+      bindSceneTileClicks(grid);
+    }
+
+    try {
+      const url = await MSNSupabase.uploadSceneImage(file);
+      stagedCustomImageUrl = url;
+      previewScene("custom");
+      const tile = grid.querySelector('.scene-swatch[data-scene="custom"]');
+      if (tile) tile.style.background = "url('" + url + "') center/cover no-repeat";
+    } catch (err) {
+      infoModal("Cenário", err.message || "Não foi possível enviar a imagem.");
+    }
   }
 
   // Aplica o cenário só visualmente no cabeçalho, sem salvar.
   function previewScene(id) {
     const header = document.querySelector(".dash-header");
-    if (header) header.style.setProperty("--scene", sceneBg(id));
+    if (header) header.style.setProperty("--scene", resolveSceneBg(id, stagedCustomImageUrl));
   }
 
   // Aplica o esquema de cores só visualmente (Novidades/atalhos), sem salvar.
   function previewColorScheme(colorSchemeId) {
     const screen = document.getElementById("screen-dashboard");
-    if (!screen) return;
-    const theme = MSNScenes.effectiveTheme(stagedScene, colorSchemeId);
-    screen.style.setProperty("--tint-light", pastel(theme, 0.92));
-    screen.style.setProperty("--tint-mid", pastel(theme, 0.8));
-    screen.style.setProperty("--tint-strong", pastel(theme, 0.62));
+    if (screen) {
+      const theme = MSNScenes.effectiveTheme(stagedScene, colorSchemeId);
+      screen.style.setProperty("--tint-light", pastel(theme, 0.92));
+      screen.style.setProperty("--tint-mid", pastel(theme, 0.8));
+      screen.style.setProperty("--tint-strong", pastel(theme, 0.62));
+    }
+    updateCurrentColorSwatch();
+  }
+
+  function updateCurrentColorSwatch() {
+    const sw = document.getElementById("color-scheme-current");
+    if (!sw) return;
+    sw.style.background = MSNScenes.effectiveTheme(stagedScene, stagedColorScheme);
   }
 
   // Salva de verdade o cenário e o esquema de cores escolhidos.
@@ -293,6 +371,9 @@ const Dashboard = (() => {
     const patch = {};
     if (stagedScene && stagedScene !== profile.scene) patch.scene = stagedScene;
     if (stagedColorScheme !== profile.color_scheme) patch.color_scheme = stagedColorScheme;
+    if (stagedScene === "custom" && stagedCustomImageUrl !== profile.scene_image_url) {
+      patch.scene_image_url = stagedCustomImageUrl;
+    }
     if (!Object.keys(patch).length) return;
 
     Object.assign(profile, patch);
@@ -303,6 +384,7 @@ const Dashboard = (() => {
   // Fecha o diálogo; se a prévia não foi aplicada, volta ao que estava salvo.
   function closeScenePicker() {
     if (profile) {
+      stagedCustomImageUrl = profile.scene_image_url || null;
       previewScene(profile.scene);
       previewColorScheme(profile.color_scheme);
     }
@@ -459,6 +541,27 @@ const Dashboard = (() => {
     if (sceneClose) sceneClose.addEventListener("click", closeScenePicker);
     const sceneX = document.getElementById("scene-dialog-x");
     if (sceneX) sceneX.addEventListener("click", closeScenePicker);
+
+    // Botão "Procurar..." (cenário customizado enviado pelo usuário)
+    const sceneBrowse = document.getElementById("scene-browse");
+    const sceneImageInput = document.getElementById("scene-image-input");
+    if (sceneBrowse && sceneImageInput) {
+      sceneBrowse.addEventListener("click", () => sceneImageInput.click());
+      sceneImageInput.addEventListener("change", onSceneImageSelected);
+    }
+
+    // "Mais cores..." (seletor de cor nativo)
+    const colorMoreBtn = document.getElementById("color-scheme-more-btn");
+    const colorNative = document.getElementById("color-scheme-native");
+    if (colorMoreBtn && colorNative) {
+      colorMoreBtn.addEventListener("click", () => colorNative.click());
+      colorNative.addEventListener("input", () => {
+        stagedColorScheme = colorNative.value;
+        document.querySelectorAll("#color-scheme-grid .color-swatch").forEach((el) =>
+          el.classList.remove("is-selected"));
+        previewColorScheme(stagedColorScheme);
+      });
+    }
 
     // Ícones auxiliares (placeholders informativos)
     const mailBtn = document.getElementById("btn-mail");

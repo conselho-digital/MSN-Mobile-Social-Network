@@ -87,6 +87,9 @@ const MSNScenes = (() => {
   // seção do diálogo clássico "Selecione um esquema de cores").
   // Guardado em profiles.color_scheme. Enquanto for null, o app usa
   // a cor pareada automaticamente ao cenário (theme(id) acima).
+  // Só 8 cores aqui para caberem numa linha só — "Mais cores..." abre
+  // o seletor nativo (input type=color), e aí color_scheme guarda o
+  // hex escolhido diretamente (ver colorSchemeHex abaixo).
   // ------------------------------------------------------------
   const COLOR_SCHEMES = [
     { id: "graphite", hex: "#3d3d3d" },
@@ -96,13 +99,13 @@ const MSNScenes = (() => {
     { id: "green",    hex: "#5cb85c" },
     { id: "yellow",   hex: "#e8c547" },
     { id: "orange",   hex: "#e08a3c" },
-    { id: "salmon",   hex: "#e07a7a" },
     { id: "pink",     hex: "#e07ab8" },
-    { id: "magenta",  hex: "#b05ce0" },
-    { id: "mint",     hex: "#8fe0a0" },
-    { id: "silver",   hex: "#c8ced4" },
   ];
+  // Aceita tanto um id da paleta acima quanto um hex direto (#rrggbb),
+  // vindo do seletor nativo "Mais cores...".
   function colorSchemeHex(id) {
+    if (!id) return null;
+    if (id.charAt(0) === "#") return id;
     const c = COLOR_SCHEMES.find((x) => x.id === id);
     return c ? c.hex : null;
   }

@@ -593,11 +593,20 @@
         <p class="scene-dialog__intro">
           As pessoas com quem você conversar verão o cenário escolhido por você.
         </p>
+
+        <img src="assets/scenes/cenario1.webp" alt="" class="scene-dialog__preview" id="scene-dialog-preview" />
+
         <h3 class="scene-dialog__section">Selecione um cenário</h3>
         <div class="scene-grid" id="scene-grid"></div>
+        <button type="button" id="scene-browse" class="scene-dialog__browse">Procurar...</button>
 
         <h3 class="scene-dialog__section scene-dialog__section--colors">Selecione um esquema de cores</h3>
         <div class="color-scheme-grid" id="color-scheme-grid"></div>
+        <div class="color-scheme-more">
+          <span class="color-scheme-more__current" id="color-scheme-current" aria-hidden="true"></span>
+          <button type="button" id="color-scheme-more-btn" class="color-scheme-more__link">Mais cores...</button>
+          <input type="color" id="color-scheme-native" class="color-scheme-native-input" aria-label="Escolher cor personalizada" />
+        </div>
       </div>
 
       <footer class="scene-dialog__footer">
@@ -610,6 +619,7 @@
 
   <!-- Input escondido para envio da foto de exibição -->
   <input type="file" id="avatar-input" accept="image/*" hidden />
+  <input type="file" id="scene-image-input" accept="image/*" hidden />
 
   <!-- Scripts -->
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
