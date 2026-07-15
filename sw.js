@@ -7,7 +7,7 @@
    app com internet, em vez de ficar presa numa versão antiga.
    ============================================================ */
 
-const CACHE = "msn-mobile-v5";
+const CACHE = "msn-mobile-v6";
 const ASSETS = [
   "./",
   "./index.html",
@@ -22,6 +22,10 @@ const ASSETS = [
   "./assets/icons/favicon.png",
   "./assets/icons/icon-192.png",
   "./assets/icons/icon-512.png",
+  "./assets/icons/available.webp",
+  "./assets/icons/ocupado.webp",
+  "./assets/icons/ausente.webp",
+  "./assets/icons/invisivel.webp",
 ];
 
 self.addEventListener("install", (event) => {

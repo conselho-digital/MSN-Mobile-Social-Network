@@ -615,17 +615,27 @@ body {
 .status-dot--away      { background: radial-gradient(circle at 35% 30%, #ffe08a, #e0a409); }
 .status-dot--invisible { background: radial-gradient(circle at 35% 30%, #e8edf1, #9aa7b1); }
 
-/* Tela de login: ícone de status quadrado com sombra (em vez de bolinha) */
+/* Tela de login: ícones de status (imagens) com sombra, em vez de bolinha */
 .signin-as .status-dot,
 .status-menu .status-dot {
-  width: 13px;
-  height: 13px;
-  border-radius: 3px;
-  box-shadow:
-    0 1px 3px rgba(0, 0, 0, 0.5),
-    inset 0 1px 1px rgba(255, 255, 255, 0.55),
-    inset 0 -1px 1px rgba(0, 0, 0, 0.25);
+  width: 14px;
+  height: 14px;
+  border-radius: 2px;
+  background-color: transparent;
+  background-size: contain;
+  background-repeat: no-repeat;
+  background-position: center;
+  image-rendering: pixelated;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.5);
 }
+.signin-as .status-dot--online,
+.status-menu .status-dot--online { background-image: url("../assets/icons/available.webp"); }
+.signin-as .status-dot--busy,
+.status-menu .status-dot--busy { background-image: url("../assets/icons/ocupado.webp"); }
+.signin-as .status-dot--away,
+.status-menu .status-dot--away { background-image: url("../assets/icons/ausente.webp"); }
+.signin-as .status-dot--invisible,
+.status-menu .status-dot--invisible { background-image: url("../assets/icons/invisivel.webp"); }
 
 /* Menu de status */
 .status-menu {
