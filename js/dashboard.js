@@ -323,11 +323,11 @@ const Dashboard = (() => {
     const menu = document.getElementById("my-menu");
     const nameBtn = document.getElementById("my-name-btn");
     const stToggle = document.getElementById("my-status-toggle");
-    const headerInfo = document.querySelector(".dash-header__info");
+    const nameRow = document.querySelector(".my-name-row");
     const closeMenu = () => {
       menu.hidden = true;
       stToggle.setAttribute("aria-expanded", "false");
-      if (headerInfo) headerInfo.classList.remove("is-open");
+      if (nameRow) nameRow.classList.remove("is-open");
     };
     const openMenu = (e) => {
       e.stopPropagation();
@@ -335,7 +335,7 @@ const Dashboard = (() => {
       if (open) markSelectedStatus();
       menu.hidden = !open;
       stToggle.setAttribute("aria-expanded", String(open));
-      if (headerInfo) headerInfo.classList.toggle("is-open", open);
+      if (nameRow) nameRow.classList.toggle("is-open", open);
     };
     nameBtn.addEventListener("click", openMenu);
     stToggle.addEventListener("click", openMenu);

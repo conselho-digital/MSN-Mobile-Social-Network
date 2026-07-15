@@ -891,27 +891,25 @@ body {
   border: 2px solid #12240d;
 }
 
-.dash-header__info {
-  position: relative;
-  flex: 1 1 auto;
-  min-width: 0;
-  margin: -4px -6px;
-  padding: 4px 6px;
-  border-radius: 5px;
-  transition: background-color 0.1s ease, box-shadow 0.1s ease;
-}
-/* Retângulo de destaque ao passar o mouse ou com o menu aberto (clique) */
-.dash-header__info:hover,
-.dash-header__info.is-open {
-  background: rgba(255, 255, 255, 0.16);
-  box-shadow: 0 0 0 1px rgba(255, 255, 255, 0.4);
-}
+.dash-header__info { position: relative; flex: 1 1 auto; min-width: 0; }
+
+/* Nome + status: retângulo próprio ao passar o mouse ou com o menu
+   aberto (clique) — efeito independente do da mensagem pessoal. */
 .my-name-row {
   display: flex;
   align-items: baseline;
   flex-wrap: wrap;
   gap: 5px;
   max-width: 100%;
+  margin: -3px -6px;
+  padding: 3px 6px;
+  border-radius: 5px;
+  transition: background-color 0.1s ease, box-shadow 0.1s ease;
+}
+.my-name-row:hover,
+.my-name-row.is-open {
+  background: rgba(255, 255, 255, 0.16);
+  box-shadow: 0 0 0 1px rgba(255, 255, 255, 0.4);
 }
 .my-name {
   padding: 0;
@@ -944,24 +942,69 @@ body {
 }
 .status-select--sm:hover #my-status-label { text-decoration: underline; }
 
+/* Mensagem pessoal: retângulo + balão de dica próprios, independentes
+   do efeito do nome/status acima. */
 .my-subnick {
+  position: relative;
   display: block;
-  margin-top: 3px;
-  padding: 0;
+  margin: 3px -6px 0;
+  padding: 1px 6px;
   border: none;
+  border-radius: 5px;
   background: transparent;
   color: #dfeff9;
   font-size: 0.82rem;
   cursor: pointer;
   text-align: left;
-  text-shadow: 0 1px 2px rgba(0,0,0,0.5);
+  max-width: calc(100% + 12px);
+  transition: background-color 0.1s ease, box-shadow 0.1s ease;
+}
+.my-subnick:hover,
+.my-subnick:focus-visible {
+  background: rgba(255, 255, 255, 0.16);
+  box-shadow: 0 0 0 1px rgba(255, 255, 255, 0.4);
+}
+.my-subnick:hover .my-subnick__text { text-decoration: underline; }
+.my-subnick__text {
+  display: block;
   max-width: 100%;
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
+  text-shadow: 0 1px 2px rgba(0,0,0,0.5);
 }
-.my-subnick:hover { text-decoration: underline; }
 .my-subnick__placeholder { color: #b9d3e6; font-style: italic; }
+
+/* Balão de dica (aparece no hover/focus da mensagem pessoal) */
+.my-subnick__tooltip {
+  position: absolute;
+  top: calc(100% + 6px);
+  left: 6px;
+  z-index: 30;
+  width: max-content;
+  max-width: 200px;
+  padding: 7px 10px;
+  background: #ffffff;
+  color: #333333;
+  font-size: 0.72rem;
+  font-weight: 400;
+  line-height: 1.4;
+  text-align: left;
+  text-shadow: none;
+  white-space: normal;
+  border: 1px solid #cfd8df;
+  border-radius: 4px;
+  box-shadow: 0 4px 14px rgba(0, 0, 0, 0.35);
+  opacity: 0;
+  visibility: hidden;
+  pointer-events: none;
+  transition: opacity 0.12s ease;
+}
+.my-subnick:hover .my-subnick__tooltip,
+.my-subnick:focus-visible .my-subnick__tooltip {
+  opacity: 1;
+  visibility: visible;
+}
 
 .status-menu--dash { top: 26px; left: 0; }
 
