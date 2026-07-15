@@ -1322,22 +1322,6 @@ body {
 .contacts--list .contact-item__avatar { display: none; }
 .contacts--list .contact-item__sub { display: none; }
 
-/* ---------- Ícone de e-mail no cabeçalho ---------- */
-.dash-mail {
-  flex: 0 0 auto;
-  align-self: flex-start;
-  width: 40px; height: 32px;
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  padding: 0;
-  border: none;
-  background: transparent;
-  cursor: pointer;
-  filter: drop-shadow(0 1px 2px rgba(0,0,0,0.4));
-}
-.dash-mail:hover { transform: translateY(-1px); }
-
 /* ---------- Barra de busca com ícones ---------- */
 .dash-search-wrap { position: relative; flex: 1 1 auto; }
 .dash-search { width: 100%; padding-right: 32px; }

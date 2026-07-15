@@ -745,11 +745,6 @@ const Dashboard = (() => {
     const groupX = document.getElementById("group-dialog-x");
     if (groupX) groupX.addEventListener("click", closeGroupPicker);
 
-    // Ícones auxiliares (placeholders informativos)
-    const mailBtn = document.getElementById("btn-mail");
-    if (mailBtn) mailBtn.addEventListener("click", () =>
-      infoModal("Novidades", "A caixa de novidades e mensagens será ativada em breve."));
-
     // Modo de exibição (dropdown: tamanho das figuras na lista)
     const viewBtn = document.getElementById("btn-view-mode");
     const viewMenu = document.getElementById("view-mode-menu");
