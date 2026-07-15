@@ -257,6 +257,35 @@ const Dashboard = (() => {
     });
   }
 
+  /* ---------- Convidar amigos (compartilhar link) ----------
+     Compartilha o link da landing page (index.html), de onde a pessoa
+     convidada pode instalar o app (Android) ou entrar direto (iPhone). */
+  function inviteUrl() {
+    return new URL("index.html", window.location.href).href;
+  }
+
+  async function shareInviteLink() {
+    const url = inviteUrl();
+    const name = (profile && profile.display_name) || "Um amigo";
+    const shareData = {
+      title: "MSN - Mobile Social Network",
+      text: name + " te chamou para conversar no MSN! 💬",
+      url: url,
+    };
+
+    if (navigator.share) {
+      try { await navigator.share(shareData); } catch (_) { /* usuário cancelou */ }
+      return;
+    }
+
+    try {
+      await navigator.clipboard.writeText(url);
+      infoModal("Convidar amigos", "Link copiado! Envie para seus amigos:\n" + url);
+    } catch (_) {
+      infoModal("Convidar amigos", "Copie o link e envie para seus amigos:\n" + url);
+    }
+  }
+
   async function doSignOut() {
     try { await MSNSupabase.signOut(); } catch (_) {}
     // Ao sair, desliga o auto-login (mas mantém e-mail/senha lembrados).
@@ -358,6 +387,10 @@ const Dashboard = (() => {
     const viewBtn = document.getElementById("btn-view-mode");
     if (viewBtn) viewBtn.addEventListener("click", () =>
       infoModal("Modo de exibição", "A troca de modos de exibição da lista será adicionada em breve."));
+
+    // Convidar amigos (compartilha o link da landing page)
+    const promoBtn = document.getElementById("dash-promo");
+    if (promoBtn) promoBtn.addEventListener("click", shareInviteLink);
 
     // Colapsar grupos
     document.querySelectorAll(".contact-group__header").forEach((h) => {

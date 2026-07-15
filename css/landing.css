@@ -1,0 +1,120 @@
+/* ============================================================
+   MSN - Mobile Social Network — Landing Page
+   ============================================================ */
+
+.landing-body {
+  height: 100%;
+  overflow-y: auto;
+  display: flex;
+  flex-direction: column;
+  background:
+    radial-gradient(140% 45% at 25% 0%, rgba(255, 255, 255, 0.5), transparent 55%),
+    radial-gradient(120% 40% at 82% 4%, rgba(255, 255, 255, 0.35), transparent 50%),
+    linear-gradient(180deg, #0a2f57 0%, #0f4f8f 22%, #1f7fd0 48%, #6bb3ea 78%, #cfe8fb 100%);
+}
+
+.landing {
+  flex: 1 1 auto;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+  gap: 4px;
+  padding: 48px 28px 24px;
+}
+
+.landing__logo {
+  width: min(150px, 40vw);
+  height: auto;
+  filter: drop-shadow(0 6px 16px rgba(0, 0, 0, 0.35));
+  margin-bottom: 10px;
+}
+
+.landing__title {
+  margin: 0 0 4px;
+  color: #ffffff;
+  font-size: 1.7rem;
+  font-weight: 700;
+  text-shadow: 0 2px 6px rgba(0, 0, 0, 0.4);
+}
+.landing__title-sub {
+  display: block;
+  margin-top: 2px;
+  font-size: 0.95rem;
+  font-weight: 400;
+  color: #dceefc;
+}
+
+.landing__tagline {
+  max-width: 360px;
+  margin: 4px 0 30px;
+  color: #eef6fd;
+  font-size: 0.98rem;
+  line-height: 1.6;
+  text-shadow: 0 1px 3px rgba(0, 0, 0, 0.35);
+}
+
+.landing__actions {
+  display: flex;
+  flex-direction: column;
+  align-items: stretch;
+  gap: 12px;
+  width: 100%;
+  max-width: 300px;
+}
+
+.btn-landing {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  padding: 13px 20px;
+  font: inherit;
+  font-size: 1rem;
+  font-weight: 600;
+  text-decoration: none;
+  border-radius: 24px;
+  cursor: pointer;
+  transition: transform 0.12s, box-shadow 0.12s;
+}
+.btn-landing:active { transform: translateY(1px); }
+
+.btn-landing--primary {
+  color: #0d3a63;
+  background: linear-gradient(#ffffff, #dceefc);
+  border: 1px solid #ffffff;
+  box-shadow: 0 4px 14px rgba(0, 0, 0, 0.25), inset 0 1px 0 rgba(255, 255, 255, 0.6);
+}
+.btn-landing--primary:hover { background: linear-gradient(#ffffff, #eef7fd); }
+.btn-landing--primary[hidden] { display: none; }
+
+.btn-landing--secondary {
+  color: #ffffff;
+  background: rgba(255, 255, 255, 0.12);
+  border: 1.5px solid rgba(255, 255, 255, 0.7);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.2);
+}
+.btn-landing--secondary:hover { background: rgba(255, 255, 255, 0.22); }
+
+.landing__hint {
+  max-width: 320px;
+  margin: 22px 0 0;
+  padding: 10px 14px;
+  font-size: 0.82rem;
+  line-height: 1.5;
+  color: #f4f9fd;
+  background: rgba(0, 0, 0, 0.18);
+  border-radius: 8px;
+}
+.landing__hint[hidden] { display: none; }
+
+.landing__footer {
+  flex: 0 0 auto;
+  padding: 14px 16px calc(14px + env(safe-area-inset-bottom));
+  text-align: center;
+  font-size: 0.78rem;
+  background: rgba(0, 0, 0, 0.12);
+}
+.landing__footer .inline-link { color: #eaf3fb; }
+.landing__footer .footer-sep { color: rgba(255, 255, 255, 0.4); }

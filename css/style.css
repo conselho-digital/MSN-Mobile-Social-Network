@@ -1134,18 +1134,25 @@ body {
 /* ---------- Banner promocional ---------- */
 .dash-promo {
   flex: 0 0 auto;
+  width: 100%;
   display: flex;
   align-items: center;
   gap: 10px;
   margin: 0;
   padding: 10px 14px calc(10px + env(safe-area-inset-bottom));
+  border: none;
   text-decoration: none;
   color: #ffffff;
+  font: inherit;
+  text-align: left;
+  cursor: pointer;
   background: linear-gradient(120deg, #0a66c2 0%, #2a8fe0 55%, #37a06f 100%);
   box-shadow: inset 0 1px 0 rgba(255,255,255,0.25);
 }
-.dash-promo__logo { width: 30px; height: 30px; }
-.dash-promo__text { font-size: 0.9rem; text-shadow: 0 1px 2px rgba(0,0,0,0.3); }
+.dash-promo:active { filter: brightness(0.94); }
+.dash-promo__logo { width: 30px; height: 30px; flex: 0 0 auto; }
+.dash-promo__text { flex: 1 1 auto; font-size: 0.9rem; text-shadow: 0 1px 2px rgba(0,0,0,0.3); }
+.dash-promo__icon { flex: 0 0 auto; opacity: 0.9; }
 
 /* ============================================================
    MODAL (editar nome / mensagem / adicionar contato)
@@ -1185,6 +1192,8 @@ body {
   color: #34495a;
   font-size: 0.88rem;
   line-height: 1.5;
+  white-space: pre-line;
+  word-break: break-word;
 }
 .modal__actions { display: flex; justify-content: flex-end; gap: 8px; margin-top: 16px; }
 .btn-signin--sm { margin: 0; min-width: 78px; padding: 7px 14px; font-size: 0.88rem; }
