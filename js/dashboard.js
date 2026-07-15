@@ -250,8 +250,8 @@ const Dashboard = (() => {
 
     grid.innerHTML = SCENES.map((s) =>
       '<button type="button" class="scene-swatch' + (s.id === stagedScene ? " is-selected" : "") +
-      '" data-scene="' + s.id + '" style="background:' + sceneBg(s.id) + '">' +
-      '<span class="scene-swatch__name">' + esc(s.name) + "</span></button>"
+      '" data-scene="' + s.id + '" style="background:' + sceneBg(s.id) +
+      '" aria-label="' + esc(s.name) + '" title="' + esc(s.name) + '"></button>'
     ).join("");
     if (stagedScene === "custom" && stagedCustomImageUrl) {
       grid.insertAdjacentHTML("afterbegin", customTileHtml(stagedCustomImageUrl, true));
@@ -274,8 +274,8 @@ const Dashboard = (() => {
   function customTileHtml(url, selected) {
     return (
       '<button type="button" class="scene-swatch' + (selected ? " is-selected" : "") +
-      '" data-scene="custom" style="background:url(\'' + url + "') center/cover no-repeat\">" +
-      '<span class="scene-swatch__name">Personalizado</span></button>'
+      '" data-scene="custom" style="background:url(\'' + url + "') center/cover no-repeat\"" +
+      ' aria-label="Personalizado" title="Personalizado"></button>'
     );
   }
 
