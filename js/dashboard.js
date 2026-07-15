@@ -457,6 +457,23 @@ const Dashboard = (() => {
     document.getElementById("scene-picker").hidden = true;
   }
 
+  function openAddContactModal() {
+    openModal({
+      title: "Adicionar contato",
+      value: "",
+      placeholder: "Nome de exibição do contato",
+      onOk: async (val) => {
+        if (!val.trim()) return "Digite o nome do contato.";
+        try {
+          await MSNSupabase.addContactByName(val.trim());
+          await load();
+        } catch (err) {
+          return err.message || "Não foi possível adicionar.";
+        }
+      },
+    });
+  }
+
   function editName() {
     openModal({
       title: "Alterar nome para exibição",
@@ -567,21 +584,28 @@ const Dashboard = (() => {
       });
     });
 
-    // Adicionar contato
-    document.getElementById("btn-add-contact").addEventListener("click", () => {
-      openModal({
-        title: "Adicionar contato",
-        value: "",
-        placeholder: "Nome de exibição do contato",
-        onOk: async (val) => {
-          if (!val.trim()) return "Digite o nome do contato.";
-          try {
-            await MSNSupabase.addContactByName(val.trim());
-            await load();
-          } catch (err) {
-            return err.message || "Não foi possível adicionar.";
-          }
-        },
+    // Adicionar (dropdown: contato / grupo)
+    const addBtn = document.getElementById("btn-add-contact");
+    const addMenu = document.getElementById("add-contact-menu");
+    const closeAddMenu = () => {
+      addMenu.hidden = true;
+      addBtn.setAttribute("aria-expanded", "false");
+    };
+    addBtn.addEventListener("click", (e) => {
+      e.stopPropagation();
+      const open = addMenu.hidden;
+      addMenu.hidden = !open;
+      addBtn.setAttribute("aria-expanded", String(open));
+    });
+    addMenu.addEventListener("click", (e) => e.stopPropagation());
+    document.addEventListener("click", closeAddMenu);
+    addMenu.querySelectorAll("[data-action]").forEach((item) => {
+      item.addEventListener("click", () => {
+        closeAddMenu();
+        if (item.dataset.action === "add-contact") openAddContactModal();
+        else if (item.dataset.action === "create-group") {
+          infoModal("Criar um grupo", "A criação de grupos será adicionada em breve.");
+        }
       });
     });
 
