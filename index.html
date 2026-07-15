@@ -62,7 +62,7 @@
 
       <h1 class="welcome" id="login-welcome">Entrar</h1>
 
-      <form id="login-form" class="login-form" autocomplete="on" novalidate>
+      <form id="login-form" class="login-form" autocomplete="off" novalidate>
         <div class="login-card">
           <!-- Combobox de e-mail (com contas salvas) -->
           <div class="field field--combo">
@@ -72,7 +72,12 @@
               type="email"
               inputmode="email"
               placeholder="example5555@email.com"
-              autocomplete="username"
+              autocomplete="off"
+              readonly
+              data-lpignore="true"
+              data-1p-ignore
+              data-bwignore
+              data-form-type="other"
               required
             />
             <button type="button" class="combo-arrow" id="account-arrow" aria-label="Escolher conta" aria-haspopup="listbox" aria-expanded="false"></button>
@@ -86,7 +91,12 @@
               name="password"
               type="password"
               placeholder="Insira sua senha"
-              autocomplete="current-password"
+              autocomplete="off"
+              readonly
+              data-lpignore="true"
+              data-1p-ignore
+              data-bwignore
+              data-form-type="other"
               required
             />
           </div>
@@ -212,7 +222,7 @@
         <a href="#" class="inline-link" id="link-back-login">Entrar.</a>
       </p>
 
-      <form id="signup-form" class="login-form" autocomplete="on" novalidate>
+      <form id="signup-form" class="login-form" autocomplete="off" novalidate>
         <div class="login-card">
           <!-- Nome de exibição -->
           <div class="field">
@@ -249,6 +259,9 @@
               placeholder="Senha (mínimo 6 caracteres)"
               autocomplete="new-password"
               minlength="6"
+              data-lpignore="true"
+              data-1p-ignore
+              data-bwignore
               required
             />
             <button type="button" class="pw-toggle" aria-label="Mostrar senha" aria-pressed="false">
@@ -266,6 +279,9 @@
               placeholder="Repita a senha"
               autocomplete="new-password"
               minlength="6"
+              data-lpignore="true"
+              data-1p-ignore
+              data-bwignore
               required
             />
             <button type="button" class="pw-toggle" aria-label="Mostrar senha" aria-pressed="false">

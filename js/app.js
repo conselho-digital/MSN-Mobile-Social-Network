@@ -28,7 +28,29 @@
     bindPasswordToggles();
     bindWindowControls();
     bindInstallApp();
+    bindAutofillGuards();
     initSession();
+  }
+
+  /* ---------- Reduzir o autopreenchimento nativo do navegador ----------
+     Os campos de e-mail/senha do login começam "readonly" (só leitura) e
+     só viram editáveis quando a pessoa realmente toca neles. Isso evita
+     que o Chrome/Safari preencha os campos sozinho assim que a página
+     carrega — o preenchimento automático só acontece pela NOSSA lógica
+     (contas lembradas), nunca pelo gerenciador de senhas do navegador.
+     Importante: nenhum navegador permite desligar 100% o "Salvar senha?"
+     nativo — isso é proposital, por segurança do usuário. Esta técnica
+     reduz drasticamente o autopreenchimento, mas não elimina esse popup
+     em todos os casos. */
+  function bindAutofillGuards() {
+    [document.getElementById("login-email"), document.getElementById("login-password")]
+      .filter(Boolean)
+      .forEach((input) => {
+        const unlock = () => input.removeAttribute("readonly");
+        input.addEventListener("focus", unlock);
+        input.addEventListener("pointerdown", unlock);
+        input.addEventListener("touchstart", unlock, { passive: true });
+      });
   }
 
   /* ---------- Sessão (Entrar automaticamente) ----------
