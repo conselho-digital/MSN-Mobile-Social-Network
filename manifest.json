@@ -2,7 +2,7 @@
   "name": "MSN - Mobile Social Network",
   "short_name": "MSN",
   "description": "Rede social retrô inspirada no Windows Live Messenger clássico.",
-  "start_url": "./app.html",
+  "start_url": "./index.html",
   "scope": "./",
   "display": "standalone",
   "orientation": "portrait",

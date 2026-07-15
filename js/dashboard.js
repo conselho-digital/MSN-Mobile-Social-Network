@@ -258,8 +258,8 @@ const Dashboard = (() => {
   }
 
   /* ---------- Convidar amigos (compartilhar link) ----------
-     Compartilha o link da landing page (index.html), de onde a pessoa
-     convidada pode instalar o app (Android) ou entrar direto (iPhone). */
+     Compartilha o link do site (index.html), de onde a pessoa convidada
+     pode instalar o app ("Adicionar App") ou entrar direto. */
   function inviteUrl() {
     return new URL("index.html", window.location.href).href;
   }
@@ -388,7 +388,7 @@ const Dashboard = (() => {
     if (viewBtn) viewBtn.addEventListener("click", () =>
       infoModal("Modo de exibição", "A troca de modos de exibição da lista será adicionada em breve."));
 
-    // Convidar amigos (compartilha o link da landing page)
+    // Convidar amigos (compartilha o link do site)
     const promoBtn = document.getElementById("dash-promo");
     if (promoBtn) promoBtn.addEventListener("click", shareInviteLink);
 

@@ -2,16 +2,13 @@
    sw.js — Service Worker do MSN (cache local para PWA)
    ============================================================ */
 
-const CACHE = "msn-mobile-v2";
+const CACHE = "msn-mobile-v3";
 const ASSETS = [
   "./",
   "./index.html",
-  "./app.html",
   "./manifest.json",
   "./css/style.css",
-  "./css/landing.css",
   "./js/app.js",
-  "./js/landing.js",
   "./js/supabase-client.js",
   "./js/ui-manager.js",
   "./js/sound-manager.js",
@@ -19,7 +16,6 @@ const ASSETS = [
   "./assets/icons/favicon.png",
   "./assets/icons/icon-192.png",
   "./assets/icons/icon-512.png",
-  "./assets/icons/emblem.png",
 ];
 
 self.addEventListener("install", (event) => {
@@ -53,11 +49,7 @@ self.addEventListener("fetch", (event) => {
           caches.open(CACHE).then((cache) => cache.put(request, copy)).catch(() => {});
           return resp;
         })
-        .catch(() => {
-          // Offline: cai para a página correspondente (landing ou app).
-          const isApp = /app\.html$/.test(url.pathname);
-          return caches.match(isApp ? "./app.html" : "./index.html");
-        });
+        .catch(() => caches.match("./index.html"));
     })
   );
 });
