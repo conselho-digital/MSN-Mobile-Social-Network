@@ -595,7 +595,7 @@
     const root = document.body;
     if (!sceneId || typeof MSNScenes === "undefined") {
       root.removeAttribute("data-login-theme");
-      ["--lg1", "--lg2", "--lg3", "--lg4", "--lg5", "--login-accent"].forEach((p) =>
+      ["--lg1", "--lg2", "--lg3", "--lg4", "--lg5", "--login-accent", "--login-scene"].forEach((p) =>
         root.style.removeProperty(p)
       );
       return;
@@ -609,6 +609,16 @@
     root.style.setProperty("--lg5", MSNScenes.pastel(hex, 0.97));
     root.style.setProperty("--login-accent", hex);
     root.setAttribute("data-login-theme", sceneId);
+
+    // Cenário (imagem) no topo — separado da cor de tema, que continua
+    // pintando o degradê do restante da tela. Sem imagem enviada para
+    // este cenário ainda, a propriedade some e nada é desenhado ali.
+    const imgUrl = MSNScenes.image(sceneId);
+    if (imgUrl) {
+      root.style.setProperty("--login-scene", "url('" + imgUrl + "') top center / 100% 150px no-repeat");
+    } else {
+      root.style.removeProperty("--login-scene");
+    }
   }
 
   /* ---------- Dropdown de contas ---------- */

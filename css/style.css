@@ -243,7 +243,12 @@ body {
    no dropdown de e-mail) — só no login/entrando, nunca no cadastro. */
 #screen-login,
 #screen-connecting {
+  /* Camadas, de cima para baixo: (1) cenário/imagem da conta — só no
+     topo, altura fixa; (2-3) brilhos decorativos; (4) degradê da cor
+     de tema, cobrindo a tela toda por baixo do cenário. É essa ordem
+     que separa visualmente cenário (topo) de tema (resto da tela). */
   background:
+    var(--login-scene, none),
     radial-gradient(140% 45% at 25% 0%, rgba(255,255,255,0.55), transparent 55%),
     radial-gradient(120% 40% at 82% 4%, rgba(255,255,255,0.40), transparent 50%),
     linear-gradient(180deg,

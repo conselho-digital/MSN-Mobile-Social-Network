@@ -65,6 +65,14 @@ const MSNScenes = (() => {
     const s = find(id);
     return (s && s.theme) || SCENES[0].theme;
   }
+  // Só a URL absoluta da imagem do cenário (sem o degradê), ou null se
+  // este cenário não tiver imagem configurada. Usado pela tela de login
+  // para montar sua própria camada de fundo (com posição/tamanho
+  // próprios, diferentes do cabeçalho do Dashboard).
+  function image(id) {
+    const s = find(id);
+    return s && s.image ? resolveUrl(s.image) : null;
+  }
 
   // Mistura uma cor hex com branco (0 = cor pura, 1 = branco puro).
   function pastel(hex, whiteRatio) {
@@ -74,5 +82,5 @@ const MSNScenes = (() => {
     return "rgb(" + mix(r) + "," + mix(g) + "," + mix(b) + ")";
   }
 
-  return { list: SCENES, find, css, bg, theme, pastel };
+  return { list: SCENES, find, css, bg, theme, image, pastel };
 })();
