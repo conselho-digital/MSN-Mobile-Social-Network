@@ -896,7 +896,7 @@ body {
 /* Nome + status: retângulo próprio ao passar o mouse ou com o menu
    aberto (clique) — efeito independente do da mensagem pessoal. */
 .my-name-row {
-  display: flex;
+  display: inline-flex; /* encolhe ao conteúdo — não estica a linha toda */
   align-items: baseline;
   flex-wrap: wrap;
   gap: 5px;
