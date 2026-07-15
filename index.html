@@ -620,6 +620,30 @@
     </div>
   </div>
 
+  <!-- Selecionar imagem para exibição: galeria de exemplos + "Procurar..." -->
+  <div id="avatar-picker" class="modal-overlay scene-dialog-overlay" hidden>
+    <div class="scene-dialog" role="dialog" aria-modal="true" aria-label="Imagem para Exibição">
+      <header class="scene-dialog__titlebar">
+        <span class="scene-dialog__titlebar-app">
+          <img src="assets/icons/favicon.png" alt="" />
+          Imagem para Exibição
+        </span>
+        <button type="button" id="avatar-dialog-x" class="scene-dialog__x" aria-label="Fechar">&times;</button>
+      </header>
+
+      <div class="scene-dialog__body">
+        <p class="scene-dialog__intro">Escolha como você deseja aparecer no Messenger:</p>
+        <div class="avatar-grid" id="avatar-grid"></div>
+        <button type="button" id="avatar-browse" class="scene-dialog__browse">Procurar...</button>
+      </div>
+
+      <footer class="scene-dialog__footer">
+        <button type="button" id="avatar-ok" class="btn-signin btn-signin--sm btn-signin--primary">OK</button>
+        <button type="button" id="avatar-close" class="btn-signin btn-signin--sm">Fechar</button>
+      </footer>
+    </div>
+  </div>
+
   <!-- Input escondido para envio da foto de exibição -->
   <input type="file" id="avatar-input" accept="image/*" hidden />
   <input type="file" id="scene-image-input" accept="image/*" hidden />

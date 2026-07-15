@@ -17,6 +17,12 @@ const Dashboard = (() => {
   // MSNScenes.updateStatusFrame).
   const frameGradient = MSNScenes.frameGradient;
 
+  // Foto de exibição padrão (bonequinho clássico) e galeria de exemplos
+  // prontos ("Selecione uma Imagem para Exibição", igual ao Messenger).
+  const DEFAULT_AVATAR = "assets/avatars/standard.webp";
+  const NO_AVATAR_TILE = "assets/avatars/semfoto.webp";
+  const AVATAR_GALLERY = Array.from({ length: 30 }, (_, i) => "assets/avatars/profile" + (i + 1) + ".webp");
+
   // Cenários (fundo do topo) e cores de tema: catálogo compartilhado
   // em js/scenes.js (usado também pela tela de login).
   const SCENES = MSNScenes.list;
@@ -85,18 +91,10 @@ const Dashboard = (() => {
   let currentFilter = "";
   let contactsSubscribed = false;
 
-  /* ---------- Avatar (foto enviada ou genérico) ---------- */
+  // Foto de exibição: a enviada/escolhida, ou assets/avatars/standard.webp
+  // como padrão (mesmo desenho do bonequinho clássico do MSN).
   function avatarMarkup(url) {
-    if (url) {
-      return '<img class="avatar-img" src="' + esc(url) + '" alt="" />';
-    }
-    return (
-      '<svg class="avatar-generic" viewBox="0 0 100 100" aria-hidden="true">' +
-      '<rect width="100" height="100" fill="#e9eff4"/>' +
-      '<circle cx="50" cy="38" r="19" fill="#a7b3bd"/>' +
-      '<path d="M16 96c0-20 15-31 34-31s34 11 34 31z" fill="#a7b3bd"/>' +
-      "</svg>"
-    );
+    return '<img class="avatar-img" src="' + esc(url || DEFAULT_AVATAR) + '" alt="" />';
   }
 
   // Moldura com a cor do status (compartilhada entre a foto do cabeçalho
@@ -354,12 +352,65 @@ const Dashboard = (() => {
     }
   }
 
-  /* ---------- Alterar imagem para exibição (upload) ---------- */
+  /* ---------- Alterar imagem para exibição ----------
+     Abre o diálogo "Selecione uma Imagem para Exibição" (galeria de
+     exemplos, igual ao Messenger clássico) em vez de ir direto pro
+     seletor de arquivo — "Procurar..." dentro do diálogo é que abre
+     o upload. Clicar só faz prévia; "OK" salva e fecha; "Fechar"/X
+     descartam e voltam ao que estava salvo (mesmo padrão do seletor
+     de cenário). */
+  let stagedAvatarUrl = null;
+
   function changePicture() {
-    const input = document.getElementById("avatar-input");
-    if (input) input.click();
+    openAvatarPicker();
   }
 
+  function openAvatarPicker() {
+    stagedAvatarUrl = profile ? profile.avatar_url || null : null;
+    const grid = document.getElementById("avatar-grid");
+    grid.innerHTML =
+      AVATAR_GALLERY.map((url) =>
+        '<button type="button" class="avatar-swatch' + (url === stagedAvatarUrl ? " is-selected" : "") +
+        '" data-avatar="' + esc(url) + '" style="background-image:url(\'' + url + "')\"></button>"
+      ).join("") +
+      '<button type="button" class="avatar-swatch' + (!stagedAvatarUrl ? " is-selected" : "") +
+      '" data-avatar="" style="background-image:url(\'' + NO_AVATAR_TILE + "')\"></button>";
+
+    grid.querySelectorAll(".avatar-swatch").forEach((sw) => {
+      sw.addEventListener("click", () => {
+        stagedAvatarUrl = sw.dataset.avatar || null;
+        grid.querySelectorAll(".avatar-swatch").forEach((x) => x.classList.remove("is-selected"));
+        sw.classList.add("is-selected");
+        previewAvatar(stagedAvatarUrl);
+      });
+    });
+
+    previewAvatar(stagedAvatarUrl);
+    document.getElementById("avatar-picker").hidden = false;
+  }
+
+  // Aplica a foto só visualmente (na moldura do cabeçalho), sem salvar.
+  function previewAvatar(url) {
+    const photoWrap = document.querySelector(".my-avatar .status-frame__photo");
+    if (!photoWrap) return;
+    photoWrap.innerHTML = avatarMarkup(url);
+    photoWrap.dataset.avatarUrl = url || "";
+  }
+
+  function closeAvatarPicker() {
+    if (profile) previewAvatar(profile.avatar_url || null);
+    document.getElementById("avatar-picker").hidden = true;
+  }
+
+  async function commitAvatarPicker() {
+    document.getElementById("avatar-picker").hidden = true;
+    if (!profile || stagedAvatarUrl === (profile.avatar_url || null)) return;
+    profile.avatar_url = stagedAvatarUrl;
+    renderProfile();
+    try { await MSNSupabase.updateMyProfile({ avatar_url: stagedAvatarUrl }); } catch (_) {}
+  }
+
+  // Envio de uma foto própria ("Procurar..." dentro do diálogo).
   async function onAvatarSelected(e) {
     const file = e.target.files && e.target.files[0];
     e.target.value = ""; // permite reenviar o mesmo arquivo
@@ -373,11 +424,14 @@ const Dashboard = (() => {
 
     // Prévia imediata
     const previewUrl = URL.createObjectURL(file);
-    if (profile) { profile.avatar_url = previewUrl; renderProfile(); }
+    stagedAvatarUrl = previewUrl;
+    document.querySelectorAll("#avatar-grid .avatar-swatch").forEach((x) => x.classList.remove("is-selected"));
+    previewAvatar(previewUrl);
 
     try {
       const url = await MSNSupabase.uploadAvatar(file);
-      if (profile) { profile.avatar_url = url; renderProfile(); }
+      stagedAvatarUrl = url;
+      previewAvatar(url);
     } catch (err) {
       infoModal("Foto de exibição", err.message || "Não foi possível enviar a imagem.");
     }
@@ -786,13 +840,23 @@ const Dashboard = (() => {
       renderContacts(currentFilter);
     });
 
-    // Foto de exibição (upload)
+    // Foto de exibição: clicar abre "Selecione uma Imagem para
+    // Exibição" (galeria + "Procurar..." pra enviar uma própria)
     const avatarInput = document.getElementById("avatar-input");
     if (avatarInput) avatarInput.addEventListener("change", onAvatarSelected);
 
-    // Clicar na foto de exibição abre direto o upload de uma nova foto
     const avatarBtn = document.getElementById("my-avatar-btn");
     if (avatarBtn) avatarBtn.addEventListener("click", changePicture);
+
+    const avatarBrowse = document.getElementById("avatar-browse");
+    if (avatarBrowse && avatarInput) avatarBrowse.addEventListener("click", () => avatarInput.click());
+
+    const avatarOk = document.getElementById("avatar-ok");
+    if (avatarOk) avatarOk.addEventListener("click", commitAvatarPicker);
+    const avatarClose = document.getElementById("avatar-close");
+    if (avatarClose) avatarClose.addEventListener("click", closeAvatarPicker);
+    const avatarX = document.getElementById("avatar-dialog-x");
+    if (avatarX) avatarX.addEventListener("click", closeAvatarPicker);
 
     // Seletor de cenário: OK (salva e fecha) / Aplicar (salva, mantém
     // aberto) / Fechar e X (descartam a prévia e fecham)
