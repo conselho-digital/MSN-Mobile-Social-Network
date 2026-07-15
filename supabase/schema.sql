@@ -31,12 +31,21 @@ alter table public.profiles add column if not exists birthdate date;
 alter table public.profiles add column if not exists scene text default 'cenario1';
 alter table public.profiles add column if not exists color_scheme text;
 alter table public.profiles add column if not exists scene_image_url text;
+alter table public.profiles add column if not exists email text;
 -- Observação: a foto de exibição usa Supabase Storage — veja
 -- supabase/personalization.sql (bucket "avatars" + políticas).
 -- color_scheme: esquema de cores escolhido separadamente do cenário
 -- (ver supabase/color_scheme.sql). NULL = usa a cor pareada ao cenário.
 -- scene_image_url: cenário customizado enviado pela pessoa (botão
 -- "Procurar..."), usado quando scene = 'custom' (ver custom_scene.sql).
+-- email: identidade usada para buscar/adicionar contatos (como o
+-- Passport clássico do MSN) — ver supabase/contacts_by_email.sql.
+
+-- Preenche quem já tem conta, usando o e-mail do auth.users.
+update public.profiles p
+set email = u.email
+from auth.users u
+where p.id = u.id and p.email is null;
 
 -- A galeria de cenários trocou os antigos ids (green/blue/aero/...)
 -- pelas imagens em assets/scenes/cenarioN.webp — atualiza quem ainda
@@ -89,6 +98,19 @@ create table if not exists public.contacts (
   unique (owner_id, contact_id)
 );
 
+-- ------------------------------------------------------------
+-- 4b) TABELA: groups
+--     Grupos criados pela pessoa para organizar os contatos
+--     ("Criar um grupo..." no menu Adicionar).
+-- ------------------------------------------------------------
+create table if not exists public.groups (
+  id           bigint generated always as identity primary key,
+  owner_id     uuid not null references public.profiles (id) on delete cascade,
+  name         text not null,
+  member_ids   uuid[] not null default '{}',
+  created_at   timestamptz not null default now()
+);
+
 -- ============================================================
 -- 5) TRIGGER: cria um profile automaticamente a cada novo usuário
 -- ============================================================
@@ -99,12 +121,13 @@ security definer
 set search_path = public
 as $$
 begin
-  insert into public.profiles (id, display_name, sub_nick, birthdate)
+  insert into public.profiles (id, display_name, sub_nick, birthdate, email)
   values (
     new.id,
     coalesce(new.raw_user_meta_data ->> 'display_name', split_part(new.email, '@', 1)),
     coalesce(new.raw_user_meta_data ->> 'sub_nick', ''),
-    (nullif(new.raw_user_meta_data ->> 'birthdate', ''))::date
+    (nullif(new.raw_user_meta_data ->> 'birthdate', ''))::date,
+    new.email
   )
   on conflict (id) do nothing;
   return new;
@@ -137,6 +160,7 @@ alter table public.profiles     enable row level security;
 alter table public.messages     enable row level security;
 alter table public.nudge_events enable row level security;
 alter table public.contacts     enable row level security;
+alter table public.groups       enable row level security;
 
 -- ---- profiles ----
 drop policy if exists "Perfis são visíveis para usuários autenticados" on public.profiles;
@@ -194,6 +218,20 @@ create policy "Ver os próprios contatos"
 drop policy if exists "Gerenciar os próprios contatos" on public.contacts;
 create policy "Gerenciar os próprios contatos"
   on public.contacts for all
+  to authenticated
+  using (auth.uid() = owner_id)
+  with check (auth.uid() = owner_id);
+
+-- ---- groups ----
+drop policy if exists "Ver os próprios grupos" on public.groups;
+create policy "Ver os próprios grupos"
+  on public.groups for select
+  to authenticated
+  using (auth.uid() = owner_id);
+
+drop policy if exists "Gerenciar os próprios grupos" on public.groups;
+create policy "Gerenciar os próprios grupos"
+  on public.groups for all
   to authenticated
   using (auth.uid() = owner_id)
   with check (auth.uid() = owner_id);

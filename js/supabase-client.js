@@ -78,6 +78,7 @@ const MSNSupabase = (() => {
         display_name: meta.display_name || (user.email ? user.email.split("@")[0] : "Novo usuário"),
         sub_nick: meta.sub_nick || "",
         status: "online",
+        email: user.email || null,
       };
       if (meta.birthdate) insert.birthdate = meta.birthdate;
       const { data: created, error: cerr } = await client
@@ -153,23 +154,37 @@ const MSNSupabase = (() => {
     return profs || [];
   }
 
-  // Adiciona um contato buscando pelo nome de exibição.
-  async function addContactByName(displayName) {
+  // Adiciona um contato buscando pelo e-mail (identidade do Passport
+  // clássico do MSN).
+  async function addContactByEmail(email) {
     if (!isConfigured()) return { ok: true, demo: true };
     const { data: { user } } = await client.auth.getUser();
     if (!user) throw new Error("Sessão expirada. Entre novamente.");
 
     const { data: found, error } = await client
-      .from("profiles").select("id, display_name")
-      .ilike("display_name", displayName.trim()).limit(1);
+      .from("profiles").select("id, display_name, email")
+      .ilike("email", email.trim()).limit(1);
     if (error) throw error;
-    if (!found || !found.length) throw new Error("Nenhum contato encontrado com esse nome.");
+    if (!found || !found.length) throw new Error("Nenhum contato encontrado com esse e-mail.");
     if (found[0].id === user.id) throw new Error("Você não pode adicionar a si mesmo.");
 
     const { error: insErr } = await client
       .from("contacts").insert({ owner_id: user.id, contact_id: found[0].id });
     if (insErr && !/duplicate|unique/i.test(insErr.message)) throw insErr;
     return { ok: true, name: found[0].display_name };
+  }
+
+  /* ---------- Grupos ---------- */
+  async function createGroup(name, memberIds) {
+    if (!isConfigured()) return { ok: true, demo: true };
+    const { data: { user } } = await client.auth.getUser();
+    if (!user) throw new Error("Sessão expirada. Entre novamente.");
+
+    const { error } = await client
+      .from("groups")
+      .insert({ owner_id: user.id, name: name.trim(), member_ids: memberIds || [] });
+    if (error) throw error;
+    return { ok: true };
   }
 
   /* ---------- Dados de demonstração ---------- */
@@ -202,7 +217,8 @@ const MSNSupabase = (() => {
 
   return {
     init, isConfigured, signIn, signUp, getSession, signOut,
-    getMyProfile, updateMyProfile, getContacts, addContactByName,
+    getMyProfile, updateMyProfile, getContacts, addContactByEmail,
+    createGroup,
     uploadAvatar,
     uploadSceneImage,
     getClient: () => client,

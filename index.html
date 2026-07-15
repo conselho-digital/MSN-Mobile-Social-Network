@@ -679,6 +679,31 @@
     </div>
   </div>
 
+  <!-- Criar um grupo: nome + seleção de contatos (botões, sem checkbox) -->
+  <div id="group-picker" class="modal-overlay scene-dialog-overlay" hidden>
+    <div class="scene-dialog" role="dialog" aria-modal="true" aria-label="Criar um grupo">
+      <header class="scene-dialog__titlebar">
+        <span class="scene-dialog__titlebar-app">
+          <img src="assets/icons/favicon.png" alt="" />
+          Criar um grupo
+        </span>
+        <button type="button" id="group-dialog-x" class="scene-dialog__x" aria-label="Fechar">&times;</button>
+      </header>
+
+      <div class="scene-dialog__body">
+        <p class="scene-dialog__intro">Dê um nome ao grupo e escolha os contatos que vão fazer parte dele.</p>
+        <input type="text" id="group-name-input" class="modal__input" placeholder="Nome do grupo" />
+        <h3 class="scene-dialog__section scene-dialog__section--colors">Selecione os contatos</h3>
+        <div class="group-contact-list" id="group-contact-list"></div>
+      </div>
+
+      <footer class="scene-dialog__footer">
+        <button type="button" id="group-ok" class="btn-signin btn-signin--sm btn-signin--primary">OK</button>
+        <button type="button" id="group-cancel" class="btn-signin btn-signin--sm">Cancelar</button>
+      </footer>
+    </div>
+  </div>
+
   <!-- Input escondido para envio da foto de exibição -->
   <input type="file" id="avatar-input" accept="image/*" hidden />
   <input type="file" id="scene-image-input" accept="image/*" hidden />

@@ -481,19 +481,76 @@ const Dashboard = (() => {
 
   function openAddContactModal() {
     openModal({
-      title: "Adicionar contato",
+      title: "Adicionar um contato",
       value: "",
-      placeholder: "Nome de exibição do contato",
+      placeholder: "Endereço de e-mail",
+      inputType: "email",
       onOk: async (val) => {
-        if (!val.trim()) return "Digite o nome do contato.";
+        if (!val.trim()) return "Digite o e-mail do contato.";
         try {
-          await MSNSupabase.addContactByName(val.trim());
+          await MSNSupabase.addContactByEmail(val.trim());
           await load();
         } catch (err) {
           return err.message || "Não foi possível adicionar.";
         }
       },
     });
+  }
+
+  /* ---------- Criar um grupo ----------
+     Nome do grupo + seleção dos contatos já adicionados. Clicar num
+     contato alterna sua aparência para "selecionado" (visual de botão
+     pressionado) — sem checkboxes, como pedido. */
+  let selectedGroupMembers = null;
+
+  function openGroupPicker() {
+    selectedGroupMembers = new Set();
+    const nameInput = document.getElementById("group-name-input");
+    nameInput.value = "";
+    const list = document.getElementById("group-contact-list");
+
+    if (!contacts.length) {
+      list.innerHTML = '<p class="group-contacts-empty">Você ainda não tem contatos adicionados.</p>';
+    } else {
+      list.innerHTML = contacts.map((c) =>
+        '<button type="button" class="group-contact-btn" data-id="' + esc(c.id) + '">' +
+        '<span class="group-contact-btn__avatar">' + avatarMarkup(c.avatar_url) + "</span>" +
+        "<span>" + esc(c.display_name) + "</span></button>"
+      ).join("");
+      list.querySelectorAll(".group-contact-btn").forEach((btn) => {
+        btn.addEventListener("click", () => {
+          const id = btn.dataset.id;
+          if (selectedGroupMembers.has(id)) {
+            selectedGroupMembers.delete(id);
+            btn.classList.remove("is-selected");
+          } else {
+            selectedGroupMembers.add(id);
+            btn.classList.add("is-selected");
+          }
+        });
+      });
+    }
+
+    document.getElementById("group-picker").hidden = false;
+    setTimeout(() => nameInput.focus(), 30);
+  }
+
+  function closeGroupPicker() {
+    document.getElementById("group-picker").hidden = true;
+  }
+
+  async function submitGroup() {
+    const name = document.getElementById("group-name-input").value.trim();
+    if (!name) {
+      infoModal("Criar um grupo", "Digite um nome para o grupo.");
+      return;
+    }
+    try {
+      await MSNSupabase.createGroup(name, Array.from(selectedGroupMembers || []));
+      closeGroupPicker();
+    } catch (err) {
+      infoModal("Criar um grupo", err.message || "Não foi possível criar o grupo.");
+    }
   }
 
   function editName() {
@@ -625,9 +682,7 @@ const Dashboard = (() => {
       item.addEventListener("click", () => {
         closeAddMenu();
         if (item.dataset.action === "add-contact") openAddContactModal();
-        else if (item.dataset.action === "create-group") {
-          infoModal("Criar um grupo", "A criação de grupos será adicionada em breve.");
-        }
+        else if (item.dataset.action === "create-group") openGroupPicker();
       });
     });
 
@@ -674,6 +729,14 @@ const Dashboard = (() => {
         previewColorScheme(stagedColorScheme);
       });
     }
+
+    // Criar um grupo: OK (cria) / Cancelar e X (descartam)
+    const groupOk = document.getElementById("group-ok");
+    if (groupOk) groupOk.addEventListener("click", submitGroup);
+    const groupCancel = document.getElementById("group-cancel");
+    if (groupCancel) groupCancel.addEventListener("click", closeGroupPicker);
+    const groupX = document.getElementById("group-dialog-x");
+    if (groupX) groupX.addEventListener("click", closeGroupPicker);
 
     // Ícones auxiliares (placeholders informativos)
     const mailBtn = document.getElementById("btn-mail");
@@ -747,7 +810,7 @@ const Dashboard = (() => {
   }
 
   /* ---------- Modal reutilizável ---------- */
-  function openModal({ title, value, placeholder, onOk }) {
+  function openModal({ title, value, placeholder, inputType, onOk }) {
     const overlay = document.getElementById("modal-overlay");
     const input = document.getElementById("modal-input");
     const msg = document.getElementById("modal-message");
@@ -756,6 +819,7 @@ const Dashboard = (() => {
 
     document.getElementById("modal-title").textContent = title;
     input.hidden = false;
+    input.type = inputType || "text";
     input.value = value || "";
     input.placeholder = placeholder || "";
     cancelBtn.hidden = false;
