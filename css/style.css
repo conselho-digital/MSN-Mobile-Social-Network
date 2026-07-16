@@ -1721,19 +1721,21 @@ body[data-login-theme="cenario1"] #screen-connecting::before {
 #group-picker .scene-dialog__banner {
   background-image:
     linear-gradient(180deg, rgba(255, 255, 255, 0) 45%, #eef7fd 100%),
-    url("assets/scenes/cenario1.webp");
+    url("../assets/scenes/cenario1.webp");
   background-size: cover, cover;
   background-position: center, center;
   background-repeat: no-repeat, no-repeat;
 }
 /* Caixa do nome do grupo mais baixa que o campo padrão. */
 #group-name-input { height: 30px; font-size: 0.85rem; }
-/* Botões no estilo clássico neutro (borda cinza, sem o azul herdado
-   dos botões da tela de login). */
-#group-picker .scene-dialog__footer .btn-signin:not(.btn-signin--primary) {
+/* OK e Cancelar no estilo clássico neutro (cinza, sem o azul herdado
+   dos botões da tela de login) — mesmo visual nos dois diálogos. */
+#group-picker .scene-dialog__footer .btn-signin,
+#add-contact-dialog .scene-dialog__footer .btn-signin {
   border-color: #adb6bd;
 }
-#group-picker .scene-dialog__footer .btn-signin:not(.btn-signin--primary):hover {
+#group-picker .scene-dialog__footer .btn-signin:hover,
+#add-contact-dialog .scene-dialog__footer .btn-signin:hover {
   background: linear-gradient(#ffffff, #e6eaee);
   border-color: #8b959c;
 }
