@@ -2115,6 +2115,13 @@ body[data-login-theme="cenario1"] #screen-connecting::before {
   outline: none;
 }
 .options-field__input:focus { border-color: var(--field-border-focus); box-shadow: 0 0 0 2px rgba(75,160,230,0.2); }
+.options-field__input:disabled { background: #eef1f4; color: #8a97a1; }
+
+/* "Salvar minhas conversas nesta pasta" — só decorativo, não tem
+   sistema de arquivos local pra apontar de verdade num PWA. */
+.options-folder-row { display: flex; gap: 8px; align-items: center; }
+.options-folder-row .options-field__input { flex: 1 1 auto; margin-top: 0; font-size: 0.8rem; }
+.options-folder-row .scene-dialog__browse { flex: 0 0 auto; margin: 0; }
 
 .options-checkbox {
   display: flex;

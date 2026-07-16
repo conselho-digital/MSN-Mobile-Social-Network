@@ -404,6 +404,70 @@ const Dashboard = (() => {
     renderContacts(currentFilter);
   }
 
+  /* ---------- Preferências de Mensagens (Opções > Mensagens) ----------
+     Ainda não existe janela de conversa no app — essas preferências só
+     ficam guardadas (localStorage) prontas pra quando o chat for
+     construído; "Manter um histórico" já liga/desliga "Mostrar minha
+     última conversa" de verdade, igual ao cliente clássico. */
+  const MESSAGE_PREF_KEYS = {
+    showEmoticons: "opt-show-emoticons",
+    showTimestamps: "opt-show-timestamps",
+    allowNudges: "opt-allow-nudges",
+    autoPlayWinks: "opt-auto-play-winks",
+    autoPlayVoice: "opt-auto-play-voice",
+    keepHistory: "opt-keep-history",
+    showLastConversation: "opt-show-last-conversation",
+  };
+  let messagePrefs = {
+    showEmoticons: true,
+    showTimestamps: false,
+    allowNudges: true,
+    autoPlayWinks: true,
+    autoPlayVoice: true,
+    keepHistory: false,
+    showLastConversation: false,
+  };
+
+  function loadMessagePrefs() {
+    try {
+      Object.keys(messagePrefs).forEach((key) => {
+        const raw = localStorage.getItem("msn:msg:" + key);
+        if (raw !== null) messagePrefs[key] = raw === "true";
+      });
+    } catch (_) {}
+  }
+  function saveMessagePrefs() {
+    try {
+      Object.keys(messagePrefs).forEach((key) => {
+        localStorage.setItem("msn:msg:" + key, String(messagePrefs[key]));
+      });
+    } catch (_) {}
+  }
+
+  function updateLastConversationCheckbox() {
+    const keepHistoryEl = document.getElementById(MESSAGE_PREF_KEYS.keepHistory);
+    const lastConvEl = document.getElementById(MESSAGE_PREF_KEYS.showLastConversation);
+    if (!keepHistoryEl || !lastConvEl) return;
+    lastConvEl.disabled = !keepHistoryEl.checked;
+    if (!keepHistoryEl.checked) lastConvEl.checked = false;
+  }
+
+  function loadMessagePrefsIntoForm() {
+    Object.keys(MESSAGE_PREF_KEYS).forEach((key) => {
+      const el = document.getElementById(MESSAGE_PREF_KEYS[key]);
+      if (el) el.checked = messagePrefs[key];
+    });
+    updateLastConversationCheckbox();
+  }
+
+  function commitMessagePrefs() {
+    Object.keys(MESSAGE_PREF_KEYS).forEach((key) => {
+      const el = document.getElementById(MESSAGE_PREF_KEYS[key]);
+      if (el) messagePrefs[key] = el.checked;
+    });
+    saveMessagePrefs();
+  }
+
   // Cria (ou recria) a "casca" de cada grupo próprio dentro de
   // #contact-groups-dynamic — chamado só quando a lista de grupos muda
   // (load()/depois de criar um grupo), não a cada busca. O preenchimento
@@ -906,6 +970,7 @@ const Dashboard = (() => {
       it.classList.toggle("is-active", it.dataset.tab === "personal"));
     document.getElementById("options-pane-personal").hidden = false;
     document.getElementById("options-pane-layout").hidden = true;
+    document.getElementById("options-pane-messages").hidden = true;
     document.getElementById("options-pane-blank").hidden = true;
   }
 
@@ -928,6 +993,7 @@ const Dashboard = (() => {
     markActivity();
 
     commitLayoutPrefs();
+    commitMessagePrefs();
 
     if (!profile) return;
     const nameVal = document.getElementById("opt-display-name").value.trim();
@@ -1104,6 +1170,7 @@ const Dashboard = (() => {
     startIdleWatch();
     loadLayoutPrefs();
     applyLayoutVisuals();
+    loadMessagePrefs();
 
     // Menu do nick (status + ações do perfil)
     const menu = document.getElementById("my-menu");
@@ -1306,10 +1373,13 @@ const Dashboard = (() => {
         item.classList.add("is-active");
         document.getElementById("options-nav-current").textContent = item.textContent;
         const tab = item.dataset.tab;
+        const knownTabs = ["personal", "layout", "messages"];
         document.getElementById("options-pane-personal").hidden = tab !== "personal";
         document.getElementById("options-pane-layout").hidden = tab !== "layout";
-        document.getElementById("options-pane-blank").hidden = tab === "personal" || tab === "layout";
+        document.getElementById("options-pane-messages").hidden = tab !== "messages";
+        document.getElementById("options-pane-blank").hidden = knownTabs.includes(tab);
         if (tab === "layout") loadLayoutPrefsIntoForm();
+        if (tab === "messages") loadMessagePrefsIntoForm();
         if (optNav) optNav.hidden = true;
         if (optNavToggle) optNavToggle.setAttribute("aria-expanded", "false");
       });
@@ -1321,6 +1391,10 @@ const Dashboard = (() => {
       closeOptionsDialog();
       openAvatarPicker();
     });
+    // "Mostrar minha última conversa..." só faz sentido com "Manter um
+    // histórico" ligado — desliga/liga junto, igual ao cliente clássico.
+    const optKeepHistory = document.getElementById("opt-keep-history");
+    if (optKeepHistory) optKeepHistory.addEventListener("change", updateLastConversationCheckbox);
     // OK (salva e fecha) / Aplicar (salva, mantém aberto) / Cancelar e X
     // (descartam)
     const optOk = document.getElementById("options-ok");

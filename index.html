@@ -689,7 +689,6 @@
         <nav class="options-nav" id="options-nav" hidden>
           <button type="button" class="options-nav__item is-active" data-tab="personal">Pessoal</button>
           <button type="button" class="options-nav__item" data-tab="layout">Layout</button>
-          <button type="button" class="options-nav__item" data-tab="signin">Entrar</button>
           <button type="button" class="options-nav__item" data-tab="messages">Mensagens</button>
           <button type="button" class="options-nav__item" data-tab="alerts">Alertas</button>
           <button type="button" class="options-nav__item" data-tab="sounds">Sons</button>
@@ -809,6 +808,51 @@
                 <option value="name">Nome</option>
               </select>
             </label>
+          </section>
+        </div>
+
+        <div class="options-pane" id="options-pane-messages" hidden>
+          <h3 class="options-pane__title">Mensagens</h3>
+
+          <section class="options-section">
+            <h4 class="options-section__heading">Configurações Gerais de Mensagem</h4>
+            <label class="options-checkbox">
+              <input type="checkbox" id="opt-show-emoticons" checked />
+              Exibir emoticons
+            </label>
+            <label class="options-checkbox">
+              <input type="checkbox" id="opt-show-timestamps" />
+              Mostrar carimbos de data/hora nas mensagens
+            </label>
+            <label class="options-checkbox">
+              <input type="checkbox" id="opt-allow-nudges" checked />
+              Permitir que eu envie e receba chamadas de atenção
+            </label>
+            <label class="options-checkbox">
+              <input type="checkbox" id="opt-auto-play-winks" checked />
+              Reproduzir winks automaticamente quando forem recebidos
+            </label>
+            <label class="options-checkbox">
+              <input type="checkbox" id="opt-auto-play-voice" checked />
+              Reproduzir mensagens de voz automaticamente quando forem recebidas
+            </label>
+          </section>
+
+          <section class="options-section">
+            <h4 class="options-section__heading">Histórico de Mensagens</h4>
+            <label class="options-checkbox">
+              <input type="checkbox" id="opt-keep-history" />
+              Manter um histórico de minhas conversas automaticamente
+            </label>
+            <label class="options-checkbox">
+              <input type="checkbox" id="opt-show-last-conversation" disabled />
+              Mostrar minha última conversa em novas janelas de conversa
+            </label>
+            <p class="options-section__text">Salvar minhas conversas nesta pasta:</p>
+            <div class="options-folder-row">
+              <input type="text" class="options-field__input" value="Documentos/MSN/Meus arquivos recebidos" disabled />
+              <button type="button" class="scene-dialog__browse" disabled>Alterar...</button>
+            </div>
           </section>
         </div>
 
