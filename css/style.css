@@ -1287,7 +1287,10 @@ body {
   color: #3f5a70;
   cursor: pointer;
 }
-.contact-group__header:hover { background: #f5f9fc; }
+/* Sem cor de fundo própria no hover/toque — fica transparente igual
+   ao resto do tempo, deixando o fundo tingido do tema (--tint-light)
+   aparecer sem interrupção. Em touch o :hover costuma "grudar" depois
+   do toque, então uma cor fixa aqui destacava a barra em branco. */
 /* Seta em "v" (mesma técnica do .chevron do login) — fechada aponta
    pra frente/direita, aberta aponta pra baixo, com cor trocando de
    branco pra preto. */
