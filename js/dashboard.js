@@ -517,13 +517,16 @@ const Dashboard = (() => {
     );
   }
 
+  // Clicar num cenário/cor só marca a seleção dentro do diálogo (não
+  // altera o Dashboard de verdade) — só "OK"/"Aplicar" aplicam e
+  // salvam de fato (ver commitScene).
   function bindSceneTileClicks(grid) {
     grid.querySelectorAll(".scene-swatch").forEach((sw) => {
       sw.addEventListener("click", () => {
         stagedScene = sw.dataset.scene;
         grid.querySelectorAll(".scene-swatch").forEach((x) => x.classList.remove("is-selected"));
         sw.classList.add("is-selected");
-        previewScene(stagedScene);
+        updateCurrentColorSwatch();
       });
     });
   }
@@ -535,7 +538,7 @@ const Dashboard = (() => {
         stagedColorScheme = sw.dataset.colorScheme === stagedColorScheme ? null : sw.dataset.colorScheme;
         colorGrid.querySelectorAll(".color-swatch").forEach((x) => x.classList.remove("is-selected"));
         if (stagedColorScheme) sw.classList.add("is-selected");
-        previewColorScheme(stagedColorScheme);
+        updateCurrentColorSwatch();
       });
     });
   }
@@ -555,7 +558,6 @@ const Dashboard = (() => {
     const previewUrl = URL.createObjectURL(file);
     stagedScene = "custom";
     stagedCustomImageUrl = previewUrl;
-    previewScene("custom");
 
     const grid = document.getElementById("scene-grid");
     const existing = grid.querySelector('.scene-swatch[data-scene="custom"]');
@@ -567,11 +569,11 @@ const Dashboard = (() => {
       grid.insertAdjacentHTML("afterbegin", customTileHtml(previewUrl, true));
       bindSceneTileClicks(grid);
     }
+    updateCurrentColorSwatch();
 
     try {
       const url = await MSNSupabase.uploadSceneImage(file);
       stagedCustomImageUrl = url;
-      previewScene("custom");
       const tile = grid.querySelector('.scene-swatch[data-scene="custom"]');
       if (tile) tile.style.background = "url('" + url + "') center/cover no-repeat";
     } catch (err) {
@@ -579,32 +581,10 @@ const Dashboard = (() => {
     }
   }
 
-  // Aplica o cenário só visualmente no cabeçalho, sem salvar.
-  function previewScene(id) {
-    const header = document.querySelector(".dash-header");
-    if (header) {
-      const tintHex = MSNScenes.colorSchemeHex(stagedColorScheme);
-      header.style.setProperty("--scene", resolveSceneBg(id, stagedCustomImageUrl, tintHex));
-    }
-    updateHeaderTextContrast(id, stagedCustomImageUrl);
-  }
-
-  // Aplica o esquema de cores só visualmente (Novidades/atalhos), sem salvar.
-  function previewColorScheme(colorSchemeId) {
-    const screen = document.getElementById("screen-dashboard");
-    if (screen) {
-      const theme = MSNScenes.effectiveTheme(stagedScene, colorSchemeId);
-      screen.style.setProperty("--tint-light", pastel(theme, 0.92));
-      screen.style.setProperty("--tint-mid", pastel(theme, 0.8));
-      screen.style.setProperty("--tint-strong", pastel(theme, 0.62));
-      screen.style.setProperty("--tint-text", MSNScenes.shade(theme, 0.35));
-    }
-    // Trocar de cor também re-tinge o banner se o cenário atual for o
-    // padrão (Céu Azul) — ver previewScene/MSNScenes.bg.
-    previewScene(stagedScene);
-    updateCurrentColorSwatch();
-  }
-
+  // Pré-visualização dentro do próprio diálogo (a bolinha "cor atual"
+  // ao lado de "Mais cores...") — não altera o Dashboard de verdade.
+  // Clicar num cenário/cor só fica "staged" (stagedScene/
+  // stagedColorScheme) até "OK"/"Aplicar" (ver commitScene).
   function updateCurrentColorSwatch() {
     const sw = document.getElementById("color-scheme-current");
     if (!sw) return;
@@ -627,13 +607,9 @@ const Dashboard = (() => {
     try { await MSNSupabase.updateMyProfile(patch); } catch (_) {}
   }
 
-  // Fecha o diálogo; se a prévia não foi aplicada, volta ao que estava salvo.
+  // Fecha o diálogo sem aplicar nem salvar nada (clicar num cenário/
+  // cor só fica staged em memória, nunca chega a mudar o Dashboard).
   function closeScenePicker() {
-    if (profile) {
-      stagedCustomImageUrl = profile.scene_image_url || null;
-      previewScene(profile.scene);
-      previewColorScheme(profile.color_scheme);
-    }
     document.getElementById("scene-picker").hidden = true;
   }
 
@@ -925,7 +901,7 @@ const Dashboard = (() => {
         stagedColorScheme = colorNative.value;
         document.querySelectorAll("#color-scheme-grid .color-swatch").forEach((el) =>
           el.classList.remove("is-selected"));
-        previewColorScheme(stagedColorScheme);
+        updateCurrentColorSwatch();
       });
     }
 
