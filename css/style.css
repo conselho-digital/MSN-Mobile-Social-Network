@@ -177,6 +177,9 @@ body {
   background-position: center, center;
   background-repeat: no-repeat, no-repeat;
   background-blend-mode: color, normal;
+  /* Sombra na base do banner — separa visualmente o cenário do resto
+     da tela, igual ao cliente clássico. */
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.3);
   pointer-events: none;
 }
 .signin-scroll {
