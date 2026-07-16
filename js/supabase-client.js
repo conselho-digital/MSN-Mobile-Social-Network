@@ -138,6 +138,97 @@ const MSNSupabase = (() => {
     return url;
   }
 
+  /* ---------- Mensagens ---------- */
+  // Histórico entre eu e um contato (as duas direções), mais antigas
+  // primeiro. "content" é limitado a 2000 caracteres (ver schema.sql) —
+  // por enquanto só texto, sem imagem/gif/anexo.
+  async function getMessages(contactId) {
+    if (!isConfigured()) return demoMessages(contactId);
+    const { data: { user } } = await client.auth.getUser();
+    if (!user) return [];
+    const { data, error } = await client
+      .from("messages")
+      .select("*")
+      .or(
+        "and(sender_id.eq." + user.id + ",receiver_id.eq." + contactId + ")," +
+        "and(sender_id.eq." + contactId + ",receiver_id.eq." + user.id + ")"
+      )
+      .order("created_at", { ascending: true })
+      .limit(200);
+    if (error) throw error;
+    return data || [];
+  }
+
+  async function sendMessage(contactId, content) {
+    if (!isConfigured()) return { ...demoMessage(content), demo: true };
+    const { data: { user } } = await client.auth.getUser();
+    if (!user) throw new Error("Sessão expirada. Entre novamente.");
+    const { data, error } = await client
+      .from("messages")
+      .insert({ sender_id: user.id, receiver_id: contactId, content })
+      .select()
+      .single();
+    if (error) throw error;
+    return data;
+  }
+
+  // Tempo real: novas mensagens ENVIADAS PRA MIM por qualquer pessoa —
+  // quem chamou filtra pelo contato da conversa aberta (evita assinar
+  // um canal por contato).
+  let messagesChannel = null;
+  function subscribeMessages(onInsert) {
+    if (!isConfigured()) return null;
+    unsubscribeMessages();
+    messagesChannel = client
+      .channel("messages-changes")
+      .on(
+        "postgres_changes",
+        { event: "INSERT", schema: "public", table: "messages" },
+        (payload) => onInsert(payload.new)
+      )
+      .subscribe();
+    return messagesChannel;
+  }
+  function unsubscribeMessages() {
+    if (messagesChannel) {
+      client.removeChannel(messagesChannel);
+      messagesChannel = null;
+    }
+  }
+
+  /* ---------- Chamar a atenção (nudge) ---------- */
+  async function sendNudge(contactId) {
+    if (!isConfigured()) return { ok: true, demo: true };
+    const { data: { user } } = await client.auth.getUser();
+    if (!user) throw new Error("Sessão expirada. Entre novamente.");
+    const { error } = await client
+      .from("nudge_events")
+      .insert({ sender_id: user.id, receiver_id: contactId });
+    if (error) throw error;
+    return { ok: true };
+  }
+
+  let nudgeChannel = null;
+  function subscribeNudges(onNudge) {
+    if (!isConfigured()) return null;
+    unsubscribeNudges();
+    nudgeChannel = client
+      .channel("nudge-changes")
+      .on(
+        "postgres_changes",
+        { event: "INSERT", schema: "public", table: "nudge_events" },
+        (payload) => onNudge(payload.new)
+      )
+      .subscribe();
+    return nudgeChannel;
+  }
+  function unsubscribeNudges() {
+    if (nudgeChannel) {
+      client.removeChannel(nudgeChannel);
+      nudgeChannel = null;
+    }
+  }
+
   /* ---------- Contatos ---------- */
   async function getContacts() {
     if (!isConfigured()) return demoContacts();
@@ -305,6 +396,20 @@ const MSNSupabase = (() => {
   function demoBlockedUsers() {
     return [];
   }
+  const demoMessageStore = {};
+  function demoMessages(contactId) {
+    return demoMessageStore[contactId] || [];
+  }
+  function demoMessage(content) {
+    const msg = {
+      id: "m" + Date.now(),
+      sender_id: "demo",
+      receiver_id: "demo-contact",
+      content,
+      created_at: new Date().toISOString(),
+    };
+    return msg;
+  }
 
   /* ---------- Modo demo (sem credenciais) ---------- */
   function demoAuth(email, password) {
@@ -328,6 +433,8 @@ const MSNSupabase = (() => {
     subscribeContacts, unsubscribeContacts,
     createGroup, getGroups,
     getBlockedUsers, blockUserByEmail, unblockUser,
+    getMessages, sendMessage, subscribeMessages, unsubscribeMessages,
+    sendNudge, subscribeNudges, unsubscribeNudges,
     uploadAvatar,
     uploadSceneImage,
     getClient: () => client,

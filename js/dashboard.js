@@ -930,14 +930,29 @@ const Dashboard = (() => {
   let stagedScene = null;
   let stagedColorScheme = null;
   let stagedCustomImageUrl = null;
+  // "profile" = cenário/tema da conta (mostrado pros outros); "chatBackground"
+  // = plano de fundo pessoal das janelas de conversa (só eu vejo, ver
+  // getPersonalChatBackground/setPersonalChatBackground mais abaixo).
+  let scenePickerMode = "profile";
 
-  function openScenePicker() {
+  function openScenePicker(mode) {
+    scenePickerMode = mode || "profile";
     const overlay = document.getElementById("scene-picker");
     const grid = document.getElementById("scene-grid");
     const colorGrid = document.getElementById("color-scheme-grid");
-    stagedScene = (profile && profile.scene) || SCENES[0].id;
-    stagedColorScheme = (profile && profile.color_scheme) || null;
-    stagedCustomImageUrl = (profile && profile.scene_image_url) || null;
+    const titleText = document.getElementById("scene-dialog-title-text");
+    if (scenePickerMode === "chatBackground") {
+      const bg = getPersonalChatBackground();
+      stagedScene = (bg && bg.scene) || SCENES[0].id;
+      stagedColorScheme = (bg && bg.colorScheme) || null;
+      stagedCustomImageUrl = null;
+      if (titleText) titleText.textContent = "Plano de Fundo";
+    } else {
+      stagedScene = (profile && profile.scene) || SCENES[0].id;
+      stagedColorScheme = (profile && profile.color_scheme) || null;
+      stagedCustomImageUrl = (profile && profile.scene_image_url) || null;
+      if (titleText) titleText.textContent = "Cenário";
+    }
 
     grid.innerHTML = SCENES.map((s) =>
       '<button type="button" class="scene-swatch' + (s.id === stagedScene ? " is-selected" : "") +
@@ -1044,8 +1059,16 @@ const Dashboard = (() => {
     sw.style.background = MSNScenes.effectiveTheme(stagedScene, stagedColorScheme);
   }
 
-  // Salva de verdade o cenário e o esquema de cores escolhidos.
+  // Salva de verdade o cenário e o esquema de cores escolhidos — na
+  // conta (mode "profile", visível pros outros) ou só como plano de
+  // fundo pessoal das conversas (mode "chatBackground", local, ninguém
+  // mais vê).
   async function commitScene() {
+    if (scenePickerMode === "chatBackground") {
+      setPersonalChatBackground(stagedScene, stagedColorScheme);
+      applyChatBackground();
+      return;
+    }
     if (!profile) return;
     const patch = {};
     if (stagedScene && stagedScene !== profile.scene) patch.scene = stagedScene;
@@ -1064,6 +1087,207 @@ const Dashboard = (() => {
   // cor só fica staged em memória, nunca chega a mudar o Dashboard).
   function closeScenePicker() {
     document.getElementById("scene-picker").hidden = true;
+  }
+
+  /* ============================================================
+     JANELA DE CONVERSA
+     ------------------------------------------------------------
+     O fundo da área de mensagens usa o cenário/tema do CONTATO por
+     padrão (com fallback pro cenário padrão se ele não tiver nenhum) —
+     simétrico: quando essa pessoa fala comigo, ela vê o MEU cenário.
+     Mas se eu tiver escolhido um "plano de fundo" pessoal (só meu,
+     nunca sincronizado, ninguém mais vê), ele prevalece em QUALQUER
+     conversa que eu abrir, independente de quem for o contato.
+     ============================================================ */
+  function getPersonalChatBackground() {
+    try {
+      const raw = localStorage.getItem("msn:chatBackground");
+      return raw ? JSON.parse(raw) : null;
+    } catch (_) { return null; }
+  }
+  function setPersonalChatBackground(scene, colorScheme) {
+    try {
+      localStorage.setItem("msn:chatBackground", JSON.stringify({ scene, colorScheme: colorScheme || null }));
+    } catch (_) {}
+  }
+
+  let currentChatContact = null;
+  let chatMessagesSubscribed = false;
+  let chatNudgeSubscribed = false;
+
+  // Resolve e aplica o fundo da conversa atualmente aberta.
+  function applyChatBackground() {
+    const thread = document.getElementById("chat-thread");
+    if (!thread || !currentChatContact) return;
+    const myBg = getPersonalChatBackground();
+    const sceneId = myBg ? myBg.scene : (currentChatContact.scene || SCENES[0].id);
+    const colorScheme = myBg ? myBg.colorScheme : currentChatContact.color_scheme;
+    const customUrl = myBg ? null : currentChatContact.scene_image_url;
+    const tintHex = MSNScenes.colorSchemeHex(colorScheme);
+    // MSNScenes.bg()/resolveSceneBg() devolvem um valor pra propriedade
+    // "background" (shorthand, com position/size/repeat embutidos) —
+    // não pra "background-image" sozinha (ver .dash-header, que usa a
+    // mesma técnica).
+    thread.style.background = resolveSceneBg(sceneId, customUrl, tintHex);
+  }
+
+  function chatStatusFrameMarkup(avatarUrl, status) {
+    return statusFrameMarkup(avatarUrl, status);
+  }
+
+  function renderChatHeader() {
+    const c = currentChatContact;
+    if (!c) return;
+    document.getElementById("chat-titlebar-text").textContent = c.email || c.display_name || "";
+    document.getElementById("chat-contact-name").textContent = c.display_name || c.email || "";
+    document.getElementById("chat-contact-status").textContent = "(" + (STATUS_LABEL[c.status] || "Offline") + ")";
+    document.getElementById("chat-contact-avatar").innerHTML = chatStatusFrameMarkup(c.avatar_url, c.status || "offline");
+
+    const myAvatar = document.getElementById("chat-my-avatar");
+    myAvatar.innerHTML = chatStatusFrameMarkup(profile && profile.avatar_url, (profile && profile.status) || "online");
+
+    const isOffline = !["online", "busy", "away"].includes(c.status);
+    const banner = document.getElementById("chat-offline-banner");
+    banner.hidden = !isOffline;
+    if (isOffline) {
+      const textEl = document.getElementById("chat-offline-banner-text");
+      textEl.innerHTML = "";
+      textEl.appendChild(document.createTextNode(
+        (c.email || c.display_name) + " parece estar offline. As mensagens serão entregues quando esse contato entrar. "
+      ));
+      const mailLink = document.createElement("a");
+      mailLink.href = "mailto:" + (c.email || "");
+      mailLink.textContent = "Enviar um e-mail para este contato";
+      textEl.appendChild(mailLink);
+    }
+  }
+
+  function chatMessageBubble(msg) {
+    const li = document.createElement("li");
+    const mine = String(msg.sender_id) === String(profile && profile.id);
+    li.className = "chat-message " + (mine ? "chat-message--mine" : "chat-message--theirs");
+    const text = document.createElement("span");
+    text.textContent = msg.content;
+    li.appendChild(text);
+    const time = document.createElement("span");
+    time.className = "chat-message__time";
+    try {
+      time.textContent = new Date(msg.created_at).toLocaleTimeString("pt-BR", { hour: "2-digit", minute: "2-digit" });
+    } catch (_) {}
+    li.appendChild(time);
+    return li;
+  }
+
+  async function loadChatMessages() {
+    const list = document.getElementById("chat-messages");
+    list.innerHTML = "";
+    if (!currentChatContact) return;
+    try {
+      const msgs = await MSNSupabase.getMessages(currentChatContact.id);
+      msgs.forEach((m) => list.appendChild(chatMessageBubble(m)));
+      scrollChatToBottom();
+    } catch (_) {}
+  }
+
+  function scrollChatToBottom() {
+    const thread = document.getElementById("chat-thread");
+    if (thread) thread.scrollTop = thread.scrollHeight;
+  }
+
+  function subscribeChatRealtime() {
+    if (chatMessagesSubscribed) return;
+    MSNSupabase.subscribeMessages((msg) => {
+      if (!currentChatContact) return;
+      const cid = String(currentChatContact.id);
+      const involved =
+        (String(msg.sender_id) === cid && String(msg.receiver_id) === String(profile && profile.id)) ||
+        (String(msg.receiver_id) === cid && String(msg.sender_id) === String(profile && profile.id));
+      if (!involved) return;
+      document.getElementById("chat-messages").appendChild(chatMessageBubble(msg));
+      scrollChatToBottom();
+      if (String(msg.sender_id) !== String(profile && profile.id)) SoundManager.play("message");
+    });
+    chatMessagesSubscribed = true;
+  }
+
+  function subscribeChatNudges() {
+    if (chatNudgeSubscribed) return;
+    MSNSupabase.subscribeNudges((nudge) => {
+      if (!currentChatContact) return;
+      if (String(nudge.sender_id) !== String(currentChatContact.id)) return;
+      if (String(nudge.receiver_id) !== String(profile && profile.id)) return;
+      triggerNudgeShake();
+      SoundManager.play("nudge");
+    });
+    chatNudgeSubscribed = true;
+  }
+
+  function triggerNudgeShake() {
+    const win = document.getElementById("screen-chat");
+    if (!win) return;
+    win.classList.remove("nudge-shake");
+    void win.offsetWidth;
+    win.classList.add("nudge-shake");
+  }
+
+  async function sendChatMessage() {
+    const input = document.getElementById("chat-input");
+    const text = input.value.trim();
+    if (!text || !currentChatContact) return;
+    input.value = "";
+    try {
+      const msg = await MSNSupabase.sendMessage(currentChatContact.id, text);
+      // Já mostra na hora (o realtime só ecoa mensagens de outras
+      // pessoas de qualquer forma, já que o filtro do Supabase não
+      // exclui o próprio remetente — evita duplicar aqui).
+      document.getElementById("chat-messages").appendChild(chatMessageBubble({
+        sender_id: (profile && profile.id) || "demo",
+        content: text,
+        created_at: (msg && msg.created_at) || new Date().toISOString(),
+      }));
+      scrollChatToBottom();
+    } catch (_) {}
+  }
+
+  async function sendChatNudge() {
+    if (!currentChatContact) return;
+    triggerNudgeShake();
+    try { await MSNSupabase.sendNudge(currentChatContact.id); } catch (_) {}
+  }
+
+  const CHAT_EMOJIS = ["😀","😂","😉","😍","😎","😭","😡","👍","👎","❤️","💔","🎉","🔥","⭐","☕","🎵","😴","🤔","😅","🙈","👋","✌️","🙏","💬"];
+  function toggleEmojiPicker() {
+    const picker = document.getElementById("chat-emoji-picker");
+    const open = picker.hidden;
+    if (open && !picker.childElementCount) {
+      picker.innerHTML = CHAT_EMOJIS.map((e) => '<button type="button">' + e + "</button>").join("");
+      picker.querySelectorAll("button").forEach((btn) => {
+        btn.addEventListener("click", () => {
+          const input = document.getElementById("chat-input");
+          input.value += btn.textContent;
+          input.focus();
+        });
+      });
+    }
+    picker.hidden = !open;
+  }
+
+  function openChat(contact) {
+    currentChatContact = contact;
+    UIManager.showScreen("screen-chat");
+    renderChatHeader();
+    applyChatBackground();
+    document.getElementById("chat-emoji-picker").hidden = true;
+    document.getElementById("chat-input").value = "";
+    loadChatMessages();
+    subscribeChatRealtime();
+    subscribeChatNudges();
+    setTimeout(() => document.getElementById("chat-input").focus(), 30);
+  }
+
+  function closeChat() {
+    currentChatContact = null;
+    UIManager.showScreen("screen-dashboard");
   }
 
   /* ---------- Opções ----------
@@ -1589,13 +1813,42 @@ const Dashboard = (() => {
       if (item) toggleFavorite(item.dataset.id);
     });
 
-    // Abrir conversa (placeholder por enquanto)
+    // Abrir conversa
     document.getElementById("contacts-container").addEventListener("click", (e) => {
       const item = e.target.closest(".contact-item");
       if (!item || e.target.closest(".contact-item__fav")) return;
+      const contact = contacts.find((c) => String(c.id) === item.dataset.id);
+      if (!contact) return;
       SoundManager.play("message");
-      // A janela de conversa será a próxima etapa.
+      openChat(contact);
     });
+
+    // Janela de conversa: fechar, enviar, chamar atenção, emoticons,
+    // plano de fundo pessoal
+    const chatClose = document.getElementById("chat-close");
+    if (chatClose) chatClose.addEventListener("click", closeChat);
+    const chatSend = document.getElementById("chat-send-btn");
+    if (chatSend) chatSend.addEventListener("click", sendChatMessage);
+    const chatInput = document.getElementById("chat-input");
+    if (chatInput) chatInput.addEventListener("keydown", (e) => {
+      if (e.key === "Enter" && !e.shiftKey) {
+        e.preventDefault();
+        sendChatMessage();
+      }
+    });
+    const chatNudgeBtn = document.getElementById("chat-nudge-btn");
+    if (chatNudgeBtn) chatNudgeBtn.addEventListener("click", sendChatNudge);
+    const chatEmojiBtn = document.getElementById("chat-emoji-btn");
+    if (chatEmojiBtn) chatEmojiBtn.addEventListener("click", (e) => {
+      e.stopPropagation();
+      toggleEmojiPicker();
+    });
+    document.addEventListener("click", (e) => {
+      const picker = document.getElementById("chat-emoji-picker");
+      if (picker && !picker.hidden && !e.target.closest(".chat-emoji-wrap")) picker.hidden = true;
+    });
+    const chatBgBtn = document.getElementById("chat-bg-btn");
+    if (chatBgBtn) chatBgBtn.addEventListener("click", () => openScenePicker("chatBackground"));
 
     // Sair (rodapé — opcional; sign-out principal fica no menu do nick)
     const signoutBtn = document.getElementById("btn-signout");
