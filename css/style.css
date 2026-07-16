@@ -1534,7 +1534,7 @@ body[data-login-theme="cenario1"] #screen-connecting::before {
   font: inherit;
   text-align: left;
   cursor: pointer;
-  background: linear-gradient(180deg, var(--tint-light, #fbfcfd) 0%, var(--tint-mid, #eef3f6) 45%, var(--tint-strong, #cfd8df) 100%);
+  background: linear-gradient(180deg, var(--tint-light, #fbfcfd) 0%, var(--tint-vivid, #a9c3d6) 100%);
 }
 .dash-promo:active { filter: brightness(0.94); }
 .dash-promo__logo { width: 30px; height: 30px; flex: 0 0 auto; }
