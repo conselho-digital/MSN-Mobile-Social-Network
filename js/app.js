@@ -545,15 +545,8 @@ const App = (function () {
   function applyLoginAvatar(url) {
     const src = typeof MSNScenes !== "undefined" ? MSNScenes.avatarSrc(url) : url;
     document
-      .querySelectorAll("#login-avatar-frame .status-frame__photo, #connecting-avatar-frame .status-frame__photo")
-      .forEach((el) => {
-        el.innerHTML = "";
-        const img = document.createElement("img");
-        img.className = "avatar-img";
-        img.alt = "";
-        img.src = src;
-        el.appendChild(img);
-      });
+      .querySelectorAll("#login-avatar-frame .avatar-img, #connecting-avatar-frame .avatar-img")
+      .forEach((img) => { img.src = src; });
   }
 
   /* ---------- Tema da tela de login (por conta) ----------

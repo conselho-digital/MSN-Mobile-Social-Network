@@ -258,9 +258,13 @@ body {
 .install-app svg { display: block; }
 .install-app[hidden] { display: none; }
 
-/* Avatar centralizado sobre o fundo claro (mesma moldura do Dashboard) */
+/* Avatar centralizado sobre o fundo claro — só a foto + moldura, sem
+   cor de status (não faz sentido mostrar status antes de entrar). Ao
+   contrário do .status-frame do Dashboard, aqui a imagem da moldura
+   (assets/avatars/login.webp) é usada direto, com suas próprias
+   cores (branco/azul), sem mask-image nem tingimento. */
 .signin-avatar { margin: 4px 0 2px; }
-.signin-avatar .status-frame {
+.signin-avatar-plain {
   position: relative;
   display: block;
   width: 104px;
@@ -269,6 +273,23 @@ body {
   /* Sombra pra "descolar" a foto do fundo — mais necessária agora que
      ela flutua parte sobre o banner do cenário, parte fora dele. */
   filter: drop-shadow(0 5px 10px rgba(0, 0, 0, 0.55));
+}
+.signin-avatar-plain .avatar-img {
+  position: absolute;
+  inset: 8%;
+  width: 84%;
+  height: 84%;
+  object-fit: cover;
+  border-radius: 4px;
+  display: block;
+}
+.signin-avatar-plain__frame {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  display: block;
+  pointer-events: none;
 }
 
 /* Login/Entrando (únicas telas com cenário no topo): tira o avatar do
