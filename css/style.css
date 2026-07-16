@@ -134,7 +134,7 @@ body {
   background:
     radial-gradient(140% 45% at 25% 0%, rgba(255,255,255,0.55), transparent 55%),
     radial-gradient(120% 40% at 82% 4%, rgba(255,255,255,0.40), transparent 50%),
-    linear-gradient(180deg, #b0d6f1 0%, #c9e2f7 20%, #dcedfb 42%, #eef6fd 64%, #ffffff 88%);
+    linear-gradient(180deg, #ffffff 0%, #eef6fd 12%, #dcedfb 36%, #c9e2f7 58%, #b0d6f1 100%);
 }
 /* Tema por conta (aplicado via JS quando uma conta salva é selecionada
    no dropdown de e-mail) — só no login/entrando, nunca no cadastro. */
@@ -147,15 +147,17 @@ body {
      a imagem (background-size num layer dentro de um "background"
      com vários layers sempre se baseia no elemento inteiro, nunca só
      numa faixa de 150px; por isso precisa ser um elemento próprio). */
+  /* Invertido: mais claro perto do banner (topo), ficando mais forte
+     (--lg1, a cor menos misturada com branco) perto do rodapé. */
   background:
     radial-gradient(140% 45% at 25% 0%, rgba(255,255,255,0.55), transparent 55%),
     radial-gradient(120% 40% at 82% 4%, rgba(255,255,255,0.40), transparent 50%),
     linear-gradient(180deg,
-      var(--lg1, #b0d6f1) 0%,
-      var(--lg2, #c9e2f7) 20%,
-      var(--lg3, #dcedfb) 42%,
-      var(--lg4, #eef6fd) 64%,
-      var(--lg5, #ffffff) 88%);
+      var(--lg5, #ffffff) 0%,
+      var(--lg4, #eef6fd) 12%,
+      var(--lg3, #dcedfb) 36%,
+      var(--lg2, #c9e2f7) 58%,
+      var(--lg1, #b0d6f1) 100%);
 }
 /* Cenário (imagem) no topo — "cover" de verdade, sem distorcer,
    preenchendo a faixa em vez de esticar largura/altura
