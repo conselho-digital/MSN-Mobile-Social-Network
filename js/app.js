@@ -573,7 +573,7 @@ const App = (function () {
     const root = document.body;
     if (!sceneId || typeof MSNScenes === "undefined") {
       root.removeAttribute("data-login-theme");
-      ["--lg1", "--lg2", "--lg3", "--lg4", "--lg5", "--login-accent", "--login-accent-text", "--login-scene"].forEach((p) =>
+      ["--lg1", "--lg2", "--lg3", "--lg4", "--lg5", "--login-accent", "--login-accent-text", "--login-scene", "--login-scene-tint"].forEach((p) =>
         root.style.removeProperty(p)
       );
       return;
@@ -609,6 +609,17 @@ const App = (function () {
       root.style.setProperty("--login-scene", "url('" + imgUrl + "')");
     } else {
       root.style.removeProperty("--login-scene");
+    }
+
+    // Recolore o cenário padrão (Céu Azul) via CSS quando um esquema de
+    // cores independente é escolhido — os demais cenários mantêm as
+    // cores originais da própria foto (ver MSNScenes.bg/.dash-header
+    // no Dashboard, mesma regra).
+    const tintHex = sceneId === MSNScenes.list[0].id ? MSNScenes.colorSchemeHex(colorSchemeId) : null;
+    if (tintHex) {
+      root.style.setProperty("--login-scene-tint", tintHex);
+    } else {
+      root.style.removeProperty("--login-scene-tint");
     }
   }
 

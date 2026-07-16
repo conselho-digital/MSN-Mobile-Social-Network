@@ -166,10 +166,16 @@ body {
   position: absolute;
   top: 0; left: 0; right: 0;
   height: 150px;
-  background-image: var(--login-scene, none);
-  background-size: cover;
-  background-position: center;
-  background-repeat: no-repeat;
+  /* Camada de tingimento (--login-scene-tint, só usada no cenário
+     padrão Céu Azul — ver applyLoginTheme em app.js) por cima da
+     imagem do cenário; blend "color" recolore a foto mantendo a
+     luminosidade original. Transparente nos demais cenários = sem
+     efeito nenhum. */
+  background-image: linear-gradient(var(--login-scene-tint, transparent), var(--login-scene-tint, transparent)), var(--login-scene, none);
+  background-size: cover, cover;
+  background-position: center, center;
+  background-repeat: no-repeat, no-repeat;
+  background-blend-mode: color, normal;
   pointer-events: none;
 }
 .signin-scroll {
@@ -819,6 +825,12 @@ body {
   background: var(--scene);
   background-size: cover;
   background-position: center;
+  /* --scene sempre vem com 3 camadas (tingimento, imagem, degradê de
+     fallback — ver resolveSceneBg/MSNScenes.bg em dashboard.js): a
+     primeira usa blend "color" pra recolorir o cenário padrão (Céu
+     Azul) quando um esquema de cores independente é escolhido; nos
+     demais cenários essa camada é transparente e não faz nada. */
+  background-blend-mode: color, normal, normal;
   color: #ffffff;
   padding: calc(10px + env(safe-area-inset-top)) 12px 10px;
 }

@@ -31,11 +31,14 @@ const Dashboard = (() => {
 
   // Cenário "custom" (enviado pela pessoa via "Procurar...") não está
   // no catálogo fixo — usa a URL enviada em vez de procurar por id.
-  function resolveSceneBg(sceneId, customUrl) {
+  // Sempre inclui a camada de tingimento (transparente aqui — só o
+  // cenário padrão Céu Azul é recolorido, ver MSNScenes.bg) pra manter
+  // a mesma contagem de camadas que background-blend-mode espera.
+  function resolveSceneBg(sceneId, customUrl, tintHex) {
     if (sceneId === "custom" && customUrl) {
-      return "url('" + customUrl + "') center/cover no-repeat, " + SCENES[0].css;
+      return "linear-gradient(transparent,transparent), url('" + customUrl + "') center/cover no-repeat, " + SCENES[0].css;
     }
-    return sceneBg(sceneId);
+    return sceneBg(sceneId, tintHex);
   }
 
   // ---------- Contraste automático do texto do cabeçalho ----------
@@ -190,7 +193,10 @@ const Dashboard = (() => {
     // usa o esquema de cores escolhido manualmente (color_scheme), ou
     // a cor pareada automaticamente ao cenário se nada foi escolhido.
     const header = document.querySelector(".dash-header");
-    if (header) header.style.setProperty("--scene", resolveSceneBg(profile.scene, profile.scene_image_url));
+    if (header) {
+      const tintHex = MSNScenes.colorSchemeHex(profile.color_scheme);
+      header.style.setProperty("--scene", resolveSceneBg(profile.scene, profile.scene_image_url, tintHex));
+    }
     updateHeaderTextContrast(profile.scene, profile.scene_image_url);
 
     const screen = document.getElementById("screen-dashboard");
@@ -564,7 +570,10 @@ const Dashboard = (() => {
   // Aplica o cenário só visualmente no cabeçalho, sem salvar.
   function previewScene(id) {
     const header = document.querySelector(".dash-header");
-    if (header) header.style.setProperty("--scene", resolveSceneBg(id, stagedCustomImageUrl));
+    if (header) {
+      const tintHex = MSNScenes.colorSchemeHex(stagedColorScheme);
+      header.style.setProperty("--scene", resolveSceneBg(id, stagedCustomImageUrl, tintHex));
+    }
     updateHeaderTextContrast(id, stagedCustomImageUrl);
   }
 
@@ -577,6 +586,9 @@ const Dashboard = (() => {
       screen.style.setProperty("--tint-mid", pastel(theme, 0.8));
       screen.style.setProperty("--tint-strong", pastel(theme, 0.62));
     }
+    // Trocar de cor também re-tinge o banner se o cenário atual for o
+    // padrão (Céu Azul) — ver previewScene/MSNScenes.bg.
+    previewScene(stagedScene);
     updateCurrentColorSwatch();
   }
 

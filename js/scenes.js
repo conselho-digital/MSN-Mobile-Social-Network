@@ -77,15 +77,26 @@ const MSNScenes = (() => {
   function resolveUrl(path) {
     try { return new URL(path, document.baseURI).href; } catch (_) { return path; }
   }
-  function bg(id) {
+  // tintHex: só tem efeito no cenário padrão (Céu Azul, o primeiro do
+  // catálogo) — é o único "neutro" o bastante pra ficar bem recolorido
+  // via background-blend-mode quando um esquema de cores independente
+  // é escolhido (ver applyLoginTheme/previewScene). Os demais cenários
+  // (foto de time de futebol, robô, etc.) sempre mantêm as cores
+  // originais da própria imagem, mesmo com outro esquema selecionado —
+  // sempre inclui a camada de tingimento (mesmo "transparent", sem
+  // efeito) pra manter a contagem de camadas previsível pro
+  // background-blend-mode no CSS (ver .dash-header/#screen-login::before).
+  function bg(id, tintHex) {
     const s = find(id) || SCENES[0];
+    const tint = (s.id === SCENES[0].id && tintHex) ? tintHex : "transparent";
+    const tintLayer = "linear-gradient(" + tint + "," + tint + ")";
     if (s.image) {
       // Aspas simples: este valor é usado dentro de um atributo HTML
       // style="..." (aspas duplas) ao montar as miniaturas do seletor
       // de cenário — aspas duplas aqui colidiriam com o atributo.
-      return "url('" + resolveUrl(s.image) + "') center/cover no-repeat, " + s.css;
+      return tintLayer + ", url('" + resolveUrl(s.image) + "') center/cover no-repeat, " + s.css;
     }
-    return s.css;
+    return tintLayer + ", " + s.css;
   }
   function theme(id) {
     const s = find(id);
