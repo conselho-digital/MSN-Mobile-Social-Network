@@ -872,7 +872,7 @@ const Dashboard = (() => {
         doSignOut();
         break;
       case "change-name":
-        editName();
+        openOptionsDialog();
         break;
       case "change-picture":
         changePicture();
@@ -1521,20 +1521,6 @@ const Dashboard = (() => {
     } catch (err) {
       infoModal("Criar um grupo", err.message || "Não foi possível criar o grupo.");
     }
-  }
-
-  function editName() {
-    openModal({
-      title: "Alterar nome para exibição",
-      value: profile ? profile.display_name : "",
-      placeholder: "Seu nome no chat",
-      onOk: async (val) => {
-        if (!val.trim()) return "Digite um nome.";
-        profile.display_name = val.trim();
-        renderProfile();
-        try { await MSNSupabase.updateMyProfile({ display_name: val.trim() }); } catch (_) {}
-      },
-    });
   }
 
   /* ---------- Convidar amigos (compartilhar link) ----------
