@@ -431,6 +431,20 @@
 
     <!-- Lista de contatos -->
     <div class="contacts" id="contacts-container">
+      <div class="contact-group contact-group--favorites" data-group="favorites" id="group-favorites">
+        <button type="button" class="contact-group__header" aria-expanded="true">
+          <span class="group-caret"></span>
+          <span class="group-star" aria-hidden="true">★</span>
+          <span class="group-title">Favoritos</span>
+          <span class="group-count" id="count-favorites">(0/0)</span>
+        </button>
+        <div class="contact-group__collapse">
+          <ul class="contact-group__list" id="list-favorites"></ul>
+        </div>
+      </div>
+
+      <div class="contact-groups-dynamic" id="contact-groups-dynamic"></div>
+
       <div class="contact-group" data-group="online">
         <button type="button" class="contact-group__header" aria-expanded="true">
           <span class="group-caret"></span>

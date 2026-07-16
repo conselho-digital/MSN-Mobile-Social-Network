@@ -144,14 +144,31 @@ const MSNSupabase = (() => {
     const { data: { user } } = await client.auth.getUser();
     if (!user) return [];
     const { data: rows, error } = await client
-      .from("contacts").select("contact_id").eq("owner_id", user.id);
+      .from("contacts").select("contact_id, is_favorite").eq("owner_id", user.id);
     if (error) throw error;
     const ids = (rows || []).map((r) => r.contact_id);
     if (!ids.length) return [];
+    // is_favorite mora na linha de "contacts" (marcação própria de cada
+    // dono sobre o contato), não em "profiles" — junta na mão aqui.
+    const favMap = new Map((rows || []).map((r) => [r.contact_id, r.is_favorite]));
     const { data: profs, error: e2 } = await client
       .from("profiles").select("*").in("id", ids);
     if (e2) throw e2;
-    return profs || [];
+    return (profs || []).map((p) => ({ ...p, is_favorite: favMap.get(p.id) || false }));
+  }
+
+  // Marca/desmarca um contato como favorito (ver supabase/favorites.sql).
+  async function setFavorite(contactId, isFavorite) {
+    if (!isConfigured()) return { ok: true, demo: true };
+    const { data: { user } } = await client.auth.getUser();
+    if (!user) throw new Error("Sessão expirada. Entre novamente.");
+    const { error } = await client
+      .from("contacts")
+      .update({ is_favorite: isFavorite })
+      .eq("owner_id", user.id)
+      .eq("contact_id", contactId);
+    if (error) throw error;
+    return { ok: true };
   }
 
   // Escuta mudanças em profiles (status, nome, mensagem pessoal, foto)
@@ -214,16 +231,31 @@ const MSNSupabase = (() => {
     return { ok: true };
   }
 
+  // Grupos criados pela própria pessoa (ver "Criar um grupo...").
+  async function getGroups() {
+    if (!isConfigured()) return demoGroups();
+    const { data: { user } } = await client.auth.getUser();
+    if (!user) return [];
+    const { data: rows, error } = await client
+      .from("groups").select("id, name, member_ids").eq("owner_id", user.id)
+      .order("created_at", { ascending: true });
+    if (error) throw error;
+    return rows || [];
+  }
+
   /* ---------- Dados de demonstração ---------- */
   function demoProfile() {
     return { id: "demo", display_name: "Você", sub_nick: "", status: "online" };
   }
   function demoContacts() {
     return [
-      { id: "d1", display_name: "Ana Clara ♥", sub_nick: "só vim ver as novidades", status: "online" },
-      { id: "d2", display_name: "João Pedro", sub_nick: "ocupado estudando", status: "busy" },
-      { id: "d3", display_name: "mayara", sub_nick: "", status: "offline" },
+      { id: "d1", display_name: "Ana Clara ♥", sub_nick: "só vim ver as novidades", status: "online", is_favorite: true },
+      { id: "d2", display_name: "João Pedro", sub_nick: "ocupado estudando", status: "busy", is_favorite: false },
+      { id: "d3", display_name: "mayara", sub_nick: "", status: "offline", is_favorite: false },
     ];
+  }
+  function demoGroups() {
+    return [{ id: "g1", name: "Amigos da faculdade", member_ids: ["d2"] }];
   }
 
   /* ---------- Modo demo (sem credenciais) ---------- */
@@ -244,9 +276,9 @@ const MSNSupabase = (() => {
 
   return {
     init, isConfigured, signIn, signUp, getSession, signOut,
-    getMyProfile, updateMyProfile, getContacts, addContactByEmail,
+    getMyProfile, updateMyProfile, getContacts, addContactByEmail, setFavorite,
     subscribeContacts, unsubscribeContacts,
-    createGroup,
+    createGroup, getGroups,
     uploadAvatar,
     uploadSceneImage,
     getClient: () => client,

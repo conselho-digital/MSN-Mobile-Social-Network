@@ -90,6 +90,7 @@ const Dashboard = (() => {
 
   let profile = null;
   let contacts = [];
+  let groups = [];
   let bound = false;
   let currentFilter = "";
   let contactsSubscribed = false;
@@ -204,9 +205,10 @@ const Dashboard = (() => {
 
   async function load() {
     try {
-      [profile, contacts] = await Promise.all([
+      [profile, contacts, groups] = await Promise.all([
         MSNSupabase.getMyProfile(),
         MSNSupabase.getContacts(),
+        MSNSupabase.getGroups(),
       ]);
       // Aplica o status escolhido na tela de login, se houver
       const chosen = sessionStorage.getItem("msn:status");
@@ -215,6 +217,7 @@ const Dashboard = (() => {
         MSNSupabase.updateMyProfile({ status: chosen }).catch(() => {});
       }
       renderProfile();
+      renderGroupShells();
       renderContacts(currentFilter);
       subscribeContactUpdates();
     } catch (err) {
@@ -318,24 +321,90 @@ const Dashboard = (() => {
     if (radio) radio.checked = true;
   }
 
-  /* ---------- Lista de contatos ---------- */
+  // Cria (ou recria) a "casca" de cada grupo próprio dentro de
+  // #contact-groups-dynamic — chamado só quando a lista de grupos muda
+  // (load()/depois de criar um grupo), não a cada busca. O preenchimento
+  // de membros fica com renderContacts()/fillList(), que roda mais
+  // vezes, pra não perder o estado de aberto/fechado à toa.
+  function renderGroupShells() {
+    const wrap = document.getElementById("contact-groups-dynamic");
+    if (!wrap) return;
+    wrap.innerHTML = groups.map((g) =>
+      '<div class="contact-group" data-group="custom-' + esc(String(g.id)) + '">' +
+      '<button type="button" class="contact-group__header" aria-expanded="true">' +
+      '<span class="group-caret"></span>' +
+      '<img class="group-icon" src="assets/icons/gruposimg.webp" alt="" aria-hidden="true" />' +
+      '<span class="group-title">' + esc(g.name) + '</span>' +
+      '<span class="group-count" id="count-group-' + esc(String(g.id)) + '">(0/0)</span>' +
+      "</button>" +
+      '<div class="contact-group__collapse">' +
+      '<ul class="contact-group__list" id="list-group-' + esc(String(g.id)) + '"></ul>' +
+      "</div></div>"
+    ).join("");
+    // Cabeçalhos novos precisam do mesmo listener de colapsar/expandir
+    // que os grupos estáticos (Favoritos/Disponível/Offline) já têm.
+    wrap.querySelectorAll(".contact-group__header").forEach((h) => {
+      h.addEventListener("click", () => {
+        const open = h.getAttribute("aria-expanded") === "true";
+        h.setAttribute("aria-expanded", String(!open));
+      });
+    });
+  }
+
+  /* ---------- Lista de contatos ----------
+     Favoritos e membros de um grupo próprio são "puxados" pra fora de
+     Disponível/Offline — um contato só aparece numa dessas seções por
+     vez (Favoritos > Grupo > Disponível/Offline, nessa prioridade),
+     igual ao cliente clássico, evitando duplicar o mesmo contato em
+     mais de um lugar. */
   function renderContacts(filter = "") {
     const q = filter.trim().toLowerCase();
+    const matches = (c) => !q || (c.display_name || "").toLowerCase().includes(q);
+    const isOnline = (c) => ["online", "busy", "away"].includes(c.status);
+
+    const favorites = contacts.filter((c) => matches(c) && c.is_favorite);
+    const favoriteIds = new Set(favorites.map((c) => String(c.id)));
+
+    const claimedIds = new Set(favoriteIds);
+    groups.forEach((g) => {
+      const memberIds = (g.member_ids || []).map(String);
+      const members = contacts.filter((c) =>
+        matches(c) && !claimedIds.has(String(c.id)) && memberIds.includes(String(c.id)));
+      members.forEach((c) => claimedIds.add(String(c.id)));
+      fillList("list-group-" + g.id, members);
+      const groupOnline = members.filter(isOnline).length;
+      const countEl = document.getElementById("count-group-" + g.id);
+      if (countEl) countEl.textContent = "(" + groupOnline + "/" + members.length + ")";
+    });
+
     const online = [];
     const offline = [];
     contacts.forEach((c) => {
-      if (q && !(c.display_name || "").toLowerCase().includes(q)) return;
-      if (["online", "busy", "away"].includes(c.status)) online.push(c);
+      if (!matches(c) || claimedIds.has(String(c.id))) return;
+      if (isOnline(c)) online.push(c);
       else offline.push(c);
     });
 
+    fillList("list-favorites", favorites);
     fillList("list-online", online);
     fillList("list-offline", offline);
+    const favOnline = favorites.filter(isOnline).length;
+    document.getElementById("count-favorites").textContent = "(" + favOnline + "/" + favorites.length + ")";
     document.getElementById("count-online").textContent = "(" + online.length + ")";
     document.getElementById("count-offline").textContent = "(" + offline.length + ")";
 
     const empty = document.getElementById("contacts-empty");
     empty.hidden = contacts.length !== 0;
+  }
+
+  // Marca/desmarca um contato como favorito e re-renderiza (pra ele
+  // saltar pra dentro/fora do grupo Favoritos na hora).
+  async function toggleFavorite(id) {
+    const c = contacts.find((x) => String(x.id) === String(id));
+    if (!c) return;
+    c.is_favorite = !c.is_favorite;
+    renderContacts(currentFilter);
+    try { await MSNSupabase.setFavorite(c.id, c.is_favorite); } catch (_) {}
   }
 
   // Atualiza os <li> existentes no lugar (em vez de recriar tudo com
@@ -372,7 +441,8 @@ const Dashboard = (() => {
       '<div class="contact-item__avatar"></div>' +
       '<div class="contact-item__body">' +
       '<div class="contact-item__name"></div>' +
-      "</div>";
+      "</div>" +
+      '<button type="button" class="contact-item__fav"></button>';
     updateContactItem(li, c);
     return li;
   }
@@ -410,6 +480,12 @@ const Dashboard = (() => {
       subEl.textContent = c.sub_nick;
     } else if (subEl) {
       subEl.remove();
+    }
+
+    const favBtn = li.querySelector(".contact-item__fav");
+    if (favBtn) {
+      favBtn.classList.toggle("is-favorite", !!c.is_favorite);
+      favBtn.setAttribute("aria-label", c.is_favorite ? "Remover dos favoritos" : "Adicionar aos favoritos");
     }
   }
 
@@ -835,6 +911,9 @@ const Dashboard = (() => {
     try {
       await MSNSupabase.createGroup(name, Array.from(selectedGroupMembers || []));
       closeGroupPicker();
+      groups = await MSNSupabase.getGroups();
+      renderGroupShells();
+      renderContacts(currentFilter);
     } catch (err) {
       infoModal("Criar um grupo", err.message || "Não foi possível criar o grupo.");
     }
@@ -1173,10 +1252,19 @@ const Dashboard = (() => {
       });
     });
 
+    // Favoritar/desfavoritar (estrela em cada contato)
+    document.getElementById("contacts-container").addEventListener("click", (e) => {
+      const favBtn = e.target.closest(".contact-item__fav");
+      if (!favBtn) return;
+      e.stopPropagation();
+      const item = favBtn.closest(".contact-item[data-id]");
+      if (item) toggleFavorite(item.dataset.id);
+    });
+
     // Abrir conversa (placeholder por enquanto)
     document.getElementById("contacts-container").addEventListener("click", (e) => {
       const item = e.target.closest(".contact-item");
-      if (!item) return;
+      if (!item || e.target.closest(".contact-item__fav")) return;
       SoundManager.play("message");
       // A janela de conversa será a próxima etapa.
     });

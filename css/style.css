@@ -1410,6 +1410,35 @@ body[data-login-theme="cenario1"] #screen-connecting::before {
 }
 .group-count { color: #9aa7b1; font-weight: 400; }
 
+/* Estrela dourada do cabeçalho "Favoritos" */
+.group-star {
+  font-size: 0.82rem;
+  line-height: 1;
+  color: #f0a83c;
+  text-shadow: 0 1px 0 rgba(255,255,255,0.5);
+}
+
+/* Ícone dos "bonequinhos" nos cabeçalhos de grupos próprios */
+.group-icon { width: 15px; height: 15px; object-fit: contain; flex: 0 0 auto; }
+
+/* Botão de favoritar em cada contato (estrela vazia/cheia) */
+.contact-item__fav {
+  flex: 0 0 auto;
+  width: 22px; height: 22px;
+  padding: 0;
+  border: none;
+  background: transparent;
+  color: #c7cdd3;
+  font-size: 1.15rem;
+  line-height: 1;
+  cursor: pointer;
+}
+.contact-item__fav::before { content: "☆"; }
+.contact-item__fav.is-favorite { color: #f0a83c; }
+.contact-item__fav.is-favorite::before { content: "★"; }
+.contacts--sm .contact-item__fav,
+.contacts--list .contact-item__fav { display: none; }
+
 /* Colapsa/expande com animação (grid-template-rows 0fr → 1fr) em vez
    de display:none/block direto, que não é animável. O <ul> em si
    mantém seu layout normal por dentro; é o wrapper que "espreme". */
