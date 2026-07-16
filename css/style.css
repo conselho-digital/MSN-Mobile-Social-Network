@@ -158,14 +158,15 @@ body {
       var(--lg5, #ffffff) 88%);
 }
 /* Cenário (imagem) no topo — "cover" de verdade, sem distorcer,
-   preenchendo a faixa de 150px em vez de esticar largura/altura
-   independentemente uma da outra. */
+   preenchendo a faixa em vez de esticar largura/altura
+   independentemente uma da outra. 112.5px = 75% dos 150px originais
+   (estava com uma altura exagerada). */
 #screen-login::before,
 #screen-connecting::before {
   content: "";
   position: absolute;
   top: 0; left: 0; right: 0;
-  height: 150px;
+  height: 112.5px;
   /* Camada de tingimento (--login-scene-tint, só usada no cenário
      padrão Céu Azul — ver applyLoginTheme em app.js) por cima da
      imagem do cenário; blend "color" recolore a foto mantendo a
@@ -267,17 +268,17 @@ body {
 
 /* Login/Entrando (únicas telas com cenário no topo): tira o avatar do
    fluxo normal e ancora numa posição fixa em relação ao topo da tela —
-   assim ele fica sempre com metade sobre o banner do cenário (150px de
-   altura) e metade abaixo, dos dois lados. Como "top" de um elemento
-   absoluto conta a partir do topo de .signin-scroll (que começa
-   colado no topo da tela, antes do padding do "notch"), o resultado
-   não varia com a altura do botão "Adicionar App" nem com a área
-   segura do aparelho. O cadastro não tem cenário, então mantém o
+   assim ele fica sempre com metade sobre o banner do cenário (112.5px
+   de altura) e metade abaixo, dos dois lados. Como "top" de um
+   elemento absoluto conta a partir do topo de .signin-scroll (que
+   começa colado no topo da tela, antes do padding do "notch"), o
+   resultado não varia com a altura do botão "Adicionar App" nem com a
+   área segura do aparelho. O cadastro não tem cenário, então mantém o
    avatar no fluxo normal (regra acima). */
 #screen-login .signin-avatar,
 #screen-connecting .signin-avatar {
   position: absolute;
-  top: 98px; /* 150px (altura do cenário) − 52px (metade dos 104px do avatar) */
+  top: 60.5px; /* 112.5px (altura do cenário) − 52px (metade dos 104px do avatar) */
   left: 50%;
   transform: translateX(-50%);
   margin: 0;
@@ -321,12 +322,12 @@ body {
   font-weight: 400;
   color: var(--login-accent-text, #3a4a55);
   /* O avatar é position:absolute (ver .signin-avatar) e termina em
-     202px (98px de topo + 104px de altura); esse margin-top soma à
+     164.5px (60.5px de topo + 104px de altura); esse margin-top soma à
      altura do botão "Adicionar App" (que continua no fluxo normal,
      ~42px) pra sobrar só uns 18px de respiro até o título — a mesma
      folga aproximada que existe do título até o cartão de login (26px
      de margin-bottom), evitando o vão desigual de antes. */
-  margin: 178px 0 26px;
+  margin: 140.5px 0 26px;
   letter-spacing: 0.2px;
   text-shadow: 0 1px 2px rgba(255, 255, 255, 0.6);
 }
