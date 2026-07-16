@@ -1729,10 +1729,14 @@ body[data-login-theme="cenario1"] #screen-connecting::before {
 /* Caixa do nome do grupo mais baixa que o campo padrão. */
 #group-name-input { height: 30px; font-size: 0.85rem; }
 /* OK e Cancelar no estilo clássico neutro (cinza, sem o azul herdado
-   dos botões da tela de login) — mesmo visual nos dois diálogos. */
+   dos botões da tela de login) — mesmo visual nos dois diálogos, 15%
+   menores que o .btn-signin--sm padrão (78px/7px 14px/0.88rem). */
 #group-picker .scene-dialog__footer .btn-signin,
 #add-contact-dialog .scene-dialog__footer .btn-signin {
   border-color: #adb6bd;
+  min-width: 66px;
+  padding: 6px 12px;
+  font-size: 0.75rem;
 }
 #group-picker .scene-dialog__footer .btn-signin:hover,
 #add-contact-dialog .scene-dialog__footer .btn-signin:hover {
