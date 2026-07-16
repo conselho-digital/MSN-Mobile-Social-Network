@@ -1287,16 +1287,38 @@ body {
   cursor: pointer;
 }
 .contact-group__header:hover { background: #f5f9fc; }
+/* Seta em "v" (mesma técnica do .chevron do login) — fechada aponta
+   pra frente/direita, aberta aponta pra baixo, com cor trocando de
+   branco pra preto. */
 .group-caret {
-  width: 0; height: 0;
-  border-top: 5px solid transparent;
-  border-bottom: 5px solid transparent;
-  border-left: 6px solid #7a8a97;
-  transition: transform 0.15s;
+  width: 7px; height: 7px;
+  border-right: 1.7px solid #ffffff;
+  border-bottom: 1.7px solid #ffffff;
+  transform: rotate(-45deg); /* fechada: aponta pra frente */
+  transition: transform 0.25s ease, border-color 0.25s ease;
 }
-.contact-group__header[aria-expanded="true"] .group-caret { transform: rotate(90deg); }
+.contact-group__header[aria-expanded="true"] .group-caret {
+  transform: rotate(45deg); /* aberta: aponta pra baixo */
+  border-right-color: #000000;
+  border-bottom-color: #000000;
+}
 .group-count { color: #9aa7b1; font-weight: 400; }
-.contact-group__header[aria-expanded="false"] + .contact-group__list { display: none; }
+
+/* Colapsa/expande com animação (grid-template-rows 0fr → 1fr) em vez
+   de display:none/block direto, que não é animável. O <ul> em si
+   mantém seu layout normal por dentro; é o wrapper que "espreme". */
+.contact-group__collapse {
+  display: grid;
+  grid-template-rows: 1fr;
+  transition: grid-template-rows 0.25s ease;
+}
+.contact-group__header[aria-expanded="false"] + .contact-group__collapse {
+  grid-template-rows: 0fr;
+}
+.contact-group__collapse > .contact-group__list {
+  overflow: hidden;
+  min-height: 0;
+}
 
 .contact-group__list { list-style: none; margin: 0; padding: 0; }
 .contact-item {
