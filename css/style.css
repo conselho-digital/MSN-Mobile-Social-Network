@@ -518,7 +518,11 @@ body {
   border-radius: 3px;
   background: transparent;
   font: inherit;
-  color: #2f6b1f;
+  /* Preto fixo — a bolinha (.status-dot) já mostra a cor do status,
+     não precisa repetir na palavra (antes ficava verde só porque
+     "Disponível" era o status inicial, não porque acompanhava a
+     seleção). */
+  color: #000000;
   cursor: pointer;
 }
 .status-select:hover { border-color: #cfe0ef; background: #f3f8fd; }
