@@ -662,9 +662,11 @@ const Dashboard = (() => {
     document.getElementById("avatar-picker").hidden = false;
   }
 
-  // Aplica a foto só visualmente (na moldura do cabeçalho e no painel
-  // de prévia do diálogo, com a mesma moldura colorida pelo status),
-  // sem salvar.
+  // Aplica a foto só visualmente (na moldura do cabeçalho, colorida
+  // pelo status de verdade, e no painel de prévia do diálogo — esse
+  // último sem cor de status, só a foto + moldura original, igual à
+  // tela de login, já que o status não é o que importa ao escolher
+  // uma foto), sem salvar.
   function previewAvatar(url) {
     const photoWrap = document.querySelector(".my-avatar .status-frame__photo");
     if (photoWrap) {
@@ -673,12 +675,13 @@ const Dashboard = (() => {
     }
     const previewFrame = document.getElementById("avatar-preview-frame");
     if (previewFrame) {
-      const previewPhoto = previewFrame.querySelector(".status-frame__photo");
+      const previewPhoto = previewFrame.querySelector(".avatar-img");
       if (previewPhoto) {
-        previewPhoto.innerHTML = avatarMarkup(url);
-        previewPhoto.dataset.avatarUrl = url || "";
+        previewPhoto.src = url || DEFAULT_AVATAR;
       } else {
-        previewFrame.innerHTML = statusFrameMarkup(url, (profile && profile.status) || "online");
+        previewFrame.innerHTML =
+          avatarMarkup(url) +
+          '<img src="assets/avatars/login.webp" class="signin-avatar-plain__frame" alt="" />';
       }
     }
   }

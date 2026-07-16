@@ -1076,7 +1076,7 @@ body[data-login-theme="cenario1"] #screen-connecting::before {
   border-radius: 5px;
   background: transparent;
   color: #dfeff9;
-  font-size: 0.95rem;
+  font-size: 12px;
   text-align: left;
   max-width: calc(100% + 12px);
   transition: background-color 0.1s ease, box-shadow 0.1s ease;
@@ -1877,23 +1877,25 @@ body[data-login-theme="cenario1"] #screen-connecting::before {
   flex-direction: column;
   gap: 8px;
 }
-/* A moldura com a cor do status (.status-frame, mesma do cabeçalho e
-   da lista de contatos) já traz seu próprio visual (foto com sombra +
-   anel colorido) — o wrapper só cuida do tamanho/posição. */
+/* Prévia sem cor de status — só a foto + moldura original (mesmo
+   componente .signin-avatar-plain da tela de login), já que escolher
+   uma foto não depende do status. .signin-avatar-plain normalmente tem
+   tamanho fixo (104px); aqui ela precisa acompanhar o tamanho do
+   container (que muda no desktop — ver media query mais abaixo). */
 .avatar-picker__preview {
   width: 100%;
   aspect-ratio: 1;
 }
-.avatar-picker__preview .status-frame {
-  position: relative;
-  display: block;
+.avatar-picker__preview .avatar-preview-frame.signin-avatar-plain {
   width: 100%;
   height: 100%;
+  margin: 0;
 }
 .avatar-picker__actions {
   display: flex;
   flex-direction: column;
   gap: 6px;
+  margin-top: 4px;
 }
 .avatar-picker__actions .scene-dialog__browse {
   flex: 0 0 auto;
@@ -1904,6 +1906,19 @@ body[data-login-theme="cenario1"] #screen-connecting::before {
   line-height: 1.25;
   white-space: normal;
   text-align: center;
+}
+
+/* No computador (tela larga o bastante pra não ser um celular), o
+   diálogo "Imagem para Exibição" ganha mais espaço: 4 colunas de
+   exemplos em vez de 3, prévia maior e mais respiro entre ela e os
+   botões — mais parecido com o cliente clássico no Windows. */
+@media (min-width: 700px) {
+  #avatar-picker .scene-dialog { max-width: 640px; }
+  .avatar-picker__layout { gap: 24px; padding-bottom: 18px; }
+  .avatar-grid { grid-template-columns: repeat(4, 1fr); gap: 10px; }
+  .avatar-picker__side { flex: 0 0 190px; gap: 8px; }
+  .avatar-picker__actions { gap: 10px; margin-top: 16px; }
+  .avatar-picker__actions .scene-dialog__browse { font-size: 0.85rem; padding: 8px 10px; }
 }
 
 /* ---------- Esquema de cores (independente do cenário) ---------- */
