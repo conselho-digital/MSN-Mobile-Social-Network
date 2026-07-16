@@ -1714,6 +1714,29 @@ body[data-login-theme="cenario1"] #screen-connecting::before {
 .scene-dialog__banner-icon { width: 44px; height: 44px; object-fit: contain; flex: 0 0 auto; }
 .scene-dialog__banner-title { margin: 0; font-size: 1.3rem; font-weight: 400; color: #1f5fa8; }
 
+/* "Criar um grupo": banner com a foto do cenário padrão (Céu Azul) em
+   vez do degradê azul liso — esmaecendo pro mesmo tom claro da faixa
+   na base, pra não destacar onde a foto termina. */
+#group-picker .scene-dialog__banner {
+  background-image:
+    linear-gradient(180deg, rgba(255, 255, 255, 0) 45%, #eef7fd 100%),
+    url("assets/scenes/cenario1.webp");
+  background-size: cover, cover;
+  background-position: center, center;
+  background-repeat: no-repeat, no-repeat;
+}
+/* Caixa do nome do grupo mais baixa que o campo padrão. */
+#group-name-input { height: 30px; font-size: 0.85rem; }
+/* Botões no estilo clássico neutro (borda cinza, sem o azul herdado
+   dos botões da tela de login). */
+#group-picker .scene-dialog__footer .btn-signin:not(.btn-signin--primary) {
+  border-color: #adb6bd;
+}
+#group-picker .scene-dialog__footer .btn-signin:not(.btn-signin--primary):hover {
+  background: linear-gradient(#ffffff, #e6eaee);
+  border-color: #8b959c;
+}
+
 .scene-dialog__body {
   flex: 1 1 auto;
   overflow-y: auto;
