@@ -7,7 +7,7 @@
    app com internet, em vez de ficar presa numa versão antiga.
    ============================================================ */
 
-const CACHE = "msn-mobile-v6";
+const CACHE = "msn-mobile-v7";
 const ASSETS = [
   "./",
   "./index.html",
@@ -51,7 +51,11 @@ self.addEventListener("fetch", (event) => {
   if (url.origin !== self.location.origin) return;
 
   event.respondWith(
-    fetch(request)
+    // cache: "no-cache" força revalidar com o servidor em vez de aceitar
+    // uma resposta guardada no cache HTTP do próprio navegador (uma
+    // camada separada do Cache Storage abaixo) — sem isso, "network-
+    // first" podia devolver JS/CSS desatualizado mesmo com internet.
+    fetch(request, { cache: "no-cache" })
       .then((resp) => {
         const copy = resp.clone();
         caches.open(CACHE).then((cache) => cache.put(request, copy)).catch(() => {});
