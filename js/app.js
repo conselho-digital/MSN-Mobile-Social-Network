@@ -583,7 +583,13 @@ const App = (function () {
     root.style.setProperty("--lg2", MSNScenes.pastel(hex, 0.68));
     root.style.setProperty("--lg3", MSNScenes.pastel(hex, 0.8));
     root.style.setProperty("--lg4", MSNScenes.pastel(hex, 0.9));
-    root.style.setProperty("--lg5", MSNScenes.pastel(hex, 0.97));
+    // --lg5 é a cor do topo do degradê (logo abaixo do banner, ver
+    // #screen-login/#screen-connecting/#screen-signup). No cenário e
+    // tema padrão (Céu Azul, sem esquema de cores escolhido à parte)
+    // usa um tom fixo pedido — nos demais casos continua calculado a
+    // partir da cor do tema.
+    const isDefaultThemeAndScene = sceneId === MSNScenes.list[0].id && !colorSchemeId;
+    root.style.setProperty("--lg5", isDefaultThemeAndScene ? "#deeff7" : MSNScenes.pastel(hex, 0.97));
     root.style.setProperty("--login-accent", hex);
     // Escurecido: a cor pura do tema (ex.: verde do cenário "Futebol")
     // pode ficar quase ilegível como texto sobre o próprio fundo
