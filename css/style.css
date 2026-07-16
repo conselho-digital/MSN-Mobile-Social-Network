@@ -1256,16 +1256,25 @@ body[data-login-theme="cenario1"] #screen-connecting::before {
   font-size: 1.1rem;
   line-height: 1;
   color: #2f6b1f;
-  /* Transparente, segue a cor de tema pareada ao cenário selecionado
-     (mesmas variáveis usadas na barra de busca/Novidades) em vez de
-     um fundo branco/cinza fixo. */
+  /* Liso por padrão — sem borda nem sombra indicando que é um botão.
+     Sem regra de :hover: em telas de toque o :hover "gruda" depois do
+     toque (não existe ponteiro real pra "sair" do elemento), deixando
+     o fundo aceso permanentemente — mesmo problema já corrigido no
+     cabeçalho dos grupos de contatos. */
   background: transparent;
-  border: 1px solid var(--tint-strong, #cfd8df);
+  border: 1px solid transparent;
   border-radius: 5px;
   cursor: pointer;
 }
-.dash-tool-btn:hover { background: var(--tint-mid, rgba(0, 0, 0, 0.05)); }
-.dash-tool-btn:active { background: var(--tint-strong, rgba(0, 0, 0, 0.08)); }
+/* Efeito "afundado" (botão pressionado), igual ao cliente clássico:
+   aparece só durante o toque/clique, ou enquanto o menu suspenso
+   deste botão está aberto. */
+.dash-tool-btn:active,
+.dash-tool-btn[aria-expanded="true"] {
+  background: var(--tint-strong, rgba(0, 0, 0, 0.08));
+  border-color: var(--tint-strong, #cfd8df);
+  box-shadow: inset 0 1px 3px rgba(0, 0, 0, 0.3);
+}
 
 /* Botão "Adicionar", com dropdown (contato / grupo) */
 .dash-tool-wrap { position: relative; flex: 0 0 auto; }
