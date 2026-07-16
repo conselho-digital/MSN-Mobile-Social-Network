@@ -202,9 +202,13 @@ const Dashboard = (() => {
     const screen = document.getElementById("screen-dashboard");
     if (screen) {
       const theme = MSNScenes.effectiveTheme(profile.scene, profile.color_scheme);
-      screen.style.setProperty("--tint-light", pastel(theme, 0.92));
-      screen.style.setProperty("--tint-mid", pastel(theme, 0.8));
-      screen.style.setProperty("--tint-strong", pastel(theme, 0.62));
+      // Misturas mais saturadas que antes (0.92/0.8/0.62 → 0.78/0.6/0.4)
+      // — em cores já claras (ex.: amarelo, rosa-claro) a versão antiga
+      // ficava quase idêntica ao branco, sem dar pra perceber a cor no
+      // fundo do Dashboard.
+      screen.style.setProperty("--tint-light", pastel(theme, 0.78));
+      screen.style.setProperty("--tint-mid", pastel(theme, 0.6));
+      screen.style.setProperty("--tint-strong", pastel(theme, 0.4));
       // Escurecida — legível como texto (ex.: placeholder da busca)
       // sobre o fundo claro tingido, ao contrário de --tint-strong.
       screen.style.setProperty("--tint-text", MSNScenes.shade(theme, 0.35));
