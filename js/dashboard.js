@@ -220,9 +220,30 @@ const Dashboard = (() => {
       renderGroupShells();
       renderContacts(currentFilter);
       subscribeContactUpdates();
+      maybeRequestNotificationPermission();
     } catch (err) {
       console.error("Falha ao carregar o dashboard:", err);
     }
+  }
+
+  // Só notificações são pedidas de forma proativa, e só ao abrir o
+  // Dashboard (nunca nas telas de login/cadastro) — e só se o
+  // dispositivo ainda não tiver decidido nada ("default"). Câmera,
+  // microfone, localização e armazenamento só são pedidos quando a
+  // pessoa liga manualmente em Opções > Alertas, ou quando o recurso
+  // que precisa deles for usado de verdade.
+  let notificationPermissionRequested = false;
+  function maybeRequestNotificationPermission() {
+    if (typeof Notification === "undefined") return;
+    if (Notification.permission !== "default") return;
+    // Marca antes de perguntar (não depois que a promise resolve) —
+    // a resposta pode demorar (a pessoa pode nem responder na hora), e
+    // Notification.permission só muda quando ela responde. Sem essa
+    // trava, chamar load() de novo nesse meio-tempo perguntaria duas
+    // vezes.
+    if (notificationPermissionRequested) return;
+    notificationPermissionRequested = true;
+    Notification.requestPermission().catch(() => {});
   }
 
   // Escuta em tempo real mudanças de status/nome/foto dos contatos já
@@ -567,13 +588,48 @@ const Dashboard = (() => {
       return "unsupported";
     }
   }
+  // Dispara o pedido de verdade do navegador pra cada permissão — cada
+  // uma usa a própria API (não existe um "requestPermission" genérico).
+  // Câmera/microfone precisam abrir o stream pra disparar o pedido;
+  // fecha na hora, já que é só pra decidir a permissão, não pra usar
+  // de verdade agora.
+  async function requestBrowserPermission(name) {
+    if (name === "notifications" && typeof Notification !== "undefined") {
+      await Notification.requestPermission();
+      return;
+    }
+    if ((name === "camera" || name === "microphone") && navigator.mediaDevices && navigator.mediaDevices.getUserMedia) {
+      try {
+        const constraints = name === "camera" ? { video: true } : { audio: true };
+        const stream = await navigator.mediaDevices.getUserMedia(constraints);
+        stream.getTracks().forEach((t) => t.stop());
+      } catch (_) {}
+      return;
+    }
+    if (name === "geolocation" && navigator.geolocation) {
+      await new Promise((resolve) => {
+        navigator.geolocation.getCurrentPosition(() => resolve(), () => resolve(), { timeout: 8000 });
+      });
+      return;
+    }
+    if (name === "persistent-storage" && navigator.storage && navigator.storage.persist) {
+      try { await navigator.storage.persist(); } catch (_) {}
+    }
+  }
+
   async function renderPermissions() {
     const list = document.getElementById("options-permissions-list");
     if (!list) return;
     list.innerHTML = PERMISSION_LIST.map((p) =>
       '<li class="options-permission-item" data-permission="' + p.name + '">' +
       "<span>" + esc(p.label) + "</span>" +
+      '<span class="options-permission-right">' +
       '<span class="options-permission-badge">…</span>' +
+      '<label class="options-permission-switch">' +
+      '<input type="checkbox" disabled />' +
+      '<span class="options-permission-switch__track"></span>' +
+      "</label>" +
+      "</span>" +
       "</li>"
     ).join("");
 
@@ -584,6 +640,24 @@ const Dashboard = (() => {
       const badge = li.querySelector(".options-permission-badge");
       badge.textContent = PERMISSION_STATE_LABEL[state] || PERMISSION_STATE_LABEL.unsupported;
       badge.className = "options-permission-badge options-permission-badge--" + state;
+
+      const toggle = li.querySelector('input[type="checkbox"]');
+      toggle.checked = state === "granted";
+      // Só dá pra "ligar" quando ainda não foi perguntado — depois de
+      // permitido/bloqueado, o próprio navegador não deixa perguntar
+      // de novo por JS (tem que mudar nas configurações do site).
+      toggle.disabled = state !== "prompt";
+      toggle.onchange = async () => {
+        if (!toggle.checked) return;
+        toggle.disabled = true;
+        // Geolocalização não tem um limite de tempo embutido pra
+        // pessoa responder o pedido — sem isso, se ela nunca responder,
+        // a chave ficaria travada "desligando" pra sempre. 20s é só uma
+        // rede de segurança pra sempre voltar a mostrar o estado atual.
+        const timeout = new Promise((resolve) => setTimeout(resolve, 20000));
+        await Promise.race([requestBrowserPermission(p.name), timeout]);
+        renderPermissions();
+      };
     }));
   }
 
