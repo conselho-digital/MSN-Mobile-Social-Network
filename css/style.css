@@ -1051,11 +1051,13 @@ body[data-login-theme="cenario1"] #screen-connecting::before {
   white-space: nowrap;
 }
 .my-name:hover #my-name-text { text-decoration: underline; }
-.my-status-inline { font-size: 1.1rem; font-weight: 400; }
+/* 15% menor que .my-name (1.35rem) — calc() deixa a relação explícita
+   caso o tamanho do nome mude no futuro. */
+.my-status-inline { font-size: calc(1.35rem * 0.85); font-weight: 400; }
 .status-select--sm {
   color: #cfeaff;
   padding: 0;
-  font-size: 1.1rem;
+  font-size: calc(1.35rem * 0.85);
 }
 .status-select--sm .caret-down { border-top-color: #cfeaff; }
 /* Mesmo tratamento do nome: texto puro, sublinha só no hover — sem a
@@ -1395,14 +1397,15 @@ body[data-login-theme="cenario1"] #screen-connecting::before {
    ao resto do tempo, deixando o fundo tingido do tema (--tint-light)
    aparecer sem interrupção. Em touch o :hover costuma "grudar" depois
    do toque, então uma cor fixa aqui destacava a barra em branco. */
-/* Triângulo sólido clássico (estilo Windows Explorer) — fechado aponta
-   pra frente/direita, aberto gira 90° e aponta pra baixo. Mais fácil
-   de distinguir o estado de longe do que a "v" fina usada antes. */
+/* Triângulo branco com borda preta (SVG — dá pra ter contorno, o que
+   o truque de "border" antigo não permitia). Fechado aponta pra
+   frente/direita, aberto gira 90° e aponta pra baixo. */
 .group-caret {
-  width: 0; height: 0;
-  border-style: solid;
-  border-width: 4px 0 4px 6px;
-  border-color: transparent transparent transparent #6e7d89;
+  width: 11px; height: 11px;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 12 12'%3E%3Cpolygon points='3,2 9,6 3,10' fill='white' stroke='black' stroke-width='1.3' stroke-linejoin='round'/%3E%3C/svg%3E");
+  background-size: contain;
+  background-repeat: no-repeat;
+  background-position: center;
   transition: transform 0.2s ease;
 }
 .contact-group__header[aria-expanded="true"] .group-caret {
@@ -1410,12 +1413,13 @@ body[data-login-theme="cenario1"] #screen-connecting::before {
 }
 .group-count { color: #9aa7b1; font-weight: 400; }
 
-/* Estrela dourada do cabeçalho "Favoritos" */
+/* Estrela do cabeçalho "Favoritos" (assets/icons/estrela.webp) — o
+   dobro do tamanho que a estrela de texto tinha antes (~13px → 26px). */
 .group-star {
-  font-size: 0.82rem;
-  line-height: 1;
-  color: #f0a83c;
-  text-shadow: 0 1px 0 rgba(255,255,255,0.5);
+  width: 26px;
+  height: 26px;
+  object-fit: contain;
+  flex: 0 0 auto;
 }
 
 /* Ícone dos "bonequinhos" nos cabeçalhos de grupos próprios */
