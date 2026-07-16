@@ -254,6 +254,9 @@ body {
   width: 104px;
   height: 104px;
   margin: 0 auto;
+  /* Sombra pra "descolar" a foto do fundo — mais necessária agora que
+     ela flutua parte sobre o banner do cenário, parte fora dele. */
+  filter: drop-shadow(0 4px 8px rgba(0, 0, 0, 0.35));
 }
 
 /* Login/Entrando (únicas telas com cenário no topo): tira o avatar do

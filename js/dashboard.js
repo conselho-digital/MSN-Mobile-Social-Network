@@ -741,6 +741,15 @@ const Dashboard = (() => {
   async function doSignOut() {
     MSNSupabase.unsubscribeContacts();
     contactsSubscribed = false;
+    // Antes de sair, atualiza o cenário/tema/foto lembrados dessa conta
+    // (caso tenham mudado durante a sessão) — assim a tela de login já
+    // mostra a versão mais recente na próxima vez, e não só a que
+    // existia no último login.
+    try {
+      if (profile) {
+        App.updateRememberedTheme(profile.email, profile.scene, profile.color_scheme, profile.avatar_url);
+      }
+    } catch (_) {}
     try { await MSNSupabase.signOut(); } catch (_) {}
     // Ao sair, desliga o auto-login (mas mantém e-mail/senha lembrados).
     try { localStorage.setItem("msn:autoSignin", "false"); } catch (_) {}

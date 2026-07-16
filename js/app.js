@@ -3,7 +3,7 @@
    Inicialização global e orquestração da tela de entrada.
    ============================================================ */
 
-(function () {
+const App = (function () {
   "use strict";
 
   let connecting = false;
@@ -418,6 +418,36 @@
     });
     setAccounts(list);
   }
+  // Atualiza o cenário/tema/foto guardados de uma conta já lembrada —
+  // chamada pelo Dashboard ao sair (ver Dashboard.doSignOut), pra
+  // cobrir o caso de a pessoa trocar de cenário/foto durante a sessão
+  // e só depois fazer logout: sem isso, a tela de login continuaria
+  // mostrando a versão antiga (só salva no momento do login). Não
+  // mexe em senha nem no estado de "lembrar-me"; se a conta não
+  // estava lembrada, não faz nada (mesma regra do login).
+  function updateRememberedTheme(email, scene, colorScheme, avatarUrl) {
+    if (!email) return;
+    const list = getAccounts();
+    const idx = list.findIndex((a) => a.email === email);
+    if (idx === -1) return;
+    list[idx] = Object.assign({}, list[idx], {
+      scene: scene || null,
+      colorScheme: colorScheme || null,
+      avatarUrl: avatarUrl || null,
+    });
+    setAccounts(list);
+
+    // Se a tela de login já estiver com esse e-mail no campo (é o que
+    // aparece logo depois do logout), reaplica na hora — sem isso a
+    // moldura ficaria com o cenário/foto antigos até o campo de e-mail
+    // disparar um novo re-render por conta própria.
+    const emailEl = document.getElementById("login-email");
+    if (emailEl && emailEl.value.trim().toLowerCase() === email.toLowerCase()) {
+      currentLoginKey = undefined; // força reaplicar mesmo se o cenário não mudou
+      applyLoginTheme(scene, colorScheme);
+      applyLoginAvatar(avatarUrl);
+    }
+  }
   function removeAccount(email) {
     setAccounts(getAccounts().filter((a) => a.email !== email));
     if (localStorage.getItem("msn:lastEmail") === email) {
@@ -717,4 +747,6 @@
       navigator.serviceWorker.register("sw.js").catch(() => {});
     });
   }
+
+  return { updateRememberedTheme };
 })();
