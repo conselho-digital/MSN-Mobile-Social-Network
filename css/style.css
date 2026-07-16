@@ -1550,6 +1550,14 @@ body {
   overflow-y: auto;
   padding: 14px 16px 4px;
 }
+/* Título grande dentro do corpo do diálogo (além do título da barra
+   escura) — igual ao clássico "Selecione uma Imagem para Exibição". */
+.scene-dialog__heading {
+  margin: 0 0 4px;
+  font-size: 1.25rem;
+  font-weight: 400;
+  color: #1f5fa8;
+}
 .scene-dialog__intro {
   margin: 0 0 14px;
   font-size: 0.82rem;
