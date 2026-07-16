@@ -159,14 +159,29 @@ body {
       var(--lg2, #c9e2f7) 58%,
       var(--lg1, #b0d6f1) 100%);
 }
+/* Cadastro: sempre o cenário/tema padrão (Céu Azul + #deeff7 no topo),
+   independente da conta "lembrada" no login neste aparelho — criar
+   uma conta nova não deve herdar o tema de outra conta já usada
+   aqui. Variáveis próprias (--signup-*), calculadas uma única vez em
+   app.js (init), nunca mudam depois disso. */
+#screen-signup {
+  background:
+    radial-gradient(140% 45% at 25% 0%, rgba(255,255,255,0.55), transparent 55%),
+    radial-gradient(120% 40% at 82% 4%, rgba(255,255,255,0.40), transparent 50%),
+    linear-gradient(180deg,
+      var(--signup-lg5, #deeff7) 0%,
+      var(--signup-lg4, #eef6fd) 12%,
+      var(--signup-lg3, #dcedfb) 36%,
+      var(--signup-lg2, #c9e2f7) 58%,
+      var(--signup-lg1, #b0d6f1) 100%);
+}
 /* Cenário (imagem) no topo — "cover" de verdade, sem distorcer,
    preenchendo a faixa em vez de esticar largura/altura
    independentemente uma da outra. 97.5px — mesma altura do banner do
    cabeçalho do Dashboard (ver .dash-header, 75% do tamanho anterior),
    pra ficar igual nas duas telas. */
 #screen-login::before,
-#screen-connecting::before,
-#screen-signup::before {
+#screen-connecting::before {
   content: "";
   position: absolute;
   top: 0; left: 0; right: 0;
@@ -190,10 +205,22 @@ body {
   pointer-events: none;
 }
 body[data-login-theme="cenario1"] #screen-login::before,
-body[data-login-theme="cenario1"] #screen-connecting::before,
-body[data-login-theme="cenario1"] #screen-signup::before {
+body[data-login-theme="cenario1"] #screen-connecting::before {
   border-bottom: none;
   box-shadow: none;
+}
+/* Cadastro: mesmo cenário padrão de cima, sem linha/sombra (é sempre
+   o padrão, nunca precisa se destacar de uma foto "de verdade"). */
+#screen-signup::before {
+  content: "";
+  position: absolute;
+  top: 0; left: 0; right: 0;
+  height: 97.5px;
+  background-image: var(--signup-scene, none);
+  background-size: cover;
+  background-position: center;
+  background-repeat: no-repeat;
+  pointer-events: none;
 }
 .signin-scroll {
   position: relative;

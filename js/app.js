@@ -16,6 +16,7 @@ const App = (function () {
     UIManager.init();
     SoundManager.preload();
 
+    applySignupDefaultTheme();
     bindAccountDropdown();
     bindWelcomeHeading();
     restoreRemembered();
@@ -29,6 +30,27 @@ const App = (function () {
     bindInstallApp();
     bindAutofillGuards();
     initSession();
+  }
+
+  /* ---------- Tema fixo da tela de cadastro ----------
+     Sempre o cenário/tema padrão (Céu Azul), nunca o de alguma conta
+     "lembrada" no login neste aparelho — criar uma conta nova não deve
+     herdar visual de outra conta já usada aqui. Calculado uma única
+     vez (não muda depois), em variáveis próprias (--signup-*) pra não
+     disputar com --lg1..5/--login-scene, que continuam livres para
+     acompanhar a conta selecionada no login. */
+  function applySignupDefaultTheme() {
+    if (typeof MSNScenes === "undefined") return;
+    const root = document.body;
+    const scene = MSNScenes.list[0];
+    const hex = scene.theme;
+    root.style.setProperty("--signup-lg1", MSNScenes.pastel(hex, 0.78));
+    root.style.setProperty("--signup-lg2", MSNScenes.pastel(hex, 0.68));
+    root.style.setProperty("--signup-lg3", MSNScenes.pastel(hex, 0.8));
+    root.style.setProperty("--signup-lg4", MSNScenes.pastel(hex, 0.9));
+    root.style.setProperty("--signup-lg5", "#deeff7");
+    const imgUrl = MSNScenes.image(scene.id);
+    if (imgUrl) root.style.setProperty("--signup-scene", "url('" + imgUrl + "')");
   }
 
   /* ---------- Reduzir o autopreenchimento nativo do navegador ----------
