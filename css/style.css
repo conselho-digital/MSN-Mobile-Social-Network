@@ -263,8 +263,8 @@ body {
 .signin-avatar .status-frame {
   position: relative;
   display: block;
-  width: 78px;
-  height: 78px;
+  width: 104px;
+  height: 104px;
   margin: 0 auto;
   /* Sombra pra "descolar" a foto do fundo — mais necessária agora que
      ela flutua parte sobre o banner do cenário, parte fora dele. */
@@ -283,7 +283,7 @@ body {
 #screen-login .signin-avatar,
 #screen-connecting .signin-avatar {
   position: absolute;
-  top: 58.5px; /* 97.5px (altura do cenário) − 39px (metade dos 78px do avatar) */
+  top: 45.5px; /* 97.5px (altura do cenário) − 52px (metade dos 104px do avatar, de volta ao tamanho original) */
   left: 50%;
   transform: translateX(-50%);
   margin: 0;
@@ -327,12 +327,12 @@ body {
   font-weight: 400;
   color: var(--login-accent-text, #3a4a55);
   /* O avatar é position:absolute (ver .signin-avatar) e termina em
-     136.5px (58.5px de topo + 78px de altura); esse margin-top soma à
+     149.5px (45.5px de topo + 104px de altura); esse margin-top soma à
      altura do botão "Adicionar App" (que continua no fluxo normal,
      ~42px) pra sobrar só uns 18px de respiro até o título — a mesma
      folga aproximada que existe do título até o cartão de login (26px
      de margin-bottom), evitando o vão desigual de antes. */
-  margin: 112.5px 0 26px;
+  margin: 125.5px 0 26px;
   letter-spacing: 0.2px;
   text-shadow: 0 1px 2px rgba(255, 255, 255, 0.6);
 }
