@@ -468,6 +468,125 @@ const Dashboard = (() => {
     saveMessagePrefs();
   }
 
+  /* ---------- Pessoas bloqueadas (Opções > Privacidade) ---------- */
+  async function renderBlockedList() {
+    const list = document.getElementById("options-blocked-list");
+    const empty = document.getElementById("options-blocked-empty");
+    if (!list) return;
+    list.innerHTML = "";
+    let blocked = [];
+    try {
+      blocked = await MSNSupabase.getBlockedUsers();
+    } catch (_) {}
+
+    empty.hidden = blocked.length !== 0;
+    blocked.forEach((person) => {
+      const li = document.createElement("li");
+      li.className = "options-blocked-item";
+      li.dataset.id = person.id;
+      const name = document.createElement("span");
+      name.textContent = person.display_name || person.email || "Pessoa";
+      const unblockBtn = document.createElement("button");
+      unblockBtn.type = "button";
+      unblockBtn.className = "scene-dialog__browse";
+      unblockBtn.textContent = "Desbloquear";
+      unblockBtn.addEventListener("click", async () => {
+        try {
+          await MSNSupabase.unblockUser(person.id);
+          renderBlockedList();
+        } catch (_) {}
+      });
+      li.appendChild(name);
+      li.appendChild(unblockBtn);
+      list.appendChild(li);
+    });
+  }
+
+  async function blockPersonByEmail() {
+    const input = document.getElementById("opt-block-email");
+    const msg = document.getElementById("opt-block-message");
+    const val = input.value.trim();
+    msg.hidden = true;
+    if (!val) {
+      msg.textContent = "Digite o e-mail da pessoa.";
+      msg.hidden = false;
+      return;
+    }
+    try {
+      await MSNSupabase.blockUserByEmail(val);
+      input.value = "";
+      renderBlockedList();
+    } catch (err) {
+      msg.textContent = err.message || "Não foi possível bloquear.";
+      msg.hidden = false;
+    }
+  }
+
+  /* ---------- Permissões do dispositivo (Opções > Alertas) ----------
+     Estado de verdade do navegador (Permissions API / Notification /
+     Storage), não é uma preferência do app — só mostra o que já está
+     concedido/bloqueado no dispositivo. */
+  const PERMISSION_LIST = [
+    { name: "notifications", label: "Notificações" },
+    { name: "camera", label: "Câmera" },
+    { name: "microphone", label: "Microfone" },
+    { name: "geolocation", label: "Localização" },
+    { name: "persistent-storage", label: "Armazenamento" },
+  ];
+  const PERMISSION_STATE_LABEL = {
+    granted: "Permitido",
+    denied: "Bloqueado",
+    prompt: "Não perguntado ainda",
+    unsupported: "Não suportado",
+  };
+  async function queryPermissionState(name) {
+    // Notificações: nem todo navegador aceita "notifications" via
+    // permissions.query (Safari, por ex.) — Notification.permission
+    // funciona em mais lugares e cobre o mesmo estado.
+    if (name === "notifications" && typeof Notification !== "undefined") {
+      const perm = Notification.permission; // "granted" | "denied" | "default"
+      return perm === "default" ? "prompt" : perm;
+    }
+    // Armazenamento: "persistent-storage" via Permissions API funciona
+    // no Chrome; navigator.storage.persisted() é o fallback (relata se
+    // já está concedido, sem estado "denied" — só sim/ainda não).
+    if (name === "persistent-storage" && (!navigator.permissions || !navigator.permissions.query)) {
+      if (navigator.storage && navigator.storage.persisted) {
+        try {
+          const persisted = await navigator.storage.persisted();
+          return persisted ? "granted" : "prompt";
+        } catch (_) { return "unsupported"; }
+      }
+      return "unsupported";
+    }
+    if (!navigator.permissions || !navigator.permissions.query) return "unsupported";
+    try {
+      const status = await navigator.permissions.query({ name });
+      return status.state; // "granted" | "denied" | "prompt"
+    } catch (_) {
+      return "unsupported";
+    }
+  }
+  async function renderPermissions() {
+    const list = document.getElementById("options-permissions-list");
+    if (!list) return;
+    list.innerHTML = PERMISSION_LIST.map((p) =>
+      '<li class="options-permission-item" data-permission="' + p.name + '">' +
+      "<span>" + esc(p.label) + "</span>" +
+      '<span class="options-permission-badge">…</span>' +
+      "</li>"
+    ).join("");
+
+    await Promise.all(PERMISSION_LIST.map(async (p) => {
+      const state = await queryPermissionState(p.name);
+      const li = list.querySelector('[data-permission="' + p.name + '"]');
+      if (!li) return;
+      const badge = li.querySelector(".options-permission-badge");
+      badge.textContent = PERMISSION_STATE_LABEL[state] || PERMISSION_STATE_LABEL.unsupported;
+      badge.className = "options-permission-badge options-permission-badge--" + state;
+    }));
+  }
+
   // Cria (ou recria) a "casca" de cada grupo próprio dentro de
   // #contact-groups-dynamic — chamado só quando a lista de grupos muda
   // (load()/depois de criar um grupo), não a cada busca. O preenchimento
@@ -971,6 +1090,8 @@ const Dashboard = (() => {
     document.getElementById("options-pane-personal").hidden = false;
     document.getElementById("options-pane-layout").hidden = true;
     document.getElementById("options-pane-messages").hidden = true;
+    document.getElementById("options-pane-alerts").hidden = true;
+    document.getElementById("options-pane-privacy").hidden = true;
     document.getElementById("options-pane-blank").hidden = true;
   }
 
@@ -1373,13 +1494,17 @@ const Dashboard = (() => {
         item.classList.add("is-active");
         document.getElementById("options-nav-current").textContent = item.textContent;
         const tab = item.dataset.tab;
-        const knownTabs = ["personal", "layout", "messages"];
+        const knownTabs = ["personal", "layout", "messages", "alerts", "privacy"];
         document.getElementById("options-pane-personal").hidden = tab !== "personal";
         document.getElementById("options-pane-layout").hidden = tab !== "layout";
         document.getElementById("options-pane-messages").hidden = tab !== "messages";
+        document.getElementById("options-pane-alerts").hidden = tab !== "alerts";
+        document.getElementById("options-pane-privacy").hidden = tab !== "privacy";
         document.getElementById("options-pane-blank").hidden = knownTabs.includes(tab);
         if (tab === "layout") loadLayoutPrefsIntoForm();
         if (tab === "messages") loadMessagePrefsIntoForm();
+        if (tab === "alerts") renderPermissions();
+        if (tab === "privacy") renderBlockedList();
         if (optNav) optNav.hidden = true;
         if (optNavToggle) optNavToggle.setAttribute("aria-expanded", "false");
       });
@@ -1395,6 +1520,13 @@ const Dashboard = (() => {
     // histórico" ligado — desliga/liga junto, igual ao cliente clássico.
     const optKeepHistory = document.getElementById("opt-keep-history");
     if (optKeepHistory) optKeepHistory.addEventListener("change", updateLastConversationCheckbox);
+    // Bloquear pessoa pelo e-mail (aba Privacidade)
+    const optBlockBtn = document.getElementById("opt-block-btn");
+    if (optBlockBtn) optBlockBtn.addEventListener("click", blockPersonByEmail);
+    const optBlockEmail = document.getElementById("opt-block-email");
+    if (optBlockEmail) optBlockEmail.addEventListener("keydown", (e) => {
+      if (e.key === "Enter") blockPersonByEmail();
+    });
     // OK (salva e fecha) / Aplicar (salva, mantém aberto) / Cancelar e X
     // (descartam)
     const optOk = document.getElementById("options-ok");

@@ -2095,6 +2095,10 @@ body[data-login-theme="cenario1"] #screen-connecting::before {
   font-weight: 400;
   color: #1f5fa8;
 }
+/* Ícone antes do título (ex.: Privacidade) */
+.options-pane__title-row { display: flex; align-items: center; gap: 10px; margin: 0 0 14px; }
+.options-pane__title-row .options-pane__title { margin: 0; }
+.options-pane__title-icon { width: 28px; height: 28px; object-fit: contain; flex: 0 0 auto; }
 
 .options-section { margin: 0 0 18px; }
 .options-section + .options-section {
@@ -2103,6 +2107,61 @@ body[data-login-theme="cenario1"] #screen-connecting::before {
 }
 .options-section__heading { margin: 0 0 10px; font-size: 0.85rem; font-weight: 600; color: #2f4a63; }
 .options-section__text { margin: 0 0 10px; font-size: 0.82rem; color: #5a6b78; line-height: 1.45; }
+
+/* Lista de pessoas bloqueadas (Privacidade) */
+.options-blocked-list {
+  list-style: none;
+  margin: 10px 0 0;
+  padding: 0;
+  border: 1px solid #d7dee4;
+  border-radius: 4px;
+  overflow: hidden;
+}
+.options-blocked-item {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  padding: 8px 10px;
+  font-size: 0.85rem;
+  color: #34495a;
+  border-bottom: 1px solid #eef1f4;
+}
+.options-blocked-item:last-child { border-bottom: none; }
+.options-blocked-item .scene-dialog__browse { flex: 0 0 auto; margin: 0; }
+
+/* Lista de permissões do navegador (Segurança) */
+.options-permissions-list {
+  list-style: none;
+  margin: 10px 0 0;
+  padding: 0;
+  border: 1px solid #d7dee4;
+  border-radius: 4px;
+  overflow: hidden;
+}
+.options-permission-item {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  padding: 9px 12px;
+  font-size: 0.85rem;
+  color: #34495a;
+  border-bottom: 1px solid #eef1f4;
+}
+.options-permission-item:last-child { border-bottom: none; }
+.options-permission-badge {
+  flex: 0 0 auto;
+  padding: 2px 9px;
+  font-size: 0.72rem;
+  font-weight: 600;
+  border-radius: 10px;
+  white-space: nowrap;
+}
+.options-permission-badge--granted { background: #e3f5e6; color: #2e7d32; }
+.options-permission-badge--denied { background: #fdeaea; color: #b3261e; }
+.options-permission-badge--prompt,
+.options-permission-badge--unsupported { background: #eef1f4; color: #5a6b78; }
 
 .options-field { display: block; margin: 0 0 12px; font-size: 0.82rem; color: #34495a; }
 .options-field__input {

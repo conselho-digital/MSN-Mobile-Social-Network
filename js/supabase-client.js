@@ -218,6 +218,51 @@ const MSNSupabase = (() => {
     return { ok: true, name: found[0].display_name };
   }
 
+  /* ---------- Pessoas bloqueadas (ver supabase/blocked_users.sql) ---------- */
+  async function getBlockedUsers() {
+    if (!isConfigured()) return demoBlockedUsers();
+    const { data: { user } } = await client.auth.getUser();
+    if (!user) return [];
+    const { data: rows, error } = await client
+      .from("blocked_users").select("blocked_id").eq("owner_id", user.id);
+    if (error) throw error;
+    const ids = (rows || []).map((r) => r.blocked_id);
+    if (!ids.length) return [];
+    const { data: profs, error: e2 } = await client
+      .from("profiles").select("id, display_name, email").in("id", ids);
+    if (e2) throw e2;
+    return profs || [];
+  }
+
+  async function blockUserByEmail(email) {
+    if (!isConfigured()) return { ok: true, demo: true };
+    const { data: { user } } = await client.auth.getUser();
+    if (!user) throw new Error("Sessão expirada. Entre novamente.");
+
+    const { data: found, error } = await client
+      .from("profiles").select("id, display_name, email")
+      .ilike("email", email.trim()).limit(1);
+    if (error) throw error;
+    if (!found || !found.length) throw new Error("Nenhuma pessoa encontrada com esse e-mail.");
+    if (found[0].id === user.id) throw new Error("Você não pode bloquear a si mesmo.");
+
+    const { error: insErr } = await client
+      .from("blocked_users").insert({ owner_id: user.id, blocked_id: found[0].id });
+    if (insErr && !/duplicate|unique/i.test(insErr.message)) throw insErr;
+    return { ok: true, name: found[0].display_name };
+  }
+
+  async function unblockUser(blockedId) {
+    if (!isConfigured()) return { ok: true, demo: true };
+    const { data: { user } } = await client.auth.getUser();
+    if (!user) throw new Error("Sessão expirada. Entre novamente.");
+    const { error } = await client
+      .from("blocked_users").delete()
+      .eq("owner_id", user.id).eq("blocked_id", blockedId);
+    if (error) throw error;
+    return { ok: true };
+  }
+
   /* ---------- Grupos ---------- */
   async function createGroup(name, memberIds) {
     if (!isConfigured()) return { ok: true, demo: true };
@@ -257,6 +302,9 @@ const MSNSupabase = (() => {
   function demoGroups() {
     return [{ id: "g1", name: "Amigos da faculdade", member_ids: ["d2"] }];
   }
+  function demoBlockedUsers() {
+    return [];
+  }
 
   /* ---------- Modo demo (sem credenciais) ---------- */
   function demoAuth(email, password) {
@@ -279,6 +327,7 @@ const MSNSupabase = (() => {
     getMyProfile, updateMyProfile, getContacts, addContactByEmail, setFavorite,
     subscribeContacts, unsubscribeContacts,
     createGroup, getGroups,
+    getBlockedUsers, blockUserByEmail, unblockUser,
     uploadAvatar,
     uploadSceneImage,
     getClient: () => client,

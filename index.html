@@ -692,14 +692,14 @@
           <button type="button" class="options-nav__item" data-tab="messages">Mensagens</button>
           <button type="button" class="options-nav__item" data-tab="alerts">Alertas</button>
           <button type="button" class="options-nav__item" data-tab="sounds">Sons</button>
-          <button type="button" class="options-nav__item" data-tab="filetransfer">Transferência de Arquivo</button>
           <button type="button" class="options-nav__item" data-tab="privacy">Privacidade</button>
-          <button type="button" class="options-nav__item" data-tab="security">Segurança</button>
-          <button type="button" class="options-nav__item" data-tab="connection">Conexão</button>
         </nav>
 
         <div class="options-pane" id="options-pane-personal">
-          <h3 class="options-pane__title">Pessoal</h3>
+          <div class="options-pane__title-row">
+            <img src="assets/icons/pessoal.webp" alt="" class="options-pane__title-icon" />
+            <h3 class="options-pane__title">Pessoal</h3>
+          </div>
 
           <section class="options-section">
             <h4 class="options-section__heading">Nome para Exibição</h4>
@@ -734,7 +734,10 @@
         </div>
 
         <div class="options-pane" id="options-pane-layout" hidden>
-          <h3 class="options-pane__title">Layout</h3>
+          <div class="options-pane__title-row">
+            <img src="assets/icons/layout.webp" alt="" class="options-pane__title-icon" />
+            <h3 class="options-pane__title">Layout</h3>
+          </div>
 
           <section class="options-section">
             <label class="options-checkbox">
@@ -847,6 +850,35 @@
               <input type="text" class="options-field__input" value="Documentos/MSN/Meus arquivos recebidos" disabled />
               <button type="button" class="scene-dialog__browse" disabled>Alterar...</button>
             </div>
+          </section>
+        </div>
+
+        <div class="options-pane" id="options-pane-privacy" hidden>
+          <div class="options-pane__title-row">
+            <img src="assets/icons/bloquear.webp" alt="" class="options-pane__title-icon" />
+            <h3 class="options-pane__title">Privacidade</h3>
+          </div>
+
+          <section class="options-section">
+            <h4 class="options-section__heading">Pessoas bloqueadas</h4>
+            <p class="options-section__text">Pessoas bloqueadas não podem ver seu status nem enviar mensagens para você.</p>
+            <div class="options-folder-row">
+              <input type="email" id="opt-block-email" class="options-field__input" placeholder="Bloquear pelo endereço de e-mail" />
+              <button type="button" id="opt-block-btn" class="scene-dialog__browse">Bloquear</button>
+            </div>
+            <p id="opt-block-message" class="modal__message" hidden></p>
+            <ul class="options-blocked-list" id="options-blocked-list"></ul>
+            <p class="options-section__text" id="options-blocked-empty" hidden>Você ainda não bloqueou ninguém.</p>
+          </section>
+        </div>
+
+        <div class="options-pane" id="options-pane-alerts" hidden>
+          <h3 class="options-pane__title">Alertas</h3>
+
+          <section class="options-section">
+            <h4 class="options-section__heading">Permissões do dispositivo</h4>
+            <p class="options-section__text">O que o MSN tem permissão de usar neste dispositivo/navegador.</p>
+            <ul class="options-permissions-list" id="options-permissions-list"></ul>
           </section>
         </div>
 
