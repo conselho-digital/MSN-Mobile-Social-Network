@@ -108,6 +108,63 @@ const Dashboard = (() => {
     openDropdownClosers.forEach((close) => { if (close !== exceptCloseFn) close(); });
   }
 
+  /* ---------- "Ausente" automático por inatividade ----------
+     Preferência local (não depende de coluna nova no Supabase — só
+     controla o comportamento deste dispositivo, como "Modo de
+     exibição"). Fica "away" sozinho depois de X minutos sem nenhuma
+     interação NA TELA DO DASHBOARD (não existe tela de conversa ainda
+     — quando existir, este mesmo checkOnce() já vai parar de contar
+     assim que a pessoa sair do Dashboard). Qualquer troca de status
+     manual pelo menu do nick cancela o auto-away e volta a valer. */
+  let autoAwayEnabled = true;
+  let autoAwayMinutes = 5;
+  let isAutoAway = false;
+  let lastActivityAt = Date.now();
+
+  function loadAutoAwayPrefs() {
+    try {
+      const raw = localStorage.getItem("msn:autoAwayEnabled");
+      autoAwayEnabled = raw === null ? true : raw === "true";
+      const mins = parseInt(localStorage.getItem("msn:autoAwayMinutes"), 10);
+      if (mins > 0) autoAwayMinutes = mins;
+    } catch (_) {}
+  }
+  function saveAutoAwayPrefs() {
+    try {
+      localStorage.setItem("msn:autoAwayEnabled", String(autoAwayEnabled));
+      localStorage.setItem("msn:autoAwayMinutes", String(autoAwayMinutes));
+    } catch (_) {}
+  }
+
+  function markActivity() {
+    lastActivityAt = Date.now();
+  }
+
+  function isDashboardActive() {
+    const screen = document.getElementById("screen-dashboard");
+    return !!screen && screen.classList.contains("screen--active");
+  }
+
+  function checkAutoAway() {
+    if (!autoAwayEnabled || !profile || isAutoAway) return;
+    if (!isDashboardActive()) return;
+    if (profile.status !== "online") return;
+    const idleMs = Date.now() - lastActivityAt;
+    if (idleMs < autoAwayMinutes * 60 * 1000) return;
+
+    isAutoAway = true;
+    profile.status = "away";
+    renderProfile();
+    MSNSupabase.updateMyProfile({ status: "away" }).catch(() => {});
+  }
+
+  function startIdleWatch() {
+    loadAutoAwayPrefs();
+    ["click", "touchstart", "keydown", "mousemove", "scroll"].forEach((evt) =>
+      document.addEventListener(evt, markActivity, { passive: true }));
+    setInterval(checkAutoAway, 15000);
+  }
+
   // Foto de exibição: a enviada/escolhida, ou assets/avatars/standard.webp
   // como padrão (mesmo desenho do bonequinho clássico do MSN).
   function avatarMarkup(url) {
@@ -645,6 +702,8 @@ const Dashboard = (() => {
   function openOptionsDialog() {
     document.getElementById("opt-display-name").value = profile ? profile.display_name || "" : "";
     document.getElementById("opt-sub-nick").value = profile ? profile.sub_nick || "" : "";
+    document.getElementById("opt-auto-away").checked = autoAwayEnabled;
+    document.getElementById("opt-auto-away-minutes").value = autoAwayMinutes;
     resetOptionsNav();
     document.getElementById("options-dialog").hidden = false;
   }
@@ -663,8 +722,19 @@ const Dashboard = (() => {
     document.getElementById("options-dialog").hidden = true;
   }
 
-  // Salva nome/mensagem pessoal editados na aba "Pessoal".
+  // Salva nome/mensagem pessoal e a preferência de "Ausente" automático
+  // editados na aba "Pessoal".
   async function commitOptions() {
+    autoAwayEnabled = document.getElementById("opt-auto-away").checked;
+    const minutesVal = parseInt(document.getElementById("opt-auto-away-minutes").value, 10);
+    autoAwayMinutes = minutesVal > 0 ? minutesVal : autoAwayMinutes;
+    document.getElementById("opt-auto-away-minutes").value = autoAwayMinutes;
+    saveAutoAwayPrefs();
+    // Desativar/aumentar o intervalo enquanto estava "away" por
+    // inatividade não deveria manter o auto-away supostamente já
+    // "vencido" — reinicia a contagem a partir de agora.
+    markActivity();
+
     if (!profile) return;
     const nameVal = document.getElementById("opt-display-name").value.trim();
     const subVal = document.getElementById("opt-sub-nick").value.trim();
@@ -678,22 +748,40 @@ const Dashboard = (() => {
     try { await MSNSupabase.updateMyProfile(patch); } catch (_) {}
   }
 
-  function openAddContactModal() {
-    openModal({
-      title: "Adicionar um contato",
-      value: "",
-      placeholder: "Endereço de e-mail",
-      inputType: "email",
-      onOk: async (val) => {
-        if (!val.trim()) return "Digite o e-mail do contato.";
-        try {
-          await MSNSupabase.addContactByEmail(val.trim());
-          await load();
-        } catch (err) {
-          return err.message || "Não foi possível adicionar.";
-        }
-      },
-    });
+  /* ---------- Adicionar um contato ----------
+     Mesmo estilo visual do "Criar um grupo" (titlebar "Windows Live
+     Messenger" + faixa com ícone), no lugar do modal genérico usado
+     antes. */
+  function openAddContactDialog() {
+    const input = document.getElementById("add-contact-email-input");
+    const msg = document.getElementById("add-contact-message");
+    input.value = "";
+    msg.hidden = true;
+    document.getElementById("add-contact-dialog").hidden = false;
+    setTimeout(() => input.focus(), 30);
+  }
+
+  function closeAddContactDialog() {
+    document.getElementById("add-contact-dialog").hidden = true;
+  }
+
+  async function submitAddContact() {
+    const input = document.getElementById("add-contact-email-input");
+    const msg = document.getElementById("add-contact-message");
+    const val = input.value.trim();
+    if (!val) {
+      msg.textContent = "Digite o e-mail do contato.";
+      msg.hidden = false;
+      return;
+    }
+    try {
+      await MSNSupabase.addContactByEmail(val);
+      await load();
+      closeAddContactDialog();
+    } catch (err) {
+      msg.textContent = err.message || "Não foi possível adicionar.";
+      msg.hidden = false;
+    }
   }
 
   /* ---------- Criar um grupo ----------
@@ -816,6 +904,8 @@ const Dashboard = (() => {
 
   /* ---------- Eventos ---------- */
   function bindEvents() {
+    startIdleWatch();
+
     // Menu do nick (status + ações do perfil)
     const menu = document.getElementById("my-menu");
     const nameBtn = document.getElementById("my-name-btn");
@@ -841,11 +931,14 @@ const Dashboard = (() => {
     menu.addEventListener("click", (e) => e.stopPropagation());
     registerDropdown(closeMenu);
 
-    // Itens de status
+    // Itens de status — troca manual sempre prevalece sobre o
+    // auto-away (cancela o "away" automático e reinicia a contagem).
     menu.querySelectorAll(".my-menu__status").forEach((item) => {
       item.addEventListener("click", async () => {
         closeMenu();
         if (!profile) return;
+        isAutoAway = false;
+        markActivity();
         profile.status = item.dataset.status;
         renderProfile();
         try { await MSNSupabase.updateMyProfile({ status: profile.status }); } catch (_) {}
@@ -900,7 +993,7 @@ const Dashboard = (() => {
     addMenu.querySelectorAll("[data-action]").forEach((item) => {
       item.addEventListener("click", () => {
         closeAddMenu();
-        if (item.dataset.action === "add-contact") openAddContactModal();
+        if (item.dataset.action === "add-contact") openAddContactDialog();
         else if (item.dataset.action === "create-group") openGroupPicker();
       });
     });
@@ -981,6 +1074,19 @@ const Dashboard = (() => {
     if (groupCancel) groupCancel.addEventListener("click", closeGroupPicker);
     const groupX = document.getElementById("group-dialog-x");
     if (groupX) groupX.addEventListener("click", closeGroupPicker);
+
+    // Adicionar um contato: OK (envia) / Cancelar e X (descartam)
+    const addContactOk = document.getElementById("add-contact-ok");
+    if (addContactOk) addContactOk.addEventListener("click", submitAddContact);
+    const addContactCancel = document.getElementById("add-contact-cancel");
+    if (addContactCancel) addContactCancel.addEventListener("click", closeAddContactDialog);
+    const addContactX = document.getElementById("add-contact-dialog-x");
+    if (addContactX) addContactX.addEventListener("click", closeAddContactDialog);
+    const addContactInput = document.getElementById("add-contact-email-input");
+    if (addContactInput) addContactInput.addEventListener("keydown", (e) => {
+      if (e.key === "Enter") submitAddContact();
+      else if (e.key === "Escape") closeAddContactDialog();
+    });
 
     // Opções: toggle da lista de categorias (recolhida por padrão)
     const optNavToggle = document.getElementById("options-nav-toggle");

@@ -556,14 +556,19 @@
       <header class="scene-dialog__titlebar">
         <span class="scene-dialog__titlebar-app">
           <img src="assets/icons/favicon.png" alt="" />
-          Criar um grupo
+          Windows Live Messenger
         </span>
         <button type="button" id="group-dialog-x" class="scene-dialog__x" aria-label="Fechar">&times;</button>
       </header>
 
+      <div class="scene-dialog__banner">
+        <img src="assets/icons/gruposimg.webp" alt="" class="scene-dialog__banner-icon" />
+        <h2 class="scene-dialog__banner-title">Criar um grupo</h2>
+      </div>
+
       <div class="scene-dialog__body">
-        <p class="scene-dialog__intro">Dê um nome ao grupo e escolha os contatos que vão fazer parte dele.</p>
-        <input type="text" id="group-name-input" class="modal__input" placeholder="Nome do grupo" />
+        <p class="scene-dialog__intro">Inicie um grupo no Messenger e participe de conversas em grupo com outros membros. Também será criado um site para seu grupo. Nele, os membros poderão compartilhar, entre outras coisas, arquivos e fotos.</p>
+        <input type="text" id="group-name-input" class="modal__input" placeholder="Insira um nome para seu grupo" />
         <h3 class="scene-dialog__section scene-dialog__section--colors">Selecione os contatos</h3>
         <div class="group-contact-list" id="group-contact-list"></div>
       </div>
@@ -571,6 +576,35 @@
       <footer class="scene-dialog__footer">
         <button type="button" id="group-ok" class="btn-signin btn-signin--sm btn-signin--primary">OK</button>
         <button type="button" id="group-cancel" class="btn-signin btn-signin--sm">Cancelar</button>
+      </footer>
+    </div>
+  </div>
+
+  <!-- Adicionar um contato: e-mail, mesmo estilo do "Criar um grupo" -->
+  <div id="add-contact-dialog" class="modal-overlay scene-dialog-overlay" hidden>
+    <div class="scene-dialog" role="dialog" aria-modal="true" aria-label="Adicionar um contato">
+      <header class="scene-dialog__titlebar">
+        <span class="scene-dialog__titlebar-app">
+          <img src="assets/icons/favicon.png" alt="" />
+          Windows Live Messenger
+        </span>
+        <button type="button" id="add-contact-dialog-x" class="scene-dialog__x" aria-label="Fechar">&times;</button>
+      </header>
+
+      <div class="scene-dialog__banner">
+        <img src="assets/icons/adicionar.webp" alt="" class="scene-dialog__banner-icon" />
+        <h2 class="scene-dialog__banner-title">Adicionar um contato</h2>
+      </div>
+
+      <div class="scene-dialog__body">
+        <p class="scene-dialog__intro">Insira o endereço de e-mail da pessoa que você deseja adicionar aos seus contatos.</p>
+        <input type="email" id="add-contact-email-input" class="modal__input" placeholder="Endereço de e-mail" />
+        <p id="add-contact-message" class="modal__message" hidden></p>
+      </div>
+
+      <footer class="scene-dialog__footer">
+        <button type="button" id="add-contact-ok" class="btn-signin btn-signin--sm btn-signin--primary">OK</button>
+        <button type="button" id="add-contact-cancel" class="btn-signin btn-signin--sm">Cancelar</button>
       </footer>
     </div>
   </div>
@@ -679,6 +713,16 @@
             <h4 class="options-section__heading">Perfil Público</h4>
             <p class="options-section__text">Criar ou modificar seu perfil público (sua descrição que outros podem ver)</p>
             <button type="button" id="opt-edit-profile" class="scene-dialog__browse" disabled>Editar Perfil</button>
+          </section>
+
+          <section class="options-section">
+            <h4 class="options-section__heading">Status</h4>
+            <label class="options-checkbox">
+              <input type="checkbox" id="opt-auto-away" checked />
+              <span>Mostrar-me como "Ausente" quando inativo por
+                <input type="number" id="opt-auto-away-minutes" class="options-inline-number" min="1" max="60" value="5" />
+                minutos</span>
+            </label>
           </section>
         </div>
 

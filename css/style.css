@@ -1653,6 +1653,21 @@ body[data-login-theme="cenario1"] #screen-connecting::before {
 }
 .scene-dialog__x:hover { background: #e81123; }
 
+/* Faixa clara com ícone grande + título, logo abaixo da barra de
+   título escura — igual ao "Criar um grupo"/"Adicionar um contato" do
+   cliente clássico (Windows Live Messenger). */
+.scene-dialog__banner {
+  flex: 0 0 auto;
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  padding: 14px 16px;
+  background: linear-gradient(135deg, #eef7fd 0%, #d7ecfa 55%, #c3e0f4 100%);
+  border-bottom: 1px solid #b7d4e8;
+}
+.scene-dialog__banner-icon { width: 44px; height: 44px; object-fit: contain; flex: 0 0 auto; }
+.scene-dialog__banner-title { margin: 0; font-size: 1.3rem; font-weight: 400; color: #1f5fa8; }
+
 .scene-dialog__body {
   flex: 1 1 auto;
   overflow-y: auto;
@@ -2027,3 +2042,17 @@ body[data-login-theme="cenario1"] #screen-connecting::before {
   cursor: pointer;
 }
 .options-checkbox input { flex: 0 0 auto; margin-top: 2px; }
+.options-checkbox input[type="checkbox"] { margin-top: 3px; }
+.options-inline-number {
+  width: 40px;
+  height: 22px;
+  margin: 0 2px;
+  padding: 0 4px;
+  font: inherit;
+  font-size: 0.82rem;
+  text-align: center;
+  border: 1px solid var(--field-border);
+  border-radius: 3px;
+  outline: none;
+}
+.options-inline-number:focus { border-color: var(--field-border-focus); box-shadow: 0 0 0 2px rgba(75,160,230,0.2); }
