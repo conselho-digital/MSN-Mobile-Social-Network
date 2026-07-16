@@ -1158,12 +1158,16 @@ body {
      caixa de busca do cliente clássico. */
   border-radius: 4px;
   outline: none;
-  /* Branco fixo (não acompanha o tom do tema) — precisa continuar se
-     destacando como uma caixa clara sobre o fundo tingido. */
-  background: #ffffff;
+  /* Acompanha a cor do tema (igual ao cliente clássico), não mais
+     branco fixo. */
+  background: var(--tint-light, #ffffff);
   color: #333;
 }
-.dash-search::placeholder { color: #7a8a97; }
+.dash-search::placeholder {
+  /* Mesma cor do tema (escurecida o bastante pra ler no fundo claro
+     da própria caixa — ver --tint-text). */
+  color: var(--tint-text, #7a8a97);
+}
 .dash-search:focus { border-color: var(--field-border-focus); box-shadow: 0 0 0 2px rgba(75,160,230,0.2); }
 .dash-tool-btn {
   flex: 0 0 auto;

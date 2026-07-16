@@ -205,6 +205,9 @@ const Dashboard = (() => {
       screen.style.setProperty("--tint-light", pastel(theme, 0.92));
       screen.style.setProperty("--tint-mid", pastel(theme, 0.8));
       screen.style.setProperty("--tint-strong", pastel(theme, 0.62));
+      // Escurecida — legível como texto (ex.: placeholder da busca)
+      // sobre o fundo claro tingido, ao contrário de --tint-strong.
+      screen.style.setProperty("--tint-text", MSNScenes.shade(theme, 0.35));
     }
 
     const subInput = document.getElementById("my-subnick-input");
@@ -585,6 +588,7 @@ const Dashboard = (() => {
       screen.style.setProperty("--tint-light", pastel(theme, 0.92));
       screen.style.setProperty("--tint-mid", pastel(theme, 0.8));
       screen.style.setProperty("--tint-strong", pastel(theme, 0.62));
+      screen.style.setProperty("--tint-text", MSNScenes.shade(theme, 0.35));
     }
     // Trocar de cor também re-tinge o banner se o cenário atual for o
     // padrão (Céu Azul) — ver previewScene/MSNScenes.bg.
