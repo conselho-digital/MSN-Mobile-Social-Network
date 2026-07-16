@@ -165,7 +165,8 @@ body {
    cabeçalho do Dashboard (ver .dash-header, 75% do tamanho anterior),
    pra ficar igual nas duas telas. */
 #screen-login::before,
-#screen-connecting::before {
+#screen-connecting::before,
+#screen-signup::before {
   content: "";
   position: absolute;
   top: 0; left: 0; right: 0;
@@ -181,10 +182,18 @@ body {
   background-repeat: no-repeat, no-repeat;
   background-blend-mode: color, normal;
   /* Linha branca + sombra na base do banner — separa visualmente o
-     cenário do resto da tela, igual ao cliente clássico. */
+     cenário do resto da tela, igual ao cliente clássico. Removida no
+     cenário padrão (Céu Azul, ver regra abaixo) — a foto já se mistura
+     de propósito com o degradê ali, e a linha/sombra fica destoando. */
   border-bottom: 1px solid rgba(255, 255, 255, 0.85);
   box-shadow: 0 4px 6px rgba(0, 0, 0, 0.3);
   pointer-events: none;
+}
+body[data-login-theme="cenario1"] #screen-login::before,
+body[data-login-theme="cenario1"] #screen-connecting::before,
+body[data-login-theme="cenario1"] #screen-signup::before {
+  border-bottom: none;
+  box-shadow: none;
 }
 .signin-scroll {
   position: relative;
@@ -294,17 +303,17 @@ body {
   pointer-events: none;
 }
 
-/* Login/Entrando (únicas telas com cenário no topo): tira o avatar do
-   fluxo normal e ancora numa posição fixa em relação ao topo da tela —
-   assim ele fica sempre com metade sobre o banner do cenário (97.5px
-   de altura) e metade abaixo, dos dois lados. Como "top" de um
-   elemento absoluto conta a partir do topo de .signin-scroll (que
-   começa colado no topo da tela, antes do padding do "notch"), o
-   resultado não varia com a altura do botão "Adicionar App" nem com a
-   área segura do aparelho. O cadastro não tem cenário, então mantém o
-   avatar no fluxo normal (regra acima). */
+/* Login/Entrando/Cadastro (todas com o cenário padrão no topo agora):
+   tira o avatar do fluxo normal e ancora numa posição fixa em relação
+   ao topo da tela — assim ele fica sempre com metade sobre o banner
+   do cenário (97.5px de altura) e metade abaixo, dos dois lados. Como
+   "top" de um elemento absoluto conta a partir do topo de
+   .signin-scroll (que começa colado no topo da tela, antes do padding
+   do "notch"), o resultado não varia com a altura do botão "Adicionar
+   App" nem com a área segura do aparelho. */
 #screen-login .signin-avatar,
-#screen-connecting .signin-avatar {
+#screen-connecting .signin-avatar,
+#screen-signup .signin-avatar {
   position: absolute;
   top: 45.5px; /* 97.5px (altura do cenário) − 52px (metade dos 104px do avatar, de volta ao tamanho original) */
   left: 50%;
@@ -365,7 +374,9 @@ body {
   font-size: 1.45rem;
   font-weight: 400;
   color: #2f4a63;
-  margin: 6px 0 4px;
+  /* Mesmo cálculo do .welcome (login/entrando) — o avatar do cadastro
+     agora também flutua sobre o banner padrão (ver .signin-avatar). */
+  margin: 125.5px 0 4px;
 }
 .signin-subtitle {
   font-size: 0.82rem;
