@@ -396,15 +396,24 @@ const Dashboard = (() => {
   }
 
   // Aplica a foto só visualmente (na moldura do cabeçalho e no painel
-  // de prévia do diálogo), sem salvar.
+  // de prévia do diálogo, com a mesma moldura colorida pelo status),
+  // sem salvar.
   function previewAvatar(url) {
     const photoWrap = document.querySelector(".my-avatar .status-frame__photo");
     if (photoWrap) {
       photoWrap.innerHTML = avatarMarkup(url);
       photoWrap.dataset.avatarUrl = url || "";
     }
-    const previewImg = document.getElementById("avatar-preview-img");
-    if (previewImg) previewImg.src = url || DEFAULT_AVATAR;
+    const previewFrame = document.getElementById("avatar-preview-frame");
+    if (previewFrame) {
+      const previewPhoto = previewFrame.querySelector(".status-frame__photo");
+      if (previewPhoto) {
+        previewPhoto.innerHTML = avatarMarkup(url);
+        previewPhoto.dataset.avatarUrl = url || "";
+      } else {
+        previewFrame.innerHTML = statusFrameMarkup(url, (profile && profile.status) || "online");
+      }
+    }
   }
 
   // Botão "Remover": volta pra foto padrão (equivale a avatar_url nulo).
