@@ -1040,7 +1040,7 @@ body[data-login-theme="cenario1"] #screen-connecting::before {
   border: none;
   background: transparent;
   color: #ffffff;
-  font-size: 1.15rem;
+  font-size: 1.35rem;
   font-weight: 400;
   cursor: pointer;
   text-align: left;
@@ -1051,11 +1051,11 @@ body[data-login-theme="cenario1"] #screen-connecting::before {
   white-space: nowrap;
 }
 .my-name:hover #my-name-text { text-decoration: underline; }
-.my-status-inline { font-size: 0.9rem; font-weight: 400; }
+.my-status-inline { font-size: 1.1rem; font-weight: 400; }
 .status-select--sm {
   color: #cfeaff;
   padding: 0;
-  font-size: 0.9rem;
+  font-size: 1.1rem;
 }
 .status-select--sm .caret-down { border-top-color: #cfeaff; }
 /* Mesmo tratamento do nome: texto puro, sublinha só no hover — sem a
@@ -1076,7 +1076,7 @@ body[data-login-theme="cenario1"] #screen-connecting::before {
   border-radius: 5px;
   background: transparent;
   color: #dfeff9;
-  font-size: 0.85rem;
+  font-size: 0.95rem;
   text-align: left;
   max-width: calc(100% + 12px);
   transition: background-color 0.1s ease, box-shadow 0.1s ease;
