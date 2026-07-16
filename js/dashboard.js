@@ -94,6 +94,20 @@ const Dashboard = (() => {
   let currentFilter = "";
   let contactsSubscribed = false;
 
+  /* ---------- Registro de dropdowns ----------
+     Menu do nick, "Adicionar" e "Modo de exibição" são independentes
+     entre si — sem isso, dava pra abrir dois ao mesmo tempo (abrir um
+     não fechava o outro que já estava aberto). Cada dropdown registra
+     sua própria função de fechar aqui; abrir qualquer um deles fecha
+     todos os outros primeiro. */
+  const openDropdownClosers = [];
+  function registerDropdown(closeFn) {
+    openDropdownClosers.push(closeFn);
+  }
+  function closeOtherDropdowns(exceptCloseFn) {
+    openDropdownClosers.forEach((close) => { if (close !== exceptCloseFn) close(); });
+  }
+
   // Foto de exibição: a enviada/escolhida, ou assets/avatars/standard.webp
   // como padrão (mesmo desenho do bonequinho clássico do MSN).
   function avatarMarkup(url) {
@@ -815,6 +829,7 @@ const Dashboard = (() => {
     const openMenu = (e) => {
       e.stopPropagation();
       const open = menu.hidden;
+      closeOtherDropdowns(closeMenu);
       if (open) markSelectedStatus();
       menu.hidden = !open;
       stToggle.setAttribute("aria-expanded", String(open));
@@ -824,6 +839,7 @@ const Dashboard = (() => {
     stToggle.addEventListener("click", openMenu);
     document.addEventListener("click", closeMenu);
     menu.addEventListener("click", (e) => e.stopPropagation());
+    registerDropdown(closeMenu);
 
     // Itens de status
     menu.querySelectorAll(".my-menu__status").forEach((item) => {
@@ -874,11 +890,13 @@ const Dashboard = (() => {
     addBtn.addEventListener("click", (e) => {
       e.stopPropagation();
       const open = addMenu.hidden;
+      closeOtherDropdowns(closeAddMenu);
       addMenu.hidden = !open;
       addBtn.setAttribute("aria-expanded", String(open));
     });
     addMenu.addEventListener("click", (e) => e.stopPropagation());
     document.addEventListener("click", closeAddMenu);
+    registerDropdown(closeAddMenu);
     addMenu.querySelectorAll("[data-action]").forEach((item) => {
       item.addEventListener("click", () => {
         closeAddMenu();
@@ -1021,11 +1039,13 @@ const Dashboard = (() => {
       viewBtn.addEventListener("click", (e) => {
         e.stopPropagation();
         const open = viewMenu.hidden;
+        closeOtherDropdowns(closeViewMenu);
         viewMenu.hidden = !open;
         viewBtn.setAttribute("aria-expanded", String(open));
       });
       viewMenu.addEventListener("click", (e) => e.stopPropagation());
       document.addEventListener("click", closeViewMenu);
+      registerDropdown(closeViewMenu);
       viewMenu.querySelectorAll('input[name="view-mode"]').forEach((radio) => {
         radio.addEventListener("change", () => {
           setViewMode(radio.value);
