@@ -529,7 +529,7 @@ body {
 }
 .options-chevron {
   margin-left: auto;
-  width: 26px; height: 26px;
+  width: 20px; height: 20px;
   border: 1px solid #cfd8df;
   border-radius: 50%;
   background: linear-gradient(#ffffff, #eef2f5);
@@ -539,23 +539,20 @@ body {
   justify-content: center;
 }
 /* Com uma conta/cenário reconhecido, usa a cor do tema em vez do
-   cinza/branco padrão (ver applyLoginTheme em app.js). */
+   cinza/branco padrão (ver applyLoginTheme em app.js) — tons bem mais
+   claros (--lg1/--lg3, misturados com branco) do que a cor pura do
+   tema, que ficava intensa demais num botão tão pequeno. */
 [data-login-theme] .options-chevron {
-  background: linear-gradient(var(--lg2, #eef2f5), var(--login-accent, #cfd8df));
-  border-color: var(--login-accent, #cfd8df);
+  background: linear-gradient(var(--lg3, #eef2f5), var(--lg1, #cfd8df));
+  border-color: var(--lg1, #cfd8df);
 }
 .chevron {
-  width: 8px; height: 8px;
+  width: 7px; height: 7px;
   border-right: 1.6px solid #6b7b88;
   border-bottom: 1.6px solid #6b7b88;
   transform: rotate(45deg);   /* fechado: aponta para baixo */
-  margin-top: -3px;
+  margin-top: -2px;
   transition: transform 0.2s, margin-top 0.2s;
-}
-/* Marca em branco pra manter contraste sobre o fundo colorido do tema. */
-[data-login-theme] .chevron {
-  border-right-color: #ffffff;
-  border-bottom-color: #ffffff;
 }
 .options-chevron[aria-expanded="true"] .chevron {
   transform: rotate(-135deg); /* aberto: aponta para cima */
