@@ -1380,20 +1380,18 @@ body[data-login-theme="cenario1"] #screen-connecting::before {
    ao resto do tempo, deixando o fundo tingido do tema (--tint-light)
    aparecer sem interrupção. Em touch o :hover costuma "grudar" depois
    do toque, então uma cor fixa aqui destacava a barra em branco. */
-/* Seta em "v" (mesma técnica do .chevron do login) — fechada aponta
-   pra frente/direita, aberta aponta pra baixo, com cor trocando de
-   branco pra preto. */
+/* Triângulo sólido clássico (estilo Windows Explorer) — fechado aponta
+   pra frente/direita, aberto gira 90° e aponta pra baixo. Mais fácil
+   de distinguir o estado de longe do que a "v" fina usada antes. */
 .group-caret {
-  width: 7px; height: 7px;
-  border-right: 1.7px solid #ffffff;
-  border-bottom: 1.7px solid #ffffff;
-  transform: rotate(-45deg); /* fechada: aponta pra frente */
-  transition: transform 0.25s ease, border-color 0.25s ease;
+  width: 0; height: 0;
+  border-style: solid;
+  border-width: 4px 0 4px 6px;
+  border-color: transparent transparent transparent #6e7d89;
+  transition: transform 0.2s ease;
 }
 .contact-group__header[aria-expanded="true"] .group-caret {
-  transform: rotate(45deg); /* aberta: aponta pra baixo */
-  border-right-color: #000000;
-  border-bottom-color: #000000;
+  transform: rotate(90deg); /* aberto: aponta pra baixo */
 }
 .group-count { color: #9aa7b1; font-weight: 400; }
 
