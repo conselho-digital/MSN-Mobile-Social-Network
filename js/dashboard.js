@@ -284,10 +284,10 @@ const Dashboard = (() => {
       screen.style.setProperty("--tint-mid", pastel(theme, 0.6));
       screen.style.setProperty("--tint-strong", pastel(theme, 0.4));
       // Ponta forte do degradê do banner de convite/topo-e-fim da lista
-      // de contatos — metade da intensidade da cor pura (0.15 → 0.575,
-      // ficando a meio caminho entre a cor cheia e o branco) porque a
-      // versão anterior ficava forte demais nesses dois lugares.
-      screen.style.setProperty("--tint-vivid", pastel(theme, 0.575));
+      // de contatos — metade da intensidade de novo (0.575 → 0.7875:
+      // a "força" da cor, 1-0.575=0.425, foi cortada pela metade de
+      // novo, 0.2125, ainda forte demais nesses dois lugares).
+      screen.style.setProperty("--tint-vivid", pastel(theme, 0.7875));
       // Escurecida — legível como texto (ex.: placeholder da busca)
       // sobre o fundo claro tingido, ao contrário de --tint-strong.
       screen.style.setProperty("--tint-text", MSNScenes.shade(theme, 0.35));
