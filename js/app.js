@@ -529,7 +529,11 @@ const App = (function () {
     const email = emailEl.value.trim().toLowerCase();
     const match = email ? getAccounts().find((a) => a.email.toLowerCase() === email) : null;
     heading.textContent = match ? "Bem-vindo novamente!" : "Entrar";
-    applyLoginTheme(match ? match.scene : null, match ? match.colorScheme : null);
+    // Sem conta reconhecida, usa o primeiro cenário do catálogo (Céu
+    // Azul) como padrão em vez de deixar sem nenhum tema — assim a
+    // tela de login nunca fica sem cenário/cor combinando.
+    const defaultScene = MSNScenes.list[0].id;
+    applyLoginTheme(match ? match.scene || defaultScene : defaultScene, match ? match.colorScheme : null);
     applyLoginAvatar(match ? match.avatarUrl : null);
   }
 
@@ -555,9 +559,11 @@ const App = (function () {
   /* ---------- Tema da tela de login (por conta) ----------
      Quando uma conta reconhecida está selecionada, a tela de login usa
      o cenário/tema salvo do perfil dessa conta (fundo tingido e título
-     colorido), guardado localmente no dispositivo. Sem conta reconhecida,
-     volta ao azul padrão. O esquema de cores (se escolhido à parte no
-     Dashboard) tem prioridade sobre a cor pareada ao cenário. */
+     colorido), guardado localmente no dispositivo. Sem conta reconhecida
+     (ver updateWelcomeHeading), usa o cenário "Céu Azul" (o primeiro do
+     catálogo) como padrão — assim sempre tem cenário + cor combinando,
+     nunca fica sem tema nenhum. O esquema de cores (se escolhido à
+     parte no Dashboard) tem prioridade sobre a cor pareada ao cenário. */
   let currentLoginKey = undefined;
   function applyLoginTheme(sceneId, colorSchemeId) {
     const key = sceneId + "|" + (colorSchemeId || "");
@@ -574,7 +580,13 @@ const App = (function () {
     }
 
     const hex = MSNScenes.effectiveTheme(sceneId, colorSchemeId);
-    root.style.setProperty("--lg1", MSNScenes.pastel(hex, 0.55));
+    // --lg1 (a faixa logo abaixo do banner de 150px) fica bem mais
+    // clara que a cor pura do tema — a maioria das imagens de cenário
+    // já esmaece pra um tom bem pálido perto da borda de baixo, então
+    // uma mistura mais saturada aqui criava uma "costura" visível
+    // entre a foto e o degradê. 0.78 fica bem mais parecido com a
+    // borda das imagens (ex.: Céu Azul termina quase branco-azulado).
+    root.style.setProperty("--lg1", MSNScenes.pastel(hex, 0.78));
     root.style.setProperty("--lg2", MSNScenes.pastel(hex, 0.68));
     root.style.setProperty("--lg3", MSNScenes.pastel(hex, 0.8));
     root.style.setProperty("--lg4", MSNScenes.pastel(hex, 0.9));

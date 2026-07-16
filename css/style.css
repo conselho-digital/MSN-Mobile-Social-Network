@@ -256,7 +256,7 @@ body {
   margin: 0 auto;
   /* Sombra pra "descolar" a foto do fundo — mais necessária agora que
      ela flutua parte sobre o banner do cenário, parte fora dele. */
-  filter: drop-shadow(0 4px 8px rgba(0, 0, 0, 0.35));
+  filter: drop-shadow(0 5px 10px rgba(0, 0, 0, 0.55));
 }
 
 /* Login/Entrando (únicas telas com cenário no topo): tira o avatar do
@@ -314,11 +314,13 @@ body {
   font-size: 1.5rem;
   font-weight: 400;
   color: var(--login-accent-text, #3a4a55);
-  /* 218px = 98px (topo do avatar) + 104px (altura do avatar) + ~16px de
-     respiro — o avatar virou position:absolute (ver .signin-avatar),
-     então esse espaço em cima é quem garante que o título não fique
-     escondido atrás dele. */
-  margin: 218px 0 26px;
+  /* O avatar é position:absolute (ver .signin-avatar) e termina em
+     202px (98px de topo + 104px de altura); esse margin-top soma à
+     altura do botão "Adicionar App" (que continua no fluxo normal,
+     ~42px) pra sobrar só uns 18px de respiro até o título — a mesma
+     folga aproximada que existe do título até o cartão de login (26px
+     de margin-bottom), evitando o vão desigual de antes. */
+  margin: 178px 0 26px;
   letter-spacing: 0.2px;
   text-shadow: 0 1px 2px rgba(255, 255, 255, 0.6);
 }
