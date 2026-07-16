@@ -283,11 +283,11 @@ const Dashboard = (() => {
       screen.style.setProperty("--tint-light", pastel(theme, 0.78));
       screen.style.setProperty("--tint-mid", pastel(theme, 0.6));
       screen.style.setProperty("--tint-strong", pastel(theme, 0.4));
-      // Bem mais próxima da cor pura do tema — só usada como ponta forte
-      // do degradê do banner de convite, onde --tint-strong (0.4, ainda
-      // bem clara) ficava perto demais de --tint-light pra dar pra notar
-      // a transição.
-      screen.style.setProperty("--tint-vivid", pastel(theme, 0.15));
+      // Ponta forte do degradê do banner de convite/topo-e-fim da lista
+      // de contatos — metade da intensidade da cor pura (0.15 → 0.575,
+      // ficando a meio caminho entre a cor cheia e o branco) porque a
+      // versão anterior ficava forte demais nesses dois lugares.
+      screen.style.setProperty("--tint-vivid", pastel(theme, 0.575));
       // Escurecida — legível como texto (ex.: placeholder da busca)
       // sobre o fundo claro tingido, ao contrário de --tint-strong.
       screen.style.setProperty("--tint-text", MSNScenes.shade(theme, 0.35));
