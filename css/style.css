@@ -1413,11 +1413,10 @@ body[data-login-theme="cenario1"] #screen-connecting::before {
 }
 .group-count { color: #9aa7b1; font-weight: 400; }
 
-/* Estrela do cabeçalho "Favoritos" (assets/icons/estrela.webp) — o
-   dobro do tamanho que a estrela de texto tinha antes (~13px → 26px). */
+/* Estrela do cabeçalho "Favoritos" (assets/icons/estrela.webp). */
 .group-star {
-  width: 26px;
-  height: 26px;
+  width: 13px;
+  height: 13px;
   object-fit: contain;
   flex: 0 0 auto;
 }
