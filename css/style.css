@@ -204,22 +204,37 @@ body {
   box-shadow: 0 4px 6px rgba(0, 0, 0, 0.3);
   pointer-events: none;
 }
+/* Cenário padrão: sem linha/sombra (a foto já se mistura de
+   propósito) e com uma camada extra de degradê por cima, esmaecendo
+   pra cor do topo do tema (--lg5) perto da base do banner — assim não
+   dá pra perceber onde a foto termina e o degradê do fundo começa. */
 body[data-login-theme="cenario1"] #screen-login::before,
 body[data-login-theme="cenario1"] #screen-connecting::before {
+  background-image:
+    linear-gradient(180deg, transparent 55%, var(--lg5, #deeff7) 100%),
+    linear-gradient(var(--login-scene-tint, transparent), var(--login-scene-tint, transparent)),
+    var(--login-scene, none);
+  background-size: cover, cover, cover;
+  background-position: center, center, center;
+  background-repeat: no-repeat, no-repeat, no-repeat;
+  background-blend-mode: normal, color, normal;
   border-bottom: none;
   box-shadow: none;
 }
-/* Cadastro: mesmo cenário padrão de cima, sem linha/sombra (é sempre
-   o padrão, nunca precisa se destacar de uma foto "de verdade"). */
+/* Cadastro: mesmo cenário padrão de cima, sem linha/sombra e com o
+   mesmo esmaecimento pra --signup-lg5 (é sempre o padrão, nunca
+   precisa se destacar de uma foto "de verdade"). */
 #screen-signup::before {
   content: "";
   position: absolute;
   top: 0; left: 0; right: 0;
   height: 97.5px;
-  background-image: var(--signup-scene, none);
-  background-size: cover;
-  background-position: center;
-  background-repeat: no-repeat;
+  background-image:
+    linear-gradient(180deg, transparent 55%, var(--signup-lg5, #deeff7) 100%),
+    var(--signup-scene, none);
+  background-size: cover, cover;
+  background-position: center, center;
+  background-repeat: no-repeat, no-repeat;
   pointer-events: none;
 }
 .signin-scroll {
