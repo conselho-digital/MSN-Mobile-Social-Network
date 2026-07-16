@@ -365,7 +365,7 @@ const Dashboard = (() => {
         openScenePicker();
         break;
       case "options":
-        infoModal("Opções", "A tela de opções será construída em breve.");
+        openOptionsDialog();
         break;
     }
   }
@@ -620,6 +620,48 @@ const Dashboard = (() => {
   // cor só fica staged em memória, nunca chega a mudar o Dashboard).
   function closeScenePicker() {
     document.getElementById("scene-picker").hidden = true;
+  }
+
+  /* ---------- Opções ----------
+     Só a categoria "Pessoal" tem conteúdo de verdade; as demais (Layout,
+     Entrar, Mensagens...) abrem uma página em branco — mesmo padrão do
+     cliente clássico, mas sem a funcionalidade por trás delas ainda.
+     A lista de categorias fica recolhida por padrão (botão-toggle) pra
+     poupar espaço na tela do mobile. */
+  function openOptionsDialog() {
+    document.getElementById("opt-display-name").value = profile ? profile.display_name || "" : "";
+    document.getElementById("opt-sub-nick").value = profile ? profile.sub_nick || "" : "";
+    resetOptionsNav();
+    document.getElementById("options-dialog").hidden = false;
+  }
+
+  function resetOptionsNav() {
+    document.getElementById("options-nav").hidden = true;
+    document.getElementById("options-nav-toggle").setAttribute("aria-expanded", "false");
+    document.getElementById("options-nav-current").textContent = "Pessoal";
+    document.querySelectorAll(".options-nav__item").forEach((it) =>
+      it.classList.toggle("is-active", it.dataset.tab === "personal"));
+    document.getElementById("options-pane-personal").hidden = false;
+    document.getElementById("options-pane-blank").hidden = true;
+  }
+
+  function closeOptionsDialog() {
+    document.getElementById("options-dialog").hidden = true;
+  }
+
+  // Salva nome/mensagem pessoal editados na aba "Pessoal".
+  async function commitOptions() {
+    if (!profile) return;
+    const nameVal = document.getElementById("opt-display-name").value.trim();
+    const subVal = document.getElementById("opt-sub-nick").value.trim();
+    const patch = {};
+    if (nameVal && nameVal !== profile.display_name) patch.display_name = nameVal;
+    if (subVal !== (profile.sub_nick || "")) patch.sub_nick = subVal;
+    if (!Object.keys(patch).length) return;
+
+    Object.assign(profile, patch);
+    renderProfile();
+    try { await MSNSupabase.updateMyProfile(patch); } catch (_) {}
   }
 
   function openAddContactModal() {
@@ -921,6 +963,52 @@ const Dashboard = (() => {
     if (groupCancel) groupCancel.addEventListener("click", closeGroupPicker);
     const groupX = document.getElementById("group-dialog-x");
     if (groupX) groupX.addEventListener("click", closeGroupPicker);
+
+    // Opções: toggle da lista de categorias (recolhida por padrão)
+    const optNavToggle = document.getElementById("options-nav-toggle");
+    const optNav = document.getElementById("options-nav");
+    if (optNavToggle && optNav) {
+      optNavToggle.addEventListener("click", () => {
+        const open = optNav.hidden;
+        optNav.hidden = !open;
+        optNavToggle.setAttribute("aria-expanded", String(open));
+      });
+    }
+    // Trocar de categoria: só "Pessoal" mostra conteúdo de verdade, as
+    // demais mostram uma página em branco. Escolher uma categoria já
+    // recolhe a lista de volta (poupa espaço).
+    document.querySelectorAll(".options-nav__item").forEach((item) => {
+      item.addEventListener("click", () => {
+        document.querySelectorAll(".options-nav__item").forEach((x) => x.classList.remove("is-active"));
+        item.classList.add("is-active");
+        document.getElementById("options-nav-current").textContent = item.textContent;
+        const isPersonal = item.dataset.tab === "personal";
+        document.getElementById("options-pane-personal").hidden = !isPersonal;
+        document.getElementById("options-pane-blank").hidden = isPersonal;
+        if (optNav) optNav.hidden = true;
+        if (optNavToggle) optNavToggle.setAttribute("aria-expanded", "false");
+      });
+    });
+    // "Alterar Imagem..." dentro de Opções abre o seletor de avatar já
+    // existente (fecha Opções primeiro pra não empilhar dois diálogos).
+    const optChangeImage = document.getElementById("opt-change-image");
+    if (optChangeImage) optChangeImage.addEventListener("click", () => {
+      closeOptionsDialog();
+      openAvatarPicker();
+    });
+    // OK (salva e fecha) / Aplicar (salva, mantém aberto) / Cancelar e X
+    // (descartam)
+    const optOk = document.getElementById("options-ok");
+    if (optOk) optOk.addEventListener("click", async () => {
+      await commitOptions();
+      closeOptionsDialog();
+    });
+    const optApply = document.getElementById("options-apply");
+    if (optApply) optApply.addEventListener("click", commitOptions);
+    const optCancel = document.getElementById("options-cancel");
+    if (optCancel) optCancel.addEventListener("click", closeOptionsDialog);
+    const optX = document.getElementById("options-dialog-x");
+    if (optX) optX.addEventListener("click", closeOptionsDialog);
 
     // Modo de exibição (dropdown: tamanho das figuras na lista)
     const viewBtn = document.getElementById("btn-view-mode");

@@ -619,6 +619,80 @@
   <input type="file" id="avatar-webcam-input" accept="image/*" capture="user" hidden />
   <input type="file" id="scene-image-input" accept="image/*" hidden />
 
+  <!-- Opções: lista de categorias (recolhível, pra poupar espaço no
+       mobile) + painel de conteúdo. Só "Pessoal" tem conteúdo de
+       verdade por enquanto; as demais categorias abrem uma página em
+       branco. -->
+  <div id="options-dialog" class="modal-overlay scene-dialog-overlay" hidden>
+    <div class="scene-dialog" role="dialog" aria-modal="true" aria-label="Opções">
+      <header class="scene-dialog__titlebar">
+        <span class="scene-dialog__titlebar-app">
+          <img src="assets/icons/favicon.png" alt="" />
+          Opções
+        </span>
+        <button type="button" id="options-dialog-x" class="scene-dialog__x" aria-label="Fechar">&times;</button>
+      </header>
+
+      <div class="scene-dialog__body">
+        <button type="button" id="options-nav-toggle" class="options-nav-toggle" aria-expanded="false" aria-controls="options-nav">
+          <span class="options-nav-toggle__caret" aria-hidden="true"></span>
+          <span id="options-nav-current">Pessoal</span>
+        </button>
+        <nav class="options-nav" id="options-nav" hidden>
+          <button type="button" class="options-nav__item is-active" data-tab="personal">Pessoal</button>
+          <button type="button" class="options-nav__item" data-tab="layout">Layout</button>
+          <button type="button" class="options-nav__item" data-tab="signin">Entrar</button>
+          <button type="button" class="options-nav__item" data-tab="messages">Mensagens</button>
+          <button type="button" class="options-nav__item" data-tab="alerts">Alertas</button>
+          <button type="button" class="options-nav__item" data-tab="sounds">Sons</button>
+          <button type="button" class="options-nav__item" data-tab="filetransfer">Transferência de Arquivo</button>
+          <button type="button" class="options-nav__item" data-tab="privacy">Privacidade</button>
+          <button type="button" class="options-nav__item" data-tab="security">Segurança</button>
+          <button type="button" class="options-nav__item" data-tab="connection">Conexão</button>
+        </nav>
+
+        <div class="options-pane" id="options-pane-personal">
+          <h3 class="options-pane__title">Pessoal</h3>
+
+          <section class="options-section">
+            <h4 class="options-section__heading">Nome para Exibição</h4>
+            <label class="options-field">
+              Digite seu nome como deseja que os outros o vejam:
+              <input type="text" id="opt-display-name" class="options-field__input" />
+            </label>
+            <label class="options-field">
+              Digite uma mensagem pessoal para que seus contatos a vejam:
+              <input type="text" id="opt-sub-nick" class="options-field__input" />
+            </label>
+          </section>
+
+          <section class="options-section">
+            <h4 class="options-section__heading">Imagem para Exibição</h4>
+            <label class="options-checkbox">
+              <input type="checkbox" id="opt-show-avatar" checked />
+              Mostrar minha imagem para exibição e permitir que outros a vejam
+            </label>
+            <button type="button" id="opt-change-image" class="scene-dialog__browse">Alterar Imagem...</button>
+          </section>
+
+          <section class="options-section">
+            <h4 class="options-section__heading">Perfil Público</h4>
+            <p class="options-section__text">Criar ou modificar seu perfil público (sua descrição que outros podem ver)</p>
+            <button type="button" id="opt-edit-profile" class="scene-dialog__browse" disabled>Editar Perfil</button>
+          </section>
+        </div>
+
+        <div class="options-pane options-pane--blank" id="options-pane-blank" hidden></div>
+      </div>
+
+      <footer class="scene-dialog__footer">
+        <button type="button" id="options-ok" class="btn-signin btn-signin--sm btn-signin--primary">OK</button>
+        <button type="button" id="options-cancel" class="btn-signin btn-signin--sm">Cancelar</button>
+        <button type="button" id="options-apply" class="btn-signin btn-signin--sm">Aplicar</button>
+      </footer>
+    </div>
+  </div>
+
   <!-- Scripts -->
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
   <script src="js/scenes.js"></script>
