@@ -597,10 +597,19 @@
 
       <div class="scene-dialog__body">
         <p class="scene-dialog__intro">Escolha como você deseja aparecer no Messenger:</p>
-        <div class="avatar-grid" id="avatar-grid"></div>
-        <div class="avatar-picker__actions">
-          <button type="button" id="avatar-webcam" class="scene-dialog__browse">Imagem da Webcam...</button>
-          <button type="button" id="avatar-browse" class="scene-dialog__browse">Procurar...</button>
+        <p class="scene-dialog__section">Imagens comuns</p>
+        <div class="avatar-picker__layout">
+          <div class="avatar-grid" id="avatar-grid"></div>
+          <div class="avatar-picker__side">
+            <div class="avatar-picker__preview">
+              <img id="avatar-preview-img" src="assets/avatars/standard.webp" alt="" />
+            </div>
+            <div class="avatar-picker__actions">
+              <button type="button" id="avatar-webcam" class="scene-dialog__browse">Imagem da Webcam...</button>
+              <button type="button" id="avatar-browse" class="scene-dialog__browse">Procurar...</button>
+              <button type="button" id="avatar-remove" class="scene-dialog__browse">Remover</button>
+            </div>
+          </div>
         </div>
       </div>
 

@@ -21,7 +21,6 @@ const Dashboard = (() => {
   // tela de login em js/scenes.js) e galeria de exemplos prontos
   // ("Selecione uma Imagem para Exibição", igual ao Messenger).
   const DEFAULT_AVATAR = MSNScenes.defaultAvatar;
-  const NO_AVATAR_TILE = "assets/avatars/semfoto.webp";
   const AVATAR_GALLERY = Array.from({ length: 30 }, (_, i) => "assets/avatars/profile" + (i + 1) + ".webp");
 
   // Cenários (fundo do topo) e cores de tema: catálogo compartilhado
@@ -369,13 +368,10 @@ const Dashboard = (() => {
   function openAvatarPicker() {
     stagedAvatarUrl = profile ? profile.avatar_url || null : null;
     const grid = document.getElementById("avatar-grid");
-    grid.innerHTML =
-      AVATAR_GALLERY.map((url) =>
-        '<button type="button" class="avatar-swatch' + (url === stagedAvatarUrl ? " is-selected" : "") +
-        '" data-avatar="' + esc(url) + '" style="background-image:url(\'' + url + "')\"></button>"
-      ).join("") +
-      '<button type="button" class="avatar-swatch' + (!stagedAvatarUrl ? " is-selected" : "") +
-      '" data-avatar="" style="background-image:url(\'' + NO_AVATAR_TILE + "')\"></button>";
+    grid.innerHTML = AVATAR_GALLERY.map((url) =>
+      '<button type="button" class="avatar-swatch' + (url === stagedAvatarUrl ? " is-selected" : "") +
+      '" data-avatar="' + esc(url) + '" style="background-image:url(\'' + url + "')\"></button>"
+    ).join("");
 
     grid.querySelectorAll(".avatar-swatch").forEach((sw) => {
       sw.addEventListener("click", () => {
@@ -390,12 +386,24 @@ const Dashboard = (() => {
     document.getElementById("avatar-picker").hidden = false;
   }
 
-  // Aplica a foto só visualmente (na moldura do cabeçalho), sem salvar.
+  // Aplica a foto só visualmente (na moldura do cabeçalho e no painel
+  // de prévia do diálogo), sem salvar.
   function previewAvatar(url) {
     const photoWrap = document.querySelector(".my-avatar .status-frame__photo");
-    if (!photoWrap) return;
-    photoWrap.innerHTML = avatarMarkup(url);
-    photoWrap.dataset.avatarUrl = url || "";
+    if (photoWrap) {
+      photoWrap.innerHTML = avatarMarkup(url);
+      photoWrap.dataset.avatarUrl = url || "";
+    }
+    const previewImg = document.getElementById("avatar-preview-img");
+    if (previewImg) previewImg.src = url || DEFAULT_AVATAR;
+  }
+
+  // Botão "Remover": volta pra foto padrão (equivale a avatar_url nulo).
+  function removeAvatarSelection() {
+    stagedAvatarUrl = null;
+    const grid = document.getElementById("avatar-grid");
+    if (grid) grid.querySelectorAll(".avatar-swatch").forEach((x) => x.classList.remove("is-selected"));
+    previewAvatar(null);
   }
 
   function closeAvatarPicker() {
@@ -850,6 +858,9 @@ const Dashboard = (() => {
     if (avatarWebcamInput) avatarWebcamInput.addEventListener("change", onAvatarSelected);
     const avatarWebcam = document.getElementById("avatar-webcam");
     if (avatarWebcam && avatarWebcamInput) avatarWebcam.addEventListener("click", () => avatarWebcamInput.click());
+
+    const avatarRemove = document.getElementById("avatar-remove");
+    if (avatarRemove) avatarRemove.addEventListener("click", removeAvatarSelection);
 
     const avatarOk = document.getElementById("avatar-ok");
     if (avatarOk) avatarOk.addEventListener("click", commitAvatarPicker);
