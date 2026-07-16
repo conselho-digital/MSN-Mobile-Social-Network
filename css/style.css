@@ -1650,13 +1650,21 @@ body[data-login-theme="cenario1"] #screen-connecting::before {
   word-break: break-word;
 }
 .modal__actions { display: flex; justify-content: flex-end; gap: 8px; margin-top: 16px; }
-.btn-signin--sm { margin: 0; min-width: 78px; padding: 7px 14px; font-size: 0.88rem; }
-.btn-signin--primary {
-  color: #fff;
-  background: linear-gradient(#3d9be0, #1f7fd0);
-  border-color: #1a6fbb;
+/* OK/Cancelar/Aplicar de todo diálogo (modal genérico, cenário, avatar,
+   opções, criar grupo, adicionar contato) — estilo clássico neutro
+   (cinza, sem o azul do botão principal da tela de login), 15% menor
+   que o .btn-signin de origem (78px/7px 14px/0.88rem). */
+.btn-signin--sm {
+  margin: 0;
+  min-width: 66px;
+  padding: 6px 12px;
+  font-size: 0.75rem;
+  border-color: #adb6bd;
 }
-.btn-signin--primary:hover { background: linear-gradient(#4aa6e8, #2384d6); }
+.btn-signin--sm:hover {
+  background: linear-gradient(#ffffff, #e6eaee);
+  border-color: #8b959c;
+}
 
 /* ---------- Seletor de cenário (diálogo estilo clássico) ---------- */
 .scene-dialog-overlay { padding: 16px; align-items: center; }
@@ -1715,10 +1723,12 @@ body[data-login-theme="cenario1"] #screen-connecting::before {
 .scene-dialog__banner-icon { width: 44px; height: 44px; object-fit: contain; flex: 0 0 auto; }
 .scene-dialog__banner-title { margin: 0; font-size: 1.3rem; font-weight: 400; color: #1f5fa8; }
 
-/* "Criar um grupo": banner com a foto do cenário padrão (Céu Azul) em
-   vez do degradê azul liso — esmaecendo pro mesmo tom claro da faixa
-   na base, pra não destacar onde a foto termina. */
-#group-picker .scene-dialog__banner {
+/* "Criar um grupo" e "Adicionar um contato": banner com a foto do
+   cenário padrão (Céu Azul) em vez do degradê azul liso — esmaecendo
+   pro mesmo tom claro da faixa na base, pra não destacar onde a foto
+   termina. */
+#group-picker .scene-dialog__banner,
+#add-contact-dialog .scene-dialog__banner {
   background-image:
     linear-gradient(180deg, rgba(255, 255, 255, 0) 45%, #eef7fd 100%),
     url("../assets/scenes/cenario1.webp");
@@ -1726,23 +1736,10 @@ body[data-login-theme="cenario1"] #screen-connecting::before {
   background-position: center, center;
   background-repeat: no-repeat, no-repeat;
 }
+/* Ícone do banner de "Adicionar um contato" 15% menor (44px → 37px). */
+#add-contact-dialog .scene-dialog__banner-icon { width: 37px; height: 37px; }
 /* Caixa do nome do grupo mais baixa que o campo padrão. */
 #group-name-input { height: 30px; font-size: 0.85rem; }
-/* OK e Cancelar no estilo clássico neutro (cinza, sem o azul herdado
-   dos botões da tela de login) — mesmo visual nos dois diálogos, 15%
-   menores que o .btn-signin--sm padrão (78px/7px 14px/0.88rem). */
-#group-picker .scene-dialog__footer .btn-signin,
-#add-contact-dialog .scene-dialog__footer .btn-signin {
-  border-color: #adb6bd;
-  min-width: 66px;
-  padding: 6px 12px;
-  font-size: 0.75rem;
-}
-#group-picker .scene-dialog__footer .btn-signin:hover,
-#add-contact-dialog .scene-dialog__footer .btn-signin:hover {
-  background: linear-gradient(#ffffff, #e6eaee);
-  border-color: #8b959c;
-}
 
 .scene-dialog__body {
   flex: 1 1 auto;
