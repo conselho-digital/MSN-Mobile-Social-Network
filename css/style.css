@@ -859,8 +859,8 @@ body {
    Técnica: duas camadas de cor (status-frame__tint = cor atual,
    status-frame__tint--next = cor de destino), cada uma um gradiente
    claro→escuro, recortadas no formato do anel via mask-image (usa o
-   alfa de avatar-frame.webp — transparente fora do anel e no vão da
-   foto, opaco só no anel). Por cima, a mesma imagem em cinza
+   alfa de assets/avatars/login.webp — transparente fora do anel e no
+   vão da foto, opaco só no anel). Por cima, a mesma imagem em cinza
    (status-frame__luma) entra com opacidade baixa, só pra devolver um
    pouco do brilho/sombreado "vidro" — sem depender de mix-blend-mode,
    que na prática se mostrou pouco confiável combinado com mask-image
@@ -898,8 +898,8 @@ body {
   position: absolute;
   inset: 0;
   background: linear-gradient(135deg, #a6f06a, #3aa11a);
-  -webkit-mask-image: url("../assets/icons/avatar-frame.webp");
-  mask-image: url("../assets/icons/avatar-frame.webp");
+  -webkit-mask-image: url("../assets/avatars/login.webp");
+  mask-image: url("../assets/avatars/login.webp");
   -webkit-mask-size: 100% 100%;
   mask-size: 100% 100%;
   -webkit-mask-repeat: no-repeat;
@@ -927,15 +927,6 @@ body {
 
 @media (prefers-reduced-motion: reduce) {
   .status-frame__tint--next.is-waving { animation: none; }
-}
-
-/* Moldura específica das telas de login/cadastro/conectando — imagem
-   diferente da usada no Dashboard (assets/avatars/login.webp), com
-   fundo transparente ao redor deixando o cenário aparecer atrás. */
-.status-frame--login .status-frame__tint,
-.status-frame--login .status-frame__tint--next {
-  -webkit-mask-image: url("../assets/avatars/login.webp");
-  mask-image: url("../assets/avatars/login.webp");
 }
 
 .dash-header__info { position: relative; flex: 1 1 auto; min-width: 0; }

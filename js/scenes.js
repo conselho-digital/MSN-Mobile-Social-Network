@@ -172,8 +172,8 @@ const MSNScenes = (() => {
   // ------------------------------------------------------------
   // Moldura da foto com cor de status (ver .status-frame* no CSS) —
   // compartilhada entre o cabeçalho do Dashboard e a foto da tela de
-  // login/cadastro/conectando. A moldura em cinza (assets/icons/
-  // avatar-frame.webp) é tingida por um gradiente claro→escuro; trocar
+  // login/cadastro/conectando. A moldura em cinza (assets/avatars/
+  // login.webp) é tingida por um gradiente claro→escuro; trocar
   // de status faz um fade-in da cor nova por cima (ver updateStatusFrame).
   // ------------------------------------------------------------
   const STATUS_FRAME_GRADIENT = {

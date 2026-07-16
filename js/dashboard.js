@@ -111,7 +111,7 @@ const Dashboard = (() => {
       '<span class="status-frame__tint" style="background:' + frameGradient(status) +
       '" data-status="' + esc(status) + '"></span>' +
       '<span class="status-frame__tint--next"></span>' +
-      '<img src="assets/icons/avatar-frame.webp" class="status-frame__luma" alt="" />' +
+      '<img src="assets/avatars/login.webp" class="status-frame__luma" alt="" />' +
       "</span>"
     );
   }
