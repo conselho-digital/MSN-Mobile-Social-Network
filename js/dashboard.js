@@ -650,6 +650,7 @@ const Dashboard = (() => {
       toggle.onchange = async () => {
         if (!toggle.checked) return;
         toggle.disabled = true;
+        badge.textContent = "Perguntando…";
         // Geolocalização não tem um limite de tempo embutido pra
         // pessoa responder o pedido — sem isso, se ela nunca responder,
         // a chave ficaria travada "desligando" pra sempre. 20s é só uma
@@ -1590,6 +1591,19 @@ const Dashboard = (() => {
     loadLayoutPrefs();
     applyLayoutVisuals();
     loadMessagePrefs();
+
+    // Se a pessoa conceder uma permissão fora do app (ex.: configurações
+    // de notificação do celular, com o app em segundo plano) e voltar
+    // pra aba Alertas, a chave/badge não tinha como saber sozinha —
+    // reconsulta o estado de verdade sempre que a aba volta a ficar
+    // visível enquanto Alertas está aberta.
+    const refreshPermissionsIfVisible = () => {
+      if (document.visibilityState !== "visible") return;
+      const pane = document.getElementById("options-pane-alerts");
+      if (pane && !pane.hidden) renderPermissions();
+    };
+    document.addEventListener("visibilitychange", refreshPermissionsIfVisible);
+    window.addEventListener("focus", refreshPermissionsIfVisible);
 
     // Menu do nick (status + ações do perfil)
     const menu = document.getElementById("my-menu");

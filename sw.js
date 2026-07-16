@@ -7,7 +7,7 @@
    app com internet, em vez de ficar presa numa versão antiga.
    ============================================================ */
 
-const CACHE = "msn-mobile-v7";
+const CACHE = "msn-mobile-v8";
 const ASSETS = [
   "./",
   "./index.html",
