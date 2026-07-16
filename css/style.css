@@ -1141,9 +1141,11 @@ body {
   align-items: center;
   gap: 8px;
   padding: 7px 10px;
-  /* Tingido com a cor de tema pareada ao cenário selecionado */
-  background: linear-gradient(180deg, var(--tint-light, #fbfcfd), var(--tint-mid, #eef2f5));
-  border-bottom: 1px solid #dde3e8;
+  /* Mesmo tom liso da lista de contatos logo abaixo (--tint-light,
+     sem degradê nem borda separando as duas) — a barra deixa de ter
+     uma faixa de cor própria e passa a "fazer parte" do fundo
+     tingido, como no cliente clássico. */
+  background: var(--tint-light, #fbfcfd);
 }
 .dash-search {
   flex: 1 1 auto;
@@ -1152,9 +1154,13 @@ body {
   font: inherit;
   font-size: 0.88rem;
   border: 1px solid var(--field-border);
-  border-radius: 16px;
+  /* Cantos só um pouco arredondados (não mais em pílula) — igual à
+     caixa de busca do cliente clássico. */
+  border-radius: 4px;
   outline: none;
-  background: var(--tint-light, #fff);
+  /* Branco fixo (não acompanha o tom do tema) — precisa continuar se
+     destacando como uma caixa clara sobre o fundo tingido. */
+  background: #ffffff;
   color: #333;
 }
 .dash-search::placeholder { color: #7a8a97; }
