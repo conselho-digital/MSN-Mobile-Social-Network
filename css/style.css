@@ -1215,6 +1215,24 @@ body[data-login-theme="cenario1"] #screen-connecting::before {
   background: #e4e9ee;
 }
 
+/* ---------- Corpo do Dashboard (toolbar + lista) ---------- */
+/* Envolve a barra de ferramentas e a lista de contatos com um único
+   degradê contínuo: cor do tema no topo e no fim, branco no meio —
+   igual ao cliente clássico. Ambos os filhos ficam com fundo
+   transparente pra esse degradê aparecer por trás dos dois sem
+   costura entre eles. */
+.dash-body {
+  display: flex;
+  flex-direction: column;
+  flex: 1 1 auto;
+  min-height: 0;
+  background: linear-gradient(180deg,
+    var(--tint-vivid, #a9c3d6) 0%,
+    #ffffff 22%,
+    #ffffff 78%,
+    var(--tint-vivid, #a9c3d6) 100%);
+}
+
 /* ---------- Barra de ferramentas ---------- */
 .dash-toolbar {
   flex: 0 0 auto;
@@ -1222,11 +1240,8 @@ body[data-login-theme="cenario1"] #screen-connecting::before {
   align-items: center;
   gap: 8px;
   padding: 7px 10px;
-  /* Mesmo tom liso da lista de contatos logo abaixo (--tint-light,
-     sem degradê nem borda separando as duas) — a barra deixa de ter
-     uma faixa de cor própria e passa a "fazer parte" do fundo
-     tingido, como no cliente clássico. */
-  background: var(--tint-light, #fbfcfd);
+  /* Transparente — deixa o degradê de .dash-body aparecer por trás. */
+  background: transparent;
 }
 .dash-search {
   flex: 1 1 auto;
@@ -1357,8 +1372,8 @@ body[data-login-theme="cenario1"] #screen-connecting::before {
   flex: 1 1 auto;
   overflow-y: auto;
   -webkit-overflow-scrolling: touch;
-  /* Tingido com a cor de tema pareada ao cenário selecionado */
-  background: var(--tint-light, #ffffff);
+  /* Transparente — deixa o degradê de .dash-body aparecer por trás. */
+  background: transparent;
   padding: 4px 0 8px;
 }
 .contact-group { border-bottom: 1px solid #f0f2f4; }
