@@ -159,15 +159,15 @@ body {
 }
 /* Cenário (imagem) no topo — "cover" de verdade, sem distorcer,
    preenchendo a faixa em vez de esticar largura/altura
-   independentemente uma da outra. 130px — mesma altura do banner do
-   cabeçalho do Dashboard (ver .dash-header), pra ficar igual nas
-   duas telas. */
+   independentemente uma da outra. 97.5px — mesma altura do banner do
+   cabeçalho do Dashboard (ver .dash-header, 75% do tamanho anterior),
+   pra ficar igual nas duas telas. */
 #screen-login::before,
 #screen-connecting::before {
   content: "";
   position: absolute;
   top: 0; left: 0; right: 0;
-  height: 130px;
+  height: 97.5px;
   /* Camada de tingimento (--login-scene-tint, só usada no cenário
      padrão Céu Azul — ver applyLoginTheme em app.js) por cima da
      imagem do cenário; blend "color" recolore a foto mantendo a
@@ -263,8 +263,8 @@ body {
 .signin-avatar .status-frame {
   position: relative;
   display: block;
-  width: 104px;
-  height: 104px;
+  width: 78px;
+  height: 78px;
   margin: 0 auto;
   /* Sombra pra "descolar" a foto do fundo — mais necessária agora que
      ela flutua parte sobre o banner do cenário, parte fora dele. */
@@ -273,7 +273,7 @@ body {
 
 /* Login/Entrando (únicas telas com cenário no topo): tira o avatar do
    fluxo normal e ancora numa posição fixa em relação ao topo da tela —
-   assim ele fica sempre com metade sobre o banner do cenário (130px
+   assim ele fica sempre com metade sobre o banner do cenário (97.5px
    de altura) e metade abaixo, dos dois lados. Como "top" de um
    elemento absoluto conta a partir do topo de .signin-scroll (que
    começa colado no topo da tela, antes do padding do "notch"), o
@@ -283,7 +283,7 @@ body {
 #screen-login .signin-avatar,
 #screen-connecting .signin-avatar {
   position: absolute;
-  top: 78px; /* 130px (altura do cenário) − 52px (metade dos 104px do avatar) */
+  top: 58.5px; /* 97.5px (altura do cenário) − 39px (metade dos 78px do avatar) */
   left: 50%;
   transform: translateX(-50%);
   margin: 0;
@@ -327,12 +327,12 @@ body {
   font-weight: 400;
   color: var(--login-accent-text, #3a4a55);
   /* O avatar é position:absolute (ver .signin-avatar) e termina em
-     182px (78px de topo + 104px de altura); esse margin-top soma à
+     136.5px (58.5px de topo + 78px de altura); esse margin-top soma à
      altura do botão "Adicionar App" (que continua no fluxo normal,
      ~42px) pra sobrar só uns 18px de respiro até o título — a mesma
      folga aproximada que existe do título até o cartão de login (26px
      de margin-bottom), evitando o vão desigual de antes. */
-  margin: 158px 0 26px;
+  margin: 112.5px 0 26px;
   letter-spacing: 0.2px;
   text-shadow: 0 1px 2px rgba(255, 255, 255, 0.6);
 }
@@ -838,10 +838,11 @@ body {
      demais cenários essa camada é transparente e não faz nada. */
   background-blend-mode: color, normal, normal;
   color: #ffffff;
-  /* 13px de cima/baixo + 104px do avatar = 130px, igual à altura do
-     banner do login (ver #screen-login::before) — as duas telas usam
-     a mesma altura de cenário agora. */
-  padding: calc(13px + env(safe-area-inset-top)) 12px 13px;
+  /* 75% do tamanho anterior: 9.75px de cima/baixo + 78px do avatar =
+     97.5px, igual à altura do banner do login (ver
+     #screen-login::before) — as duas telas continuam com a mesma
+     altura de cenário. */
+  padding: calc(9.75px + env(safe-area-inset-top)) 12px 9.75px;
   /* Linha branca + sombra na base do banner, igual ao cliente clássico
      (mesmo efeito usado no banner do login). */
   border-bottom: 1px solid rgba(255, 255, 255, 0.85);
@@ -851,7 +852,7 @@ body {
 
 .my-avatar {
   position: relative;
-  width: 104px; height: 104px;
+  width: 78px; height: 78px;
   flex: 0 0 auto;
   border: none;
   border-radius: 4px;
@@ -963,7 +964,7 @@ body {
   border: none;
   background: transparent;
   color: #ffffff;
-  font-size: 1.3rem;
+  font-size: 0.975rem;
   font-weight: 700;
   cursor: pointer;
   text-align: left;
@@ -974,11 +975,11 @@ body {
   white-space: nowrap;
 }
 .my-name:hover #my-name-text { text-decoration: underline; }
-.my-status-inline { font-size: 1rem; font-weight: 400; }
+.my-status-inline { font-size: 0.75rem; font-weight: 400; }
 .status-select--sm {
   color: #cfeaff;
   padding: 0;
-  font-size: 1rem;
+  font-size: 0.75rem;
 }
 .status-select--sm .caret-down { border-top-color: #cfeaff; }
 /* Mesmo tratamento do nome: texto puro, sublinha só no hover — sem a
@@ -999,7 +1000,7 @@ body {
   border-radius: 5px;
   background: transparent;
   color: #dfeff9;
-  font-size: 0.95rem;
+  font-size: 0.7125rem;
   text-align: left;
   max-width: calc(100% + 12px);
   transition: background-color 0.1s ease, box-shadow 0.1s ease;
