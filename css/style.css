@@ -278,10 +278,13 @@ body {
   z-index: 1;
 }
 
-/* Cartão translúcido sobre o fundo azul */
+/* Cartão translúcido sobre o fundo azul — bem mais transparente pra
+   deixar a cor do tema (do cenário escolhido pra conta) aparecer por
+   trás; os campos continuam com fundo branco sólido (ver .field
+   input), então a legibilidade do texto digitado não é afetada. */
 .signin-screen .login-card {
-  background: rgba(255, 255, 255, 0.55);
-  border-color: rgba(120, 150, 180, 0.45);
+  background: rgba(255, 255, 255, 0.22);
+  border-color: rgba(120, 150, 180, 0.4);
 }
 
 /* Rodapé transparente empurrado para baixo */
@@ -535,6 +538,12 @@ body {
   align-items: center;
   justify-content: center;
 }
+/* Com uma conta/cenário reconhecido, usa a cor do tema em vez do
+   cinza/branco padrão (ver applyLoginTheme em app.js). */
+[data-login-theme] .options-chevron {
+  background: linear-gradient(var(--lg2, #eef2f5), var(--login-accent, #cfd8df));
+  border-color: var(--login-accent, #cfd8df);
+}
 .chevron {
   width: 8px; height: 8px;
   border-right: 1.6px solid #6b7b88;
@@ -542,6 +551,11 @@ body {
   transform: rotate(45deg);   /* fechado: aponta para baixo */
   margin-top: -3px;
   transition: transform 0.2s, margin-top 0.2s;
+}
+/* Marca em branco pra manter contraste sobre o fundo colorido do tema. */
+[data-login-theme] .chevron {
+  border-right-color: #ffffff;
+  border-bottom-color: #ffffff;
 }
 .options-chevron[aria-expanded="true"] .chevron {
   transform: rotate(-135deg); /* aberto: aponta para cima */
