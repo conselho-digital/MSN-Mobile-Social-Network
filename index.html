@@ -445,7 +445,7 @@
 
       <div class="contact-groups-dynamic" id="contact-groups-dynamic"></div>
 
-      <div class="contact-group" data-group="online">
+      <div class="contact-group contact-group--other" data-group="online">
         <button type="button" class="contact-group__header" aria-expanded="true">
           <span class="group-caret"></span>
           <span class="group-title">Disponível</span>
@@ -456,7 +456,7 @@
         </div>
       </div>
 
-      <div class="contact-group" data-group="offline">
+      <div class="contact-group contact-group--other" data-group="offline">
         <button type="button" class="contact-group__header" aria-expanded="true">
           <span class="group-caret"></span>
           <span class="group-title">Offline</span>
@@ -736,6 +736,78 @@
               <span>Mostrar-me como "Ausente" quando inativo por
                 <input type="number" id="opt-auto-away-minutes" class="options-inline-number" min="1" max="60" value="5" />
                 minutos</span>
+            </label>
+          </section>
+        </div>
+
+        <div class="options-pane" id="options-pane-layout" hidden>
+          <h3 class="options-pane__title">Layout</h3>
+
+          <section class="options-section">
+            <label class="options-checkbox">
+              <input type="checkbox" id="opt-show-favorites" checked />
+              Mostrar favoritos
+            </label>
+            <label class="options-checkbox">
+              <input type="checkbox" id="opt-show-groups" checked />
+              Mostrar grupos
+            </label>
+          </section>
+
+          <section class="options-section">
+            <h4 class="options-section__heading">Lista de contatos</h4>
+
+            <p class="options-subheading">Favoritos</p>
+            <div class="options-size-picker" id="size-picker-favorites">
+              <label class="options-size-option">
+                <input type="radio" name="size-favorites" value="normal" checked />
+                <span class="options-size-option__avatar options-size-option__avatar--md"></span>
+              </label>
+              <label class="options-size-option">
+                <input type="radio" name="size-favorites" value="small" />
+                <span class="options-size-option__avatar options-size-option__avatar--sm"></span>
+              </label>
+              <label class="options-size-option">
+                <input type="radio" name="size-favorites" value="list" />
+                <span class="options-size-option__avatar options-size-option__avatar--list"></span>
+              </label>
+            </div>
+
+            <p class="options-subheading">Outros contatos</p>
+            <div class="options-size-picker" id="size-picker-other">
+              <label class="options-size-option">
+                <input type="radio" name="size-other" value="normal" checked />
+                <span class="options-size-option__avatar options-size-option__avatar--md"></span>
+              </label>
+              <label class="options-size-option">
+                <input type="radio" name="size-other" value="small" />
+                <span class="options-size-option__avatar options-size-option__avatar--sm"></span>
+              </label>
+              <label class="options-size-option">
+                <input type="radio" name="size-other" value="list" />
+                <span class="options-size-option__avatar options-size-option__avatar--list"></span>
+              </label>
+            </div>
+          </section>
+
+          <section class="options-section">
+            <label class="options-field">
+              Rotular contatos por:
+              <select id="opt-label-by" class="options-field__input">
+                <option value="name">Nome para Exibição</option>
+                <option value="email">Endereço de E-mail</option>
+              </select>
+            </label>
+            <label class="options-checkbox">
+              <input type="checkbox" id="opt-show-status-label" />
+              Mostrar informações de status em rótulos
+            </label>
+            <label class="options-field">
+              Organizar contatos por:
+              <select id="opt-sort-by" class="options-field__input">
+                <option value="status">Status Online</option>
+                <option value="name">Nome</option>
+              </select>
             </label>
           </section>
         </div>

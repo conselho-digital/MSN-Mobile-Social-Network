@@ -321,6 +321,89 @@ const Dashboard = (() => {
     if (radio) radio.checked = true;
   }
 
+  /* ---------- Preferências de Layout (Opções > Layout) ----------
+     Tudo aqui é preferência local (localStorage), como Modo de
+     exibição — não depende de coluna nova no Supabase. */
+  let showFavoritesGroup = true;
+  let showGroupsSection = true;
+  let favSize = "normal";
+  let otherSize = "normal";
+  let labelBy = "name";
+  let showStatusLabel = false;
+  let sortBy = "status";
+
+  function loadLayoutPrefs() {
+    try {
+      const get = (k, d) => { const v = localStorage.getItem(k); return v === null ? d : v; };
+      showFavoritesGroup = get("msn:showFavorites", "true") === "true";
+      showGroupsSection = get("msn:showGroups", "true") === "true";
+      favSize = get("msn:favSize", "normal");
+      otherSize = get("msn:otherSize", "normal");
+      labelBy = get("msn:labelBy", "name");
+      showStatusLabel = get("msn:showStatusLabel", "false") === "true";
+      sortBy = get("msn:sortBy", "status");
+    } catch (_) {}
+  }
+  function saveLayoutPrefs() {
+    try {
+      localStorage.setItem("msn:showFavorites", String(showFavoritesGroup));
+      localStorage.setItem("msn:showGroups", String(showGroupsSection));
+      localStorage.setItem("msn:favSize", favSize);
+      localStorage.setItem("msn:otherSize", otherSize);
+      localStorage.setItem("msn:labelBy", labelBy);
+      localStorage.setItem("msn:showStatusLabel", String(showStatusLabel));
+      localStorage.setItem("msn:sortBy", sortBy);
+    } catch (_) {}
+  }
+
+  // Aplica visibilidade/tamanho — não depende de re-renderizar os
+  // contatos (só liga/desliga classes nos containers já existentes).
+  function applyLayoutVisuals() {
+    const favGroup = document.getElementById("group-favorites");
+    if (favGroup) {
+      favGroup.hidden = !showFavoritesGroup;
+      favGroup.classList.remove("size-small", "size-list");
+      if (favSize === "small") favGroup.classList.add("size-small");
+      else if (favSize === "list") favGroup.classList.add("size-list");
+    }
+    const groupsWrap = document.getElementById("contact-groups-dynamic");
+    if (groupsWrap) groupsWrap.hidden = !showGroupsSection;
+
+    const container = document.getElementById("contacts-container");
+    if (container) {
+      container.classList.remove("contacts-other-size-small", "contacts-other-size-list");
+      if (otherSize === "small") container.classList.add("contacts-other-size-small");
+      else if (otherSize === "list") container.classList.add("contacts-other-size-list");
+    }
+  }
+
+  function loadLayoutPrefsIntoForm() {
+    document.getElementById("opt-show-favorites").checked = showFavoritesGroup;
+    document.getElementById("opt-show-groups").checked = showGroupsSection;
+    document.getElementById("opt-label-by").value = labelBy;
+    document.getElementById("opt-show-status-label").checked = showStatusLabel;
+    document.getElementById("opt-sort-by").value = sortBy;
+    const favRadio = document.querySelector('input[name="size-favorites"][value="' + favSize + '"]');
+    if (favRadio) favRadio.checked = true;
+    const otherRadio = document.querySelector('input[name="size-other"][value="' + otherSize + '"]');
+    if (otherRadio) otherRadio.checked = true;
+  }
+
+  function commitLayoutPrefs() {
+    showFavoritesGroup = document.getElementById("opt-show-favorites").checked;
+    showGroupsSection = document.getElementById("opt-show-groups").checked;
+    labelBy = document.getElementById("opt-label-by").value;
+    showStatusLabel = document.getElementById("opt-show-status-label").checked;
+    sortBy = document.getElementById("opt-sort-by").value;
+    const favRadio = document.querySelector('input[name="size-favorites"]:checked');
+    favSize = favRadio ? favRadio.value : "normal";
+    const otherRadio = document.querySelector('input[name="size-other"]:checked');
+    otherSize = otherRadio ? otherRadio.value : "normal";
+    saveLayoutPrefs();
+    applyLayoutVisuals();
+    renderContacts(currentFilter);
+  }
+
   // Cria (ou recria) a "casca" de cada grupo próprio dentro de
   // #contact-groups-dynamic — chamado só quando a lista de grupos muda
   // (load()/depois de criar um grupo), não a cada busca. O preenchimento
@@ -330,7 +413,7 @@ const Dashboard = (() => {
     const wrap = document.getElementById("contact-groups-dynamic");
     if (!wrap) return;
     wrap.innerHTML = groups.map((g) =>
-      '<div class="contact-group" data-group="custom-' + esc(String(g.id)) + '">' +
+      '<div class="contact-group contact-group--other" data-group="custom-' + esc(String(g.id)) + '">' +
       '<button type="button" class="contact-group__header" aria-expanded="true">' +
       '<span class="group-caret"></span>' +
       '<img class="group-icon" src="assets/icons/gruposimg.webp" alt="" aria-hidden="true" />' +
@@ -362,14 +445,20 @@ const Dashboard = (() => {
     const matches = (c) => !q || (c.display_name || "").toLowerCase().includes(q);
     const isOnline = (c) => ["online", "busy", "away"].includes(c.status);
 
-    const favorites = contacts.filter((c) => matches(c) && c.is_favorite);
+    // Só "puxa" contatos pra fora de Disponível/Offline quando a
+    // respectiva seção está de fato visível (Opções > Layout) — senão
+    // um contato favoritado/agrupado sumiria da lista inteira ao
+    // desligar "Mostrar favoritos"/"Mostrar grupos", em vez de só
+    // voltar a aparecer no lugar de sempre.
+    const favorites = showFavoritesGroup ? contacts.filter((c) => matches(c) && c.is_favorite) : [];
     const favoriteIds = new Set(favorites.map((c) => String(c.id)));
 
     const claimedIds = new Set(favoriteIds);
     groups.forEach((g) => {
       const memberIds = (g.member_ids || []).map(String);
-      const members = contacts.filter((c) =>
-        matches(c) && !claimedIds.has(String(c.id)) && memberIds.includes(String(c.id)));
+      const members = showGroupsSection
+        ? contacts.filter((c) => matches(c) && !claimedIds.has(String(c.id)) && memberIds.includes(String(c.id)))
+        : [];
       members.forEach((c) => claimedIds.add(String(c.id)));
       fillList("list-group-" + g.id, members);
       const groupOnline = members.filter(isOnline).length;
@@ -377,13 +466,31 @@ const Dashboard = (() => {
       if (countEl) countEl.textContent = "(" + groupOnline + "/" + members.length + ")";
     });
 
-    const online = [];
-    const offline = [];
+    let online = [];
+    let offline = [];
     contacts.forEach((c) => {
       if (!matches(c) || claimedIds.has(String(c.id))) return;
       if (isOnline(c)) online.push(c);
       else offline.push(c);
     });
+
+    const byName = (a, b) => (a.display_name || "").localeCompare(b.display_name || "");
+    const onlineTitle = document.querySelector('[data-group="online"] .group-title');
+    const offlineGroup = document.querySelector('[data-group="offline"]');
+    if (sortBy === "name") {
+      // "Organizar por Nome": uma lista só, em ordem alfabética, sem
+      // separar por status — junta tudo no bloco de "Disponível"
+      // (relabelado) e esconde o de "Offline".
+      online = online.concat(offline).sort(byName);
+      offline = [];
+      if (onlineTitle) onlineTitle.textContent = "Contatos";
+      if (offlineGroup) offlineGroup.hidden = true;
+    } else {
+      online.sort(byName);
+      offline.sort(byName);
+      if (onlineTitle) onlineTitle.textContent = "Disponível";
+      if (offlineGroup) offlineGroup.hidden = false;
+    }
 
     fillList("list-favorites", favorites);
     fillList("list-online", online);
@@ -467,7 +574,11 @@ const Dashboard = (() => {
     }
 
     const nameEl = li.querySelector(".contact-item__name");
-    if (nameEl) nameEl.textContent = c.display_name;
+    if (nameEl) {
+      let label = (labelBy === "email" && c.email) ? c.email : c.display_name;
+      if (showStatusLabel) label += " (" + (STATUS_LABEL[c.status] || "") + ")";
+      nameEl.textContent = label;
+    }
 
     const body = li.querySelector(".contact-item__body");
     let subEl = li.querySelector(".contact-item__sub");
@@ -791,6 +902,7 @@ const Dashboard = (() => {
     document.querySelectorAll(".options-nav__item").forEach((it) =>
       it.classList.toggle("is-active", it.dataset.tab === "personal"));
     document.getElementById("options-pane-personal").hidden = false;
+    document.getElementById("options-pane-layout").hidden = true;
     document.getElementById("options-pane-blank").hidden = true;
   }
 
@@ -798,8 +910,9 @@ const Dashboard = (() => {
     document.getElementById("options-dialog").hidden = true;
   }
 
-  // Salva nome/mensagem pessoal e a preferência de "Ausente" automático
-  // editados na aba "Pessoal".
+  // Salva nome/mensagem pessoal, "Ausente" automático (aba Pessoal) e
+  // as preferências de Layout — sempre lê os dois formulários, mesmo
+  // que só um esteja visível no momento (os valores continuam no DOM).
   async function commitOptions() {
     autoAwayEnabled = document.getElementById("opt-auto-away").checked;
     const minutesVal = parseInt(document.getElementById("opt-auto-away-minutes").value, 10);
@@ -810,6 +923,8 @@ const Dashboard = (() => {
     // inatividade não deveria manter o auto-away supostamente já
     // "vencido" — reinicia a contagem a partir de agora.
     markActivity();
+
+    commitLayoutPrefs();
 
     if (!profile) return;
     const nameVal = document.getElementById("opt-display-name").value.trim();
@@ -984,6 +1099,8 @@ const Dashboard = (() => {
   /* ---------- Eventos ---------- */
   function bindEvents() {
     startIdleWatch();
+    loadLayoutPrefs();
+    applyLayoutVisuals();
 
     // Menu do nick (status + ações do perfil)
     const menu = document.getElementById("my-menu");
@@ -1177,17 +1294,19 @@ const Dashboard = (() => {
         optNavToggle.setAttribute("aria-expanded", String(open));
       });
     }
-    // Trocar de categoria: só "Pessoal" mostra conteúdo de verdade, as
-    // demais mostram uma página em branco. Escolher uma categoria já
-    // recolhe a lista de volta (poupa espaço).
+    // Trocar de categoria: "Pessoal" e "Layout" mostram conteúdo de
+    // verdade, as demais mostram uma página em branco. Escolher uma
+    // categoria já recolhe a lista de volta (poupa espaço).
     document.querySelectorAll(".options-nav__item").forEach((item) => {
       item.addEventListener("click", () => {
         document.querySelectorAll(".options-nav__item").forEach((x) => x.classList.remove("is-active"));
         item.classList.add("is-active");
         document.getElementById("options-nav-current").textContent = item.textContent;
-        const isPersonal = item.dataset.tab === "personal";
-        document.getElementById("options-pane-personal").hidden = !isPersonal;
-        document.getElementById("options-pane-blank").hidden = isPersonal;
+        const tab = item.dataset.tab;
+        document.getElementById("options-pane-personal").hidden = tab !== "personal";
+        document.getElementById("options-pane-layout").hidden = tab !== "layout";
+        document.getElementById("options-pane-blank").hidden = tab === "personal" || tab === "layout";
+        if (tab === "layout") loadLayoutPrefsIntoForm();
         if (optNav) optNav.hidden = true;
         if (optNavToggle) optNavToggle.setAttribute("aria-expanded", "false");
       });

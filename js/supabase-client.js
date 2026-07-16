@@ -249,9 +249,9 @@ const MSNSupabase = (() => {
   }
   function demoContacts() {
     return [
-      { id: "d1", display_name: "Ana Clara ♥", sub_nick: "só vim ver as novidades", status: "online", is_favorite: true },
-      { id: "d2", display_name: "João Pedro", sub_nick: "ocupado estudando", status: "busy", is_favorite: false },
-      { id: "d3", display_name: "mayara", sub_nick: "", status: "offline", is_favorite: false },
+      { id: "d1", display_name: "Ana Clara ♥", email: "ana.clara@escargot.chat", sub_nick: "só vim ver as novidades", status: "online", is_favorite: true },
+      { id: "d2", display_name: "João Pedro", email: "joao.pedro@escargot.chat", sub_nick: "ocupado estudando", status: "busy", is_favorite: false },
+      { id: "d3", display_name: "mayara", email: "mayara@escargot.chat", sub_nick: "", status: "offline", is_favorite: false },
     ];
   }
   function demoGroups() {

@@ -1549,6 +1549,20 @@ body[data-login-theme="cenario1"] #screen-connecting::before {
 .contacts--list .contact-item__avatar { display: none; }
 .contacts--list .contact-item__sub { display: none; }
 
+/* Tamanho de foto por seção (Opções > Layout) — independente do Modo
+   de exibição acima, que é global. Favoritos usa o próprio container
+   (#group-favorites); "Outros contatos" (Grupos + Disponível +
+   Offline) usa a classe .contact-group--other compartilhada por eles. */
+#group-favorites.size-small .contact-item__avatar { width: 24px; height: 24px; }
+#group-favorites.size-list .contact-item__avatar { display: none; }
+#group-favorites.size-list .contact-item { padding-left: 12px; }
+#group-favorites.size-list .contact-item__sub { display: none; }
+
+.contacts-other-size-small .contact-group--other .contact-item__avatar { width: 24px; height: 24px; }
+.contacts-other-size-list .contact-group--other .contact-item__avatar { display: none; }
+.contacts-other-size-list .contact-group--other .contact-item { padding-left: 12px; }
+.contacts-other-size-list .contact-group--other .contact-item__sub { display: none; }
+
 /* ---------- Barra de busca com ícones ---------- */
 .dash-search-wrap { position: relative; flex: 1 1 auto; }
 .dash-search { width: 100%; padding-right: 32px; }
@@ -2085,3 +2099,31 @@ body[data-login-theme="cenario1"] #screen-connecting::before {
   outline: none;
 }
 .options-inline-number:focus { border-color: var(--field-border-focus); box-shadow: 0 0 0 2px rgba(75,160,230,0.2); }
+
+/* Aba Layout: subtítulo "Favoritos"/"Outros contatos" + seletor de
+   tamanho de foto (radios estilizados como miniaturas clicáveis). */
+.options-subheading { margin: 12px 0 6px; font-size: 0.8rem; font-weight: 600; color: #2f4a63; }
+.options-size-picker { display: flex; gap: 16px; margin: 0 0 6px; }
+.options-size-option { position: relative; cursor: pointer; }
+.options-size-option input {
+  position: absolute;
+  width: 1px; height: 1px;
+  padding: 0; margin: -1px;
+  border: 0;
+  clip: rect(0, 0, 0, 0);
+  overflow: hidden;
+}
+.options-size-option__avatar {
+  display: block;
+  background: #dbe4ea;
+  border: 2px solid transparent;
+  border-radius: 4px;
+  box-sizing: border-box;
+}
+.options-size-option__avatar--md { width: 32px; height: 32px; }
+.options-size-option__avatar--sm { width: 20px; height: 20px; margin: 6px; }
+.options-size-option__avatar--list { width: 32px; height: 8px; margin-top: 12px; border-radius: 2px; }
+.options-size-option input:checked + .options-size-option__avatar {
+  border-color: #1f7fd0;
+  box-shadow: 0 0 0 2px rgba(31, 127, 208, 0.3);
+}
