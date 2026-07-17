@@ -2495,11 +2495,12 @@ body[data-login-theme="cenario1"] #screen-connecting::before {
    JANELA DE CONVERSA
    ------------------------------------------------------------
    Barra de título clara (não a escura dos diálogos — igual ao
-   cliente clássico), cabeçalho com foto+nome+status do contato,
-   faixa amarela de "offline", área de mensagens com o cenário do
-   contato (ou o meu plano de fundo pessoal, se eu tiver escolhido
-   um — ver applyChatBackground em dashboard.js) e a barra de
-   composição embaixo, com a minha foto ao lado.
+   cliente clássico), coluna lateral com as duas fotos (contato em
+   cima, minha embaixo — recolhível), cabeçalho com nome+status do
+   contato, faixa amarela de "offline", área de mensagens com o
+   cenário do contato (ou o meu plano de fundo pessoal, se eu tiver
+   escolhido um — ver applyChatBackground em dashboard.js) e a barra
+   de composição embaixo.
    ============================================================ */
 .chat-titlebar {
   flex: 0 0 auto;
@@ -2538,6 +2539,62 @@ body[data-login-theme="cenario1"] #screen-connecting::before {
 }
 .chat-titlebar__close:hover { background: #e2e8ec; }
 
+/* Corpo da janela: coluna lateral (fotos) + botão de recolher + área
+   principal (cabeçalho/mensagens/composição) lado a lado. */
+.chat-body {
+  flex: 1 1 auto;
+  display: flex;
+  min-height: 0;
+}
+.chat-sidebar {
+  flex: 0 0 auto;
+  width: 78px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 16px;
+  padding: 16px 9px;
+  background: #eef1f4;
+  border-right: 1px solid #d7dee4;
+  overflow-y: auto;
+  transition: width 0.2s ease, padding 0.2s ease, opacity 0.2s ease, border-color 0.2s ease;
+}
+.chat-sidebar__avatar { position: relative; width: 60px; height: 60px; flex: 0 0 auto; }
+/* Recolhida: encolhe pra 0 (não só "hidden") pra animar a largura em
+   vez de sumir de uma vez. */
+.chat-sidebar.is-collapsed {
+  width: 0;
+  padding-left: 0;
+  padding-right: 0;
+  opacity: 0;
+  overflow: hidden;
+  border-right-color: transparent;
+}
+.chat-sidebar-toggle {
+  flex: 0 0 auto;
+  align-self: center;
+  width: 16px;
+  height: 44px;
+  margin: 0;
+  padding: 0;
+  border: 1px solid #d7dee4;
+  border-left: none;
+  border-radius: 0 5px 5px 0;
+  background: #f4f6f8;
+  color: #5a6b78;
+  font-size: 0.7rem;
+  line-height: 1;
+  cursor: pointer;
+}
+.chat-sidebar-toggle:hover { background: #e2e8ec; }
+
+.chat-main {
+  flex: 1 1 auto;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+}
+
 .chat-header {
   flex: 0 0 auto;
   display: flex;
@@ -2547,7 +2604,6 @@ body[data-login-theme="cenario1"] #screen-connecting::before {
   background: #ffffff;
   border-bottom: 1px solid #e3e8ec;
 }
-.chat-header__avatar { position: relative; width: 52px; height: 52px; flex: 0 0 auto; }
 .chat-header__info { min-width: 0; display: flex; flex-direction: column; gap: 2px; }
 .chat-header__name {
   font-size: 1.15rem;
@@ -2558,6 +2614,10 @@ body[data-login-theme="cenario1"] #screen-connecting::before {
 }
 .chat-header__status { font-size: 0.85rem; color: #7a8a97; }
 
+/* [hidden] tem a mesma especificidade de uma classe — sem isso, o
+   display:flex abaixo ganhava do hidden nativo e a faixa aparecia
+   vazia mesmo escondida (bug visto ao testar com um contato online). */
+.chat-offline-banner[hidden] { display: none; }
 .chat-offline-banner {
   flex: 0 0 auto;
   display: flex;
@@ -2652,7 +2712,6 @@ body[data-login-theme="cenario1"] #screen-connecting::before {
   background: #ffffff;
   border-top: 1px solid #e3e8ec;
 }
-.chat-compose__avatar { position: relative; width: 46px; height: 46px; flex: 0 0 auto; }
 .chat-compose__box { flex: 1 1 auto; min-width: 0; display: flex; flex-direction: column; gap: 6px; }
 .chat-compose__input {
   width: 100%;

@@ -494,37 +494,48 @@
       <button type="button" id="chat-close" class="chat-titlebar__close" aria-label="Voltar">&times;</button>
     </header>
 
-    <div class="chat-header">
-      <span class="status-frame chat-header__avatar" id="chat-contact-avatar"></span>
-      <div class="chat-header__info">
-        <span class="chat-header__name" id="chat-contact-name"></span>
-        <span class="chat-header__status" id="chat-contact-status"></span>
-      </div>
-    </div>
+    <div class="chat-body">
+      <!-- Coluna lateral com as duas fotos (do contato em cima, a
+           minha embaixo) — igual ao cliente clássico. O botão ao lado
+           esconde/mostra essa coluna. -->
+      <aside class="chat-sidebar" id="chat-sidebar">
+        <span class="status-frame chat-sidebar__avatar" id="chat-contact-avatar"></span>
+        <span class="status-frame chat-sidebar__avatar" id="chat-my-avatar"></span>
+      </aside>
+      <button type="button" id="chat-sidebar-toggle" class="chat-sidebar-toggle" aria-label="Esconder fotos" aria-expanded="true">‹</button>
 
-    <div class="chat-offline-banner" id="chat-offline-banner" hidden>
-      <span class="chat-offline-banner__icon" aria-hidden="true">ℹ</span>
-      <span class="chat-offline-banner__text" id="chat-offline-banner-text"></span>
-    </div>
-
-    <div class="chat-thread" id="chat-thread">
-      <ul class="chat-messages" id="chat-messages"></ul>
-    </div>
-
-    <div class="chat-compose">
-      <span class="status-frame chat-compose__avatar" id="chat-my-avatar"></span>
-      <div class="chat-compose__box">
-        <textarea id="chat-input" class="chat-compose__input" maxlength="2000"></textarea>
-        <div class="chat-toolbar">
-          <div class="chat-emoji-wrap">
-            <button type="button" id="chat-emoji-btn" class="chat-toolbar__btn" title="Emoticons">🙂<span class="caret-down"></span></button>
-            <div class="chat-emoji-picker" id="chat-emoji-picker" hidden></div>
+      <div class="chat-main">
+        <div class="chat-header">
+          <div class="chat-header__info">
+            <span class="chat-header__name" id="chat-contact-name"></span>
+            <span class="chat-header__status" id="chat-contact-status"></span>
           </div>
-          <button type="button" class="chat-toolbar__btn" title="Formatar texto" disabled>A</button>
-          <button type="button" class="chat-toolbar__btn" title="Enviar uma imagem" disabled>🖼</button>
-          <button type="button" id="chat-nudge-btn" class="chat-toolbar__btn" title="Chamar a atenção">🔔</button>
-          <button type="button" id="chat-bg-btn" class="chat-toolbar__btn" title="Alterar plano de fundo">🖌</button>
-          <button type="button" id="chat-send-btn" class="chat-toolbar__btn chat-toolbar__btn--send">Enviar</button>
+        </div>
+
+        <div class="chat-offline-banner" id="chat-offline-banner" hidden>
+          <span class="chat-offline-banner__icon" aria-hidden="true">ℹ</span>
+          <span class="chat-offline-banner__text" id="chat-offline-banner-text"></span>
+        </div>
+
+        <div class="chat-thread" id="chat-thread">
+          <ul class="chat-messages" id="chat-messages"></ul>
+        </div>
+
+        <div class="chat-compose">
+          <div class="chat-compose__box">
+            <textarea id="chat-input" class="chat-compose__input" maxlength="2000"></textarea>
+            <div class="chat-toolbar">
+              <div class="chat-emoji-wrap">
+                <button type="button" id="chat-emoji-btn" class="chat-toolbar__btn" title="Emoticons">🙂<span class="caret-down"></span></button>
+                <div class="chat-emoji-picker" id="chat-emoji-picker" hidden></div>
+              </div>
+              <button type="button" class="chat-toolbar__btn" title="Formatar texto" disabled>A</button>
+              <button type="button" class="chat-toolbar__btn" title="Enviar uma imagem" disabled>🖼</button>
+              <button type="button" id="chat-nudge-btn" class="chat-toolbar__btn" title="Chamar a atenção">🔔</button>
+              <button type="button" id="chat-bg-btn" class="chat-toolbar__btn" title="Alterar plano de fundo">🖌</button>
+              <button type="button" id="chat-send-btn" class="chat-toolbar__btn chat-toolbar__btn--send">Enviar</button>
+            </div>
+          </div>
         </div>
       </div>
     </div>

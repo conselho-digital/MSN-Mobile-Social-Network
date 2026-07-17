@@ -1666,8 +1666,19 @@ const Dashboard = (() => {
     subscribeChatRealtime();
     subscribeChatNudges();
     setTimeout(() => document.getElementById("chat-input").focus(), 30);
+    // Empilha um estado só pra isso: o botão "voltar" do aparelho
+    // (Android) volta pro Dashboard em vez de sair do app/PWA — ver o
+    // listener de popstate em bindEvents, que faz a troca de tela de
+    // verdade. O botão "X" da própria janela chama history.back() (não
+    // troca de tela direto) pra passar pelo mesmo caminho e manter o
+    // histórico do navegador consistente nos dois casos.
+    try { history.pushState({ msnScreen: "chat" }, ""); } catch (_) {}
   }
 
+  // Só a troca de tela de verdade — chamada pelo popstate (botão
+  // voltar) depois que o navegador já saiu do estado "chat" sozinho.
+  // Nunca chame direto pra fechar a janela por um clique (ver
+  // chat-close em bindEvents, que usa history.back() em vez disso).
   function closeChat() {
     currentChatContact = null;
     UIManager.showScreen("screen-dashboard");
@@ -2226,7 +2237,30 @@ const Dashboard = (() => {
     // Janela de conversa: fechar, enviar, chamar atenção, emoticons,
     // plano de fundo pessoal
     const chatClose = document.getElementById("chat-close");
-    if (chatClose) chatClose.addEventListener("click", closeChat);
+    if (chatClose) chatClose.addEventListener("click", () => {
+      // Não troca de tela direto — volta um passo no histórico, que
+      // dispara o popstate abaixo (mesmo caminho do botão físico
+      // "voltar" do aparelho), mantendo os dois em sincronia.
+      if (currentChatContact) history.back();
+    });
+    // Botão/gesto "voltar" do aparelho: se a janela de conversa estava
+    // aberta, volta pro Dashboard em vez de sair do app ou ir pra uma
+    // página anterior fora dele (ver o pushState em openChat).
+    window.addEventListener("popstate", () => {
+      if (currentChatContact) closeChat();
+    });
+
+    // Coluna lateral das fotos: esconder/mostrar
+    const chatSidebar = document.getElementById("chat-sidebar");
+    const chatSidebarToggle = document.getElementById("chat-sidebar-toggle");
+    if (chatSidebar && chatSidebarToggle) {
+      chatSidebarToggle.addEventListener("click", () => {
+        const collapsed = chatSidebar.classList.toggle("is-collapsed");
+        chatSidebarToggle.textContent = collapsed ? "›" : "‹";
+        chatSidebarToggle.setAttribute("aria-expanded", String(!collapsed));
+        chatSidebarToggle.setAttribute("aria-label", collapsed ? "Mostrar fotos" : "Esconder fotos");
+      });
+    }
     const chatSend = document.getElementById("chat-send-btn");
     if (chatSend) chatSend.addEventListener("click", sendChatMessage);
     const chatInput = document.getElementById("chat-input");
