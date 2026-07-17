@@ -307,7 +307,6 @@ const App = (function () {
       }
 
       UIManager.clearMessage();
-      toggleResendConfirmLink(null);
       await startConnecting(email, password);
     });
   }
@@ -426,11 +425,6 @@ const App = (function () {
       console.error("Erro ao entrar:", err);
       UIManager.showScreen("screen-login");
       UIManager.showMessage(friendlyError(err));
-      // O Supabase devolve a mesma mensagem ("Invalid login credentials")
-      // tanto pra senha errada quanto pra e-mail ainda não confirmado —
-      // não dá pra saber qual é só pela resposta. Em vez de arriscar
-      // dizer o motivo errado, oferece o reenvio como ação à parte.
-      toggleResendConfirmLink(isInvalidCredentials(err) ? email : null);
     } finally {
       connecting = false;
     }
@@ -806,41 +800,6 @@ const App = (function () {
       });
     }
 
-    const resendConfirm = document.getElementById("link-resend-confirm");
-    if (resendConfirm) {
-      resendConfirm.addEventListener("click", async (e) => {
-        e.preventDefault();
-        const email = resendConfirm.dataset.email;
-        if (!email) return;
-        try {
-          await MSNSupabase.resendConfirmation(email);
-          UIManager.showMessage("E-mail de confirmação reenviado. Confira sua caixa de entrada.", "info");
-        } catch (err) {
-          console.error("Erro ao reenviar confirmação:", err);
-          UIManager.showMessage(friendlyError(err));
-        }
-      });
-    }
-  }
-
-  // "Invalid login credentials" cobre tanto senha errada quanto e-mail
-  // não confirmado (ver friendlyError) — usado pra decidir se mostra o
-  // link de reenviar confirmação.
-  function isInvalidCredentials(err) {
-    const msg = (err && (err.message || err.error_description || err.msg || err.error)) || "";
-    return /invalid login credentials/i.test(msg);
-  }
-
-  function toggleResendConfirmLink(email) {
-    const link = document.getElementById("link-resend-confirm");
-    if (!link) return;
-    if (email) {
-      link.dataset.email = email;
-      link.hidden = false;
-    } else {
-      delete link.dataset.email;
-      link.hidden = true;
-    }
   }
 
   /* ---------- Mensagens de erro amigáveis ---------- */

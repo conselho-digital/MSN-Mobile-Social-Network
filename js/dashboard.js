@@ -202,11 +202,45 @@ const Dashboard = (() => {
 
   // Ícone "bonequinho" clássico (Opções > Layout > "Mostrar ícone
   // clássico"), alternativa à foto de exibição na lista de contatos —
-  // a mesma imagem (verde) é usada como máscara e recolorida via CSS
-  // conforme o status (ver .contact-classic-icon no CSS), igual à
-  // técnica já usada em .status-frame__tint.
+  // recolorido via CSS conforme o status (ver .contact-classic-icon).
   function classicIconMarkup(status) {
     return '<span class="contact-classic-icon" data-status="' + esc(status) + '" aria-hidden="true"></span>';
+  }
+
+  // Arrastar o banner do cenário pra baixo recarrega a página — um
+  // gesto de "puxar para atualizar" restrito só a essa área (não à
+  // lista de contatos nem ao resto da tela), pra não competir com a
+  // rolagem normal em nenhum outro lugar.
+  function bindSceneBannerPullToRefresh() {
+    const header = document.querySelector(".dash-header");
+    if (!header) return;
+    const THRESHOLD = 70;
+    let startY = null;
+    let dragging = false;
+
+    header.addEventListener("touchstart", (e) => {
+      if (e.touches.length !== 1) return;
+      startY = e.touches[0].clientY;
+      dragging = true;
+    }, { passive: true });
+
+    header.addEventListener("touchmove", (e) => {
+      if (!dragging || startY === null) return;
+      const delta = e.touches[0].clientY - startY;
+      header.style.transform = delta > 0 ? "translateY(" + Math.min(delta * 0.4, 50) + "px)" : "";
+    }, { passive: true });
+
+    const endDrag = (e) => {
+      if (!dragging) return;
+      dragging = false;
+      const touch = e.changedTouches && e.changedTouches[0];
+      const delta = touch && startY !== null ? touch.clientY - startY : 0;
+      header.style.transform = "";
+      startY = null;
+      if (delta > THRESHOLD) location.reload();
+    };
+    header.addEventListener("touchend", endDrag);
+    header.addEventListener("touchcancel", endDrag);
   }
 
   function esc(s) {
@@ -311,6 +345,11 @@ const Dashboard = (() => {
     if (header) {
       const tintHex = MSNScenes.colorSchemeHex(profile.color_scheme);
       header.style.setProperty("--scene", resolveSceneBg(profile.scene, profile.scene_image_url, tintHex));
+      // A linha/sombra na base do banner (ver .dash-header no CSS) foi
+      // pensada pra separar o cenário do resto — no cenário padrão
+      // (degradê escuro) ela aparecia como uma linha escura feia por
+      // cima do próprio degradê, então some só nesse caso.
+      header.classList.toggle("is-default-scene", !profile.scene || profile.scene === SCENES[0].id);
     }
     updateHeaderTextContrast(profile.scene, profile.scene_image_url);
 
@@ -1810,6 +1849,7 @@ const Dashboard = (() => {
     loadLayoutPrefs();
     applyLayoutVisuals();
     loadMessagePrefs();
+    bindSceneBannerPullToRefresh();
 
     // Se a pessoa conceder uma permissão fora do app (ex.: configurações
     // de notificação do celular, com o app em segundo plano) e voltar

@@ -69,17 +69,6 @@ const MSNSupabase = (() => {
     if (isConfigured()) await client.auth.signOut();
   }
 
-  // Reenvia o e-mail de confirmação de cadastro. Usado quando o login
-  // falha e a causa pode ser conta ainda não confirmada — o Supabase
-  // devolve "Invalid login credentials" tanto pra senha errada quanto
-  // pra e-mail não confirmado (não dá pra diferenciar só pela resposta
-  // do login), então oferecemos o reenvio como ação à parte.
-  async function resendConfirmation(email) {
-    if (!isConfigured()) return;
-    const { error } = await client.auth.resend({ type: "signup", email });
-    if (error) throw error;
-  }
-
   /* ---------- Perfil ---------- */
   async function getMyProfile() {
     if (!isConfigured()) return demoProfile();
@@ -474,7 +463,7 @@ const MSNSupabase = (() => {
   }
 
   return {
-    init, isConfigured, signIn, signUp, getSession, signOut, resendConfirmation,
+    init, isConfigured, signIn, signUp, getSession, signOut,
     getMyProfile, updateMyProfile, updateEmail, updatePassword, deleteMyAccount,
     getContacts, addContactByEmail, setFavorite,
     subscribeContacts, unsubscribeContacts,

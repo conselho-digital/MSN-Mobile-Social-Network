@@ -923,6 +923,11 @@ body[data-login-theme="cenario1"] #screen-connecting::before {
      demais cenários essa camada é transparente e não faz nada. */
   background-blend-mode: color, normal, normal;
   color: #ffffff;
+  /* Arrastar pra baixo recarrega a página (ver
+     bindSceneBannerPullToRefresh em dashboard.js) — sem transição
+     durante o próprio arrasto (o JS já segue o dedo em tempo real),
+     só ao soltar, pra voltar suave em vez de "pular" de volta. */
+  transition: transform 0.25s ease;
   /* 75% do tamanho anterior: 9.75px de cima/baixo + 78px do avatar =
      97.5px, igual à altura do banner do login (ver
      #screen-login::before) — as duas telas continuam com a mesma
@@ -935,6 +940,14 @@ body[data-login-theme="cenario1"] #screen-connecting::before {
      também troca de cor. */
   border-bottom: 1px solid rgba(255, 255, 255, 0.85);
   box-shadow: 0 4px 6px rgba(0, 0, 0, 0.3);
+}
+/* No cenário padrão (Céu Azul) a linha/sombra acima ficava com cara de
+   traço preto solto no meio do céu, sem servir pra separar nada — foi
+   pedido explicitamente pra sumir só nesse cenário. Ver renderProfile
+   em dashboard.js, que liga esta classe. */
+.dash-header.is-default-scene {
+  border-bottom: none;
+  box-shadow: none;
 }
 .dash-header__top { display: flex; align-items: center; gap: 12px; }
 
@@ -1491,14 +1504,23 @@ body[data-login-theme="cenario1"] #screen-connecting::before {
 .contact-item__body { min-width: 0; flex: 1 1 auto; }
 
 /* Ícone "bonequinho" clássico (Opções > Layout > "Mostrar ícone
-   clássico"), alternativa à foto na lista de contatos. Mesma técnica
-   de máscara usada em .status-frame__tint: a imagem (verde, com
-   sombreado) vira só a forma (alfa), recolorida via background-color
-   conforme o status. */
+   clássico"), alternativa à foto na lista de contatos. A imagem
+   (cinza, com brilho/sombreado 3D) é tingida por cima com
+   background-blend-mode: color — mesma técnica do cenário do
+   cabeçalho (ver .dash-header/scenes.js bg()) — que troca só o
+   matiz/saturação e preserva a luminosidade original, então o
+   sombreado do boneco continua aparecendo (não vira uma silhueta
+   lisa). A máscara (mesma imagem) por cima só recorta o resultado no
+   formato do ícone, pra não pintar um quadrado ao redor dele. */
 .contact-classic-icon {
   display: block;
   width: 100%; height: 100%;
-  background-color: #9aa7b1;
+  --tint: #c7d2db;
+  background-image: linear-gradient(var(--tint), var(--tint)), url("../assets/icons/contato_icon.webp");
+  background-size: contain, contain;
+  background-repeat: no-repeat, no-repeat;
+  background-position: center, center;
+  background-blend-mode: color, normal;
   -webkit-mask-image: url("../assets/icons/contato_icon.webp");
   mask-image: url("../assets/icons/contato_icon.webp");
   -webkit-mask-size: contain;
@@ -1509,11 +1531,16 @@ body[data-login-theme="cenario1"] #screen-connecting::before {
   mask-position: center;
   transition: background-color 0.3s ease;
 }
-.contact-classic-icon[data-status="online"] { background-color: #10eb09; }
-.contact-classic-icon[data-status="busy"] { background-color: #c62828; }
-.contact-classic-icon[data-status="away"] { background-color: #e0a409; }
+/* Verde igual ao ícone original (amostrado da imagem verde enviada
+   antes de trocar pra versão cinza) — só o matiz/saturação importam
+   pro blend "color" acima, não o tom exato deste hex. As outras cores
+   reaproveitam o mesmo tom "cheio" (não pastel) já usado na moldura
+   de status dos avatares (ver STATUS_FRAME_GRADIENT em scenes.js). */
+.contact-classic-icon[data-status="online"] { --tint: #3c7431; }
+.contact-classic-icon[data-status="busy"] { --tint: #c62828; }
+.contact-classic-icon[data-status="away"] { --tint: #e0a409; }
 .contact-classic-icon[data-status="invisible"],
-.contact-classic-icon[data-status="offline"] { background-color: #9aa7b1; }
+.contact-classic-icon[data-status="offline"] { --tint: #9aa7b1; }
 .contact-item__name {
   font-size: 0.9rem;
   color: #2b2b2b;
