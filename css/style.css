@@ -21,6 +21,15 @@
 
 * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
 
+/* [hidden] tem a mesma especificidade CSS de uma classe — sem essa
+   regra, qualquer elemento escondido via JS (el.hidden = true) que
+   também tenha uma classe com "display" definido (grid, flex...)
+   continua aparecendo, porque a classe "ganha" da regra nativa do
+   navegador pro atributo hidden. !important garante que hidden
+   sempre vence, em qualquer elemento, sem precisar lembrar de
+   escrever ".minha-classe[hidden] { display: none; }" toda vez. */
+[hidden] { display: none !important; }
+
 html, body {
   margin: 0;
   padding: 0;
@@ -2614,10 +2623,6 @@ body[data-login-theme="cenario1"] #screen-connecting::before {
 }
 .chat-header__status { font-size: 0.85rem; color: #7a8a97; }
 
-/* [hidden] tem a mesma especificidade de uma classe — sem isso, o
-   display:flex abaixo ganhava do hidden nativo e a faixa aparecia
-   vazia mesmo escondida (bug visto ao testar com um contato online). */
-.chat-offline-banner[hidden] { display: none; }
 .chat-offline-banner {
   flex: 0 0 auto;
   display: flex;

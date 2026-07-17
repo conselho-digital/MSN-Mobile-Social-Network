@@ -1510,6 +1510,14 @@ const Dashboard = (() => {
       mailLink.textContent = "Enviar um e-mail para este contato";
       textEl.appendChild(mailLink);
     }
+
+    // Com o contato offline, "Chamar a atenção" (nudge, ninguém do
+    // outro lado pra tremer a tela na hora) e "Enviar uma imagem"
+    // somem da barra — só ficam emoji, fonte e plano de fundo.
+    const nudgeBtn = document.getElementById("chat-nudge-btn");
+    if (nudgeBtn) nudgeBtn.hidden = isOffline;
+    const imageBtn = document.getElementById("chat-image-btn");
+    if (imageBtn) imageBtn.hidden = isOffline;
   }
 
   // Só guardamos texto puro no banco (ver supabase/schema.sql) — GIFs e
