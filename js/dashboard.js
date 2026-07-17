@@ -77,11 +77,23 @@ const Dashboard = (() => {
     const header = document.querySelector(".dash-header");
     if (!header) return;
     const url = sceneId === "custom" && customUrl ? customUrl : MSNScenes.image(sceneId);
+
+    // Pré-calculado (ver isLight em scenes.js), aplica na hora — sem
+    // isso o texto ficava branco (ilegível em cenários claros) por um
+    // instante toda vez que o Dashboard carregava, até a amostragem
+    // abaixo (que depende de baixar a foto) terminar.
+    const known = MSNScenes.isLightScene(sceneId);
+    if (known !== null) header.classList.toggle("is-light-scene", known);
+
     const token = ++brightnessToken;
     if (!url) {
       header.classList.remove("is-light-scene");
       return;
     }
+    // Continua rodando por cima do valor pré-calculado — é o único
+    // jeito de saber a resposta certa pra cenário customizado (imagem
+    // enviada pela pessoa, sem isLight fixo), e serve de conferência
+    // pros demais.
     sampleBrightness(url, (avg) => {
       if (token !== brightnessToken || avg === null) return;
       header.classList.toggle("is-light-scene", avg > 150);

@@ -23,30 +23,38 @@ const MSNScenes = (() => {
   function gradientFor(theme) {
     return "linear-gradient(120deg,#0a0a0a 0%," + theme + " 100%)";
   }
+  // isLight: brilho médio da FOTO de cada cenário (não da cor de tema —
+  // são coisas diferentes: a foto é o que fica atrás do nome/status no
+  // banner, a cor de tema pinta só a faixa abaixo da busca) já calculado
+  // de antemão (mesma fórmula de luminância usada em updateHeaderTextContrast,
+  // em dashboard.js), > 150 = clara. Ter isso pronto evita mostrar
+  // texto branco ilegível por um instante no primeiro carregamento do
+  // Dashboard, enquanto a amostragem em tempo real (que ainda roda por
+  // cima, pra cenário customizado enviado pela pessoa) não terminou.
   const SCENES = [
-    { id: "cenario1",  name: "Céu Azul",         theme: "#2bb0e0" },
-    { id: "cenario2",  name: "Rendas",           theme: "#a89f8c" },
-    { id: "cenario3",  name: "Amigos no Jardim", theme: "#5cb85c" },
-    { id: "cenario4",  name: "Campo Dourado",    theme: "#e0902a" },
-    { id: "cenario5",  name: "Galhos",           theme: "#e08a3c" },
-    { id: "cenario6",  name: "Futebol",          theme: "#5cb85c" },
-    { id: "cenario7",  name: "Deserto Azul",     theme: "#3f6fe0" },
-    { id: "cenario8",  name: "Bloco Rosa",       theme: "#e07ab8" },
-    { id: "cenario9",  name: "Verde Puro",       theme: "#5cb85c" },
-    { id: "cenario10", name: "Flores Roxas",     theme: "#8f7fd6" },
-    { id: "cenario11", name: "Flor de Cerejeira", theme: "#e69bb5" },
-    { id: "cenario12", name: "Neon Geométrico",  theme: "#d94f7a" },
-    { id: "cenario13", name: "Mandala",          theme: "#a0227a" },
-    { id: "cenario14", name: "Ouro Rosa",        theme: "#e0227a" },
-    { id: "cenario15", name: "Grafite Verde",    theme: "#2e7d32" },
-    { id: "cenario16", name: "Robô Espacial",    theme: "#1f7fd0" },
-    { id: "cenario17", name: "Grafite Urbano",   theme: "#2bb0e0" },
-    { id: "cenario18", name: "Bambu",            theme: "#3aa11a" },
-    { id: "cenario19", name: "Pop Art",          theme: "#e8c547" },
-    { id: "cenario20", name: "Caveira Roxa",     theme: "#7b3fd0" },
-    { id: "cenario21", name: "Terracota",        theme: "#8a5a4a" },
-    { id: "cenario22", name: "Amor",             theme: "#a0303a" },
-    { id: "cenario23", name: "Damasco",          theme: "#4a4a4a" },
+    { id: "cenario1",  name: "Céu Azul",         theme: "#2bb0e0", isLight: true },
+    { id: "cenario2",  name: "Rendas",           theme: "#a89f8c", isLight: true },
+    { id: "cenario3",  name: "Amigos no Jardim", theme: "#5cb85c", isLight: true },
+    { id: "cenario4",  name: "Campo Dourado",    theme: "#e0902a", isLight: true },
+    { id: "cenario5",  name: "Galhos",           theme: "#e08a3c", isLight: true },
+    { id: "cenario6",  name: "Futebol",          theme: "#5cb85c", isLight: true },
+    { id: "cenario7",  name: "Deserto Azul",     theme: "#3f6fe0", isLight: false },
+    { id: "cenario8",  name: "Bloco Rosa",       theme: "#e07ab8", isLight: false },
+    { id: "cenario9",  name: "Verde Puro",       theme: "#5cb85c", isLight: true },
+    { id: "cenario10", name: "Flores Roxas",     theme: "#8f7fd6", isLight: false },
+    { id: "cenario11", name: "Flor de Cerejeira", theme: "#e69bb5", isLight: true },
+    { id: "cenario12", name: "Neon Geométrico",  theme: "#d94f7a", isLight: false },
+    { id: "cenario13", name: "Mandala",          theme: "#a0227a", isLight: false },
+    { id: "cenario14", name: "Ouro Rosa",        theme: "#e0227a", isLight: false },
+    { id: "cenario15", name: "Grafite Verde",    theme: "#2e7d32", isLight: false },
+    { id: "cenario16", name: "Robô Espacial",    theme: "#1f7fd0", isLight: false },
+    { id: "cenario17", name: "Grafite Urbano",   theme: "#2bb0e0", isLight: true },
+    { id: "cenario18", name: "Bambu",            theme: "#3aa11a", isLight: false },
+    { id: "cenario19", name: "Pop Art",          theme: "#e8c547", isLight: true },
+    { id: "cenario20", name: "Caveira Roxa",     theme: "#7b3fd0", isLight: false },
+    { id: "cenario21", name: "Terracota",        theme: "#8a5a4a", isLight: false },
+    { id: "cenario22", name: "Amor",             theme: "#a0303a", isLight: false },
+    { id: "cenario23", name: "Damasco",          theme: "#4a4a4a", isLight: false },
   ].map((s) => Object.assign(s, {
     css: gradientFor(s.theme),
     image: "assets/scenes/" + s.id + ".webp",
@@ -101,6 +109,15 @@ const MSNScenes = (() => {
   function theme(id) {
     const s = find(id);
     return (s && s.theme) || SCENES[0].theme;
+  }
+  // Se a FOTO do cenário é clara o bastante pra precisar de texto
+  // escuro em cima (ver comentário do isLight acima, na definição de
+  // SCENES) — null pra um id desconhecido/cenário customizado, que
+  // não tem esse valor pré-calculado (ver updateHeaderTextContrast em
+  // dashboard.js, que sabe cair pra amostragem em tempo real nesse caso).
+  function isLightScene(id) {
+    const s = find(id);
+    return s ? s.isLight : null;
   }
   // Só a URL absoluta da imagem do cenário (sem o degradê), ou null se
   // este cenário não tiver imagem configurada. Usado pela tela de login
@@ -222,7 +239,7 @@ const MSNScenes = (() => {
 
   return {
     list: SCENES, find, css, bg, theme, image, example, pastel, shade,
-    colorSchemes: COLOR_SCHEMES, colorSchemeHex, effectiveTheme,
+    colorSchemes: COLOR_SCHEMES, colorSchemeHex, effectiveTheme, isLightScene,
     frameGradient, updateStatusFrame, defaultAvatar: DEFAULT_AVATAR, avatarSrc,
   };
 })();
