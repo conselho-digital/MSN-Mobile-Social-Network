@@ -200,11 +200,18 @@ const Dashboard = (() => {
 
   const updateStatusFrame = MSNScenes.updateStatusFrame;
 
-  // Ícone "bonequinho" clássico (Opções > Layout > "Mostrar ícone
-  // clássico"), alternativa à foto de exibição na lista de contatos —
-  // recolorido via CSS conforme o status (ver .contact-classic-icon).
+  // Ícone "bonequinho" clássico — um dos modos de exibição do avatar
+  // (Opções > Layout / dropdown "Modo de exibição"), recolorido via
+  // CSS conforme o status (ver .contact-classic-icon).
   function classicIconMarkup(status) {
     return '<span class="contact-classic-icon" data-status="' + esc(status) + '" aria-hidden="true"></span>';
+  }
+
+  // Ícone de status "pequeno" — o mesmo usado no dropdown "Entrar
+  // como:" da tela de login (ver .signin-as .status-dot), reaproveitado
+  // como avatar em miniatura no modo de exibição "tiny".
+  function statusIconMarkup(status) {
+    return '<span class="contact-status-icon-img" data-status="' + esc(status) + '" aria-hidden="true"></span>';
   }
 
   // Arrastar o banner do cenário pra baixo recarrega a página — um
@@ -379,37 +386,35 @@ const Dashboard = (() => {
     }
   }
 
-  /* ---------- Modo de exibição (tamanho das figuras na lista) ----------
-     Preferência local (não é salva no perfil/Supabase), lembrada por
-     dispositivo via localStorage. "md" é o padrão (mesmo visual de
-     sempre — não precisa de classe extra). */
-  const VIEW_MODES = ["lg", "md", "sm", "list"];
-  function setViewMode(mode) {
-    if (VIEW_MODES.indexOf(mode) === -1) mode = "md";
-    const list = document.getElementById("contacts-container");
-    if (list) {
-      VIEW_MODES.forEach((m) => list.classList.remove("contacts--" + m));
-      if (mode !== "md") list.classList.add("contacts--" + mode);
-    }
-    try { localStorage.setItem("msn:viewMode", mode); } catch (_) {}
-  }
-  function loadViewMode() {
-    let mode = "md";
-    try { mode = localStorage.getItem("msn:viewMode") || "md"; } catch (_) {}
-    setViewMode(mode);
-    const radio = document.querySelector('input[name="view-mode"][value="' + mode + '"]');
-    if (radio) radio.checked = true;
+  /* ---------- Preferências de Layout (Opções > Layout) ----------
+     Tudo aqui é preferência local (localStorage), não depende de
+     coluna nova no Supabase.
+
+     Tamanho/estilo do avatar dos contatos: 4 modos (ver
+     .contact-item__avatar[data-mode] no CSS) — "huge" (tamanho da
+     própria foto de exibição), "large" (padrão de sempre, 38px),
+     "classic" (ícone bonequinho colorido pelo status) e "tiny" (ícone
+     de status da tela de login). Favoritos e "Outros contatos"
+     (grupos + Disponível + Offline) guardam o modo separadamente
+     (favSize/otherSize) — o dropdown "Modo de exibição" na barra de
+     ferramentas é só um atalho que seta os dois de uma vez, pra não
+     ter um terceiro estado pra manter sincronizado. */
+  const SIZE_MODES = ["huge", "large", "classic", "tiny"];
+  // Converte valores antigos (de antes dessa tela ganhar 4 modos) pro
+  // equivalente mais próximo, pra quem já tinha uma preferência salva
+  // não cair num valor inválido.
+  function normalizeSizeMode(v) {
+    if (SIZE_MODES.indexOf(v) !== -1) return v;
+    if (v === "normal" || v === "md" || v === "lg") return v === "lg" ? "huge" : "large";
+    if (v === "small" || v === "sm") return "tiny";
+    return "large";
   }
 
-  /* ---------- Preferências de Layout (Opções > Layout) ----------
-     Tudo aqui é preferência local (localStorage), como Modo de
-     exibição — não depende de coluna nova no Supabase. */
   let showFavoritesGroup = true;
   let showGroupsSection = true;
   let showBlockedContacts = true;
-  let useClassicIcon = false;
-  let favSize = "normal";
-  let otherSize = "normal";
+  let favSize = "large";
+  let otherSize = "large";
   let labelBy = "name";
   let showStatusLabel = false;
   let sortBy = "status";
@@ -420,9 +425,8 @@ const Dashboard = (() => {
       showFavoritesGroup = get("msn:showFavorites", "true") === "true";
       showGroupsSection = get("msn:showGroups", "true") === "true";
       showBlockedContacts = get("msn:showBlocked", "true") === "true";
-      useClassicIcon = get("msn:classicIcon", "false") === "true";
-      favSize = get("msn:favSize", "normal");
-      otherSize = get("msn:otherSize", "normal");
+      favSize = normalizeSizeMode(get("msn:favSize", "large"));
+      otherSize = normalizeSizeMode(get("msn:otherSize", "large"));
       labelBy = get("msn:labelBy", "name");
       showStatusLabel = get("msn:showStatusLabel", "false") === "true";
       sortBy = get("msn:sortBy", "status");
@@ -433,7 +437,6 @@ const Dashboard = (() => {
       localStorage.setItem("msn:showFavorites", String(showFavoritesGroup));
       localStorage.setItem("msn:showGroups", String(showGroupsSection));
       localStorage.setItem("msn:showBlocked", String(showBlockedContacts));
-      localStorage.setItem("msn:classicIcon", String(useClassicIcon));
       localStorage.setItem("msn:favSize", favSize);
       localStorage.setItem("msn:otherSize", otherSize);
       localStorage.setItem("msn:labelBy", labelBy);
@@ -442,32 +445,30 @@ const Dashboard = (() => {
     } catch (_) {}
   }
 
-  // Aplica visibilidade/tamanho — não depende de re-renderizar os
-  // contatos (só liga/desliga classes nos containers já existentes).
+  // Aplica visibilidade — o tamanho/estilo do avatar é decidido por
+  // item em renderContacts()/fillList() (cada seção usa favSize ou
+  // otherSize), não precisa de classe no container.
   function applyLayoutVisuals() {
     const favGroup = document.getElementById("group-favorites");
-    if (favGroup) {
-      favGroup.hidden = !showFavoritesGroup;
-      favGroup.classList.remove("size-small", "size-list");
-      if (favSize === "small") favGroup.classList.add("size-small");
-      else if (favSize === "list") favGroup.classList.add("size-list");
-    }
+    if (favGroup) favGroup.hidden = !showFavoritesGroup;
     const groupsWrap = document.getElementById("contact-groups-dynamic");
     if (groupsWrap) groupsWrap.hidden = !showGroupsSection;
+    syncViewModeMenu();
+  }
 
-    const container = document.getElementById("contacts-container");
-    if (container) {
-      container.classList.remove("contacts-other-size-small", "contacts-other-size-list");
-      if (otherSize === "small") container.classList.add("contacts-other-size-small");
-      else if (otherSize === "list") container.classList.add("contacts-other-size-list");
-    }
+  // O dropdown "Modo de exibição" da barra de ferramentas reflete o
+  // modo dos Favoritos como referência (os dois seletores de Opções >
+  // Layout podem divergir entre si; aqui é só um atalho pra setar os
+  // dois de uma vez, ver bindEvents).
+  function syncViewModeMenu() {
+    const radio = document.querySelector('input[name="view-mode"][value="' + favSize + '"]');
+    if (radio) radio.checked = true;
   }
 
   function loadLayoutPrefsIntoForm() {
     document.getElementById("opt-show-favorites").checked = showFavoritesGroup;
     document.getElementById("opt-show-groups").checked = showGroupsSection;
     document.getElementById("opt-show-blocked").checked = showBlockedContacts;
-    document.getElementById("opt-classic-icon").checked = useClassicIcon;
     document.getElementById("opt-label-by").value = labelBy;
     document.getElementById("opt-show-status-label").checked = showStatusLabel;
     document.getElementById("opt-sort-by").value = sortBy;
@@ -481,14 +482,13 @@ const Dashboard = (() => {
     showFavoritesGroup = document.getElementById("opt-show-favorites").checked;
     showGroupsSection = document.getElementById("opt-show-groups").checked;
     showBlockedContacts = document.getElementById("opt-show-blocked").checked;
-    useClassicIcon = document.getElementById("opt-classic-icon").checked;
     labelBy = document.getElementById("opt-label-by").value;
     showStatusLabel = document.getElementById("opt-show-status-label").checked;
     sortBy = document.getElementById("opt-sort-by").value;
     const favRadio = document.querySelector('input[name="size-favorites"]:checked');
-    favSize = favRadio ? favRadio.value : "normal";
+    favSize = favRadio ? favRadio.value : "large";
     const otherRadio = document.querySelector('input[name="size-other"]:checked');
-    otherSize = otherRadio ? otherRadio.value : "normal";
+    otherSize = otherRadio ? otherRadio.value : "large";
     saveLayoutPrefs();
     applyLayoutVisuals();
     renderContacts(currentFilter);
@@ -890,7 +890,7 @@ const Dashboard = (() => {
         ? contacts.filter((c) => matches(c) && !claimedIds.has(String(c.id)) && memberIds.includes(String(c.id)))
         : [];
       members.forEach((c) => claimedIds.add(String(c.id)));
-      fillList("list-group-" + g.id, members);
+      fillList("list-group-" + g.id, members, otherSize);
       const groupOnline = members.filter(isOnline).length;
       const countEl = document.getElementById("count-group-" + g.id);
       if (countEl) countEl.textContent = "(" + groupOnline + "/" + members.length + ")";
@@ -922,9 +922,9 @@ const Dashboard = (() => {
       if (offlineGroup) offlineGroup.hidden = false;
     }
 
-    fillList("list-favorites", favorites);
-    fillList("list-online", online);
-    fillList("list-offline", offline);
+    fillList("list-favorites", favorites, favSize);
+    fillList("list-online", online, otherSize);
+    fillList("list-offline", offline, otherSize);
     const favOnline = favorites.filter(isOnline).length;
     document.getElementById("count-favorites").textContent = "(" + favOnline + "/" + favorites.length + ")";
     document.getElementById("count-online").textContent = "(" + online.length + ")";
@@ -949,7 +949,7 @@ const Dashboard = (() => {
   // animar quando o status de um contato muda, ao invés de só "trocar"
   // de uma vez (nó novo = sem transição pra animar a partir de onde
   // estava).
-  function fillList(id, list) {
+  function fillList(id, list, mode) {
     const ul = document.getElementById(id);
     const existing = new Map();
     ul.querySelectorAll(".contact-item[data-id]").forEach((li) => existing.set(li.dataset.id, li));
@@ -958,10 +958,10 @@ const Dashboard = (() => {
       const key = String(c.id);
       let li = existing.get(key);
       if (li) {
-        updateContactItem(li, c);
+        updateContactItem(li, c, mode);
         existing.delete(key);
       } else {
-        li = contactItem(c);
+        li = contactItem(c, mode);
       }
       ul.appendChild(li); // garante a ordem da lista atual
     });
@@ -971,7 +971,7 @@ const Dashboard = (() => {
     existing.forEach((li) => li.remove());
   }
 
-  function contactItem(c) {
+  function contactItem(c, mode) {
     const li = document.createElement("li");
     li.dataset.id = c.id;
     li.innerHTML =
@@ -980,29 +980,36 @@ const Dashboard = (() => {
       '<div class="contact-item__name"></div>' +
       "</div>" +
       '<button type="button" class="contact-item__fav"></button>';
-    updateContactItem(li, c);
+    updateContactItem(li, c, mode);
     return li;
   }
 
-  function updateContactItem(li, c) {
+  function updateContactItem(li, c, mode) {
     const isOnline = ["online", "busy", "away"].includes(c.status);
     li.className = "contact-item " + (isOnline ? "contact-item--" + c.status : "contact-item--offline");
 
     const avatarBox = li.querySelector(".contact-item__avatar");
     if (avatarBox) {
-      const icon = avatarBox.querySelector(".contact-classic-icon");
-      const ring = avatarBox.querySelector(".status-frame__ring");
-      // A troca entre foto e ícone clássico (Opções > Layout) exige
-      // remontar o miolo — os dois modos têm estruturas diferentes por
-      // dentro, ao contrário de uma simples atualização de status.
-      if (useClassicIcon && !icon) {
-        avatarBox.innerHTML = classicIconMarkup(c.status);
-      } else if (!useClassicIcon && !ring) {
-        avatarBox.innerHTML = statusFrameMarkup(c.avatar_url, c.status);
-      } else if (useClassicIcon) {
-        icon.dataset.status = c.status;
+      avatarBox.dataset.mode = mode;
+      // Trocar de modo (Opções > Layout / "Modo de exibição") exige
+      // remontar o miolo — cada um tem uma estrutura diferente por
+      // dentro (foto+moldura / ícone clássico / ícone de status), ao
+      // contrário de uma simples atualização de status.
+      const current = avatarBox.dataset.renderedMode;
+      if (current !== mode) {
+        avatarBox.dataset.renderedMode = mode;
+        if (mode === "classic") avatarBox.innerHTML = classicIconMarkup(c.status);
+        else if (mode === "tiny") avatarBox.innerHTML = statusIconMarkup(c.status);
+        else avatarBox.innerHTML = statusFrameMarkup(c.avatar_url, c.status);
+      } else if (mode === "classic") {
+        const icon = avatarBox.querySelector(".contact-classic-icon");
+        if (icon) icon.dataset.status = c.status;
+      } else if (mode === "tiny") {
+        const img = avatarBox.querySelector(".contact-status-icon-img");
+        if (img) img.dataset.status = c.status;
       } else {
-        updateStatusFrame(ring, c.status);
+        const ring = avatarBox.querySelector(".status-frame__ring");
+        if (ring) updateStatusFrame(ring, c.status);
         const photoWrap = avatarBox.querySelector(".status-frame__photo");
         if (photoWrap && photoWrap.dataset.avatarUrl !== (c.avatar_url || "")) {
           photoWrap.innerHTML = avatarMarkup(c.avatar_url);
@@ -2141,13 +2148,18 @@ const Dashboard = (() => {
       viewMenu.addEventListener("click", (e) => e.stopPropagation());
       document.addEventListener("click", closeViewMenu);
       registerDropdown(closeViewMenu);
+      // Atalho: escolher um modo aqui seta Favoritos e Outros contatos
+      // de uma vez (mesmo estado das Opções > Layout — ver
+      // syncViewModeMenu/applyLayoutVisuals).
       viewMenu.querySelectorAll('input[name="view-mode"]').forEach((radio) => {
         radio.addEventListener("change", () => {
-          setViewMode(radio.value);
+          favSize = radio.value;
+          otherSize = radio.value;
+          saveLayoutPrefs();
+          renderContacts(currentFilter);
           closeViewMenu();
         });
       });
-      loadViewMode();
     }
 
     // Convidar amigos (compartilha o link do site)

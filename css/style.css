@@ -1385,10 +1385,42 @@ body[data-login-theme="cenario1"] #screen-connecting::before {
   box-shadow: inset 0 0 0 1px rgba(0, 0, 0, 0.15);
 }
 .view-mode-option__box svg { display: block; width: 100%; height: 100%; }
-.view-mode-option__box--lg { width: 44px; height: 44px; }
-.view-mode-option__box--md { width: 34px; height: 34px; }
-.view-mode-option__box--sm { width: 24px; height: 24px; }
-.view-mode-option__box--list { width: 16px; height: 16px; background: #f4f6f8; }
+.view-mode-option__box--huge { width: 44px; height: 44px; }
+.view-mode-option__box--large { width: 34px; height: 34px; }
+/* Mostram o ícone de verdade em miniatura — aqui a diferença não é só
+   tamanho, é o que substitui a foto (ver .contact-classic-icon e
+   .contact-status-icon-img, mesma técnica). */
+.view-mode-option__box--classic {
+  width: 30px; height: 30px;
+}
+.view-mode-option__box--classic::before {
+  content: "";
+  display: block;
+  width: 100%; height: 100%;
+  --tint: #3c7431;
+  background-image: linear-gradient(var(--tint), var(--tint)), url("../assets/icons/contato_icon.webp");
+  background-size: contain, contain;
+  background-repeat: no-repeat, no-repeat;
+  background-position: center, center;
+  background-blend-mode: color, normal;
+  -webkit-mask-image: url("../assets/icons/contato_icon.webp");
+  mask-image: url("../assets/icons/contato_icon.webp");
+  -webkit-mask-size: contain;
+  mask-size: contain;
+  -webkit-mask-repeat: no-repeat;
+  mask-repeat: no-repeat;
+  -webkit-mask-position: center;
+  mask-position: center;
+}
+.view-mode-option__box--tiny {
+  width: 16px; height: 16px;
+  background-color: #f4f6f8;
+  background-image: url("../assets/icons/available.webp");
+  background-size: 60%;
+  background-repeat: no-repeat;
+  background-position: center;
+  image-rendering: pixelated;
+}
 .view-mode-option input:checked + .view-mode-option__box,
 .view-mode-option input:focus-visible + .view-mode-option__box {
   box-shadow: 0 0 0 2px #3f9fe0;
@@ -1468,8 +1500,6 @@ body[data-login-theme="cenario1"] #screen-connecting::before {
 .contact-item__fav::before { content: "☆"; }
 .contact-item__fav.is-favorite { color: #f0a83c; }
 .contact-item__fav.is-favorite::before { content: "★"; }
-.contacts--sm .contact-item__fav,
-.contacts--list .contact-item__fav { display: none; }
 
 /* Colapsa/expande com animação (grid-template-rows 0fr → 1fr) em vez
    de display:none/block direto, que não é animável. O <ul> em si
@@ -1503,9 +1533,10 @@ body[data-login-theme="cenario1"] #screen-connecting::before {
 }
 .contact-item__body { min-width: 0; flex: 1 1 auto; }
 
-/* Ícone "bonequinho" clássico (Opções > Layout > "Mostrar ícone
-   clássico"), alternativa à foto na lista de contatos. A imagem
-   (cinza, com brilho/sombreado 3D) é tingida por cima com
+/* Ícone "bonequinho" clássico — uma das opções de tamanho/estilo em
+   Opções > Layout ("Ícone clássico") e no dropdown "Modo de exibição",
+   alternativa à foto na lista de contatos. A imagem (cinza, com
+   brilho/sombreado 3D) é tingida por cima com
    background-blend-mode: color — mesma técnica do cenário do
    cabeçalho (ver .dash-header/scenes.js bg()) — que troca só o
    matiz/saturação e preserva a luminosidade original, então o
@@ -1605,34 +1636,45 @@ body[data-login-theme="cenario1"] #screen-connecting::before {
 .group-contact-btn__avatar svg { width: 100%; height: 100%; display: block; object-fit: cover; }
 .group-contacts-empty { color: #8a97a1; font-size: 0.85rem; padding: 8px 4px; }
 
-/* ---------- Modo de exibição (tamanho das figuras na lista) ----------
-   "md" é o padrão (regras acima). Os outros modos são aplicados via
-   classe no #contacts-container, escolhida no dropdown do botão
-   "Modo de exibição". */
-.contacts--lg .contact-item { padding-top: 9px; padding-bottom: 9px; }
-.contacts--lg .contact-item__avatar { width: 46px; height: 46px; }
+/* ---------- Modo de exibição (avatar dos contatos na lista) ----------
+   4 tamanhos/estilos, escolhidos por seção em Opções > Layout
+   (Favoritos e Outros contatos separadamente) ou de uma vez só no
+   dropdown do botão "Modo de exibição" na barra de ferramentas — os
+   dois controles escrevem no mesmo estado (favSize/otherSize em
+   dashboard.js), então ficam sempre em sincronia.
 
-.contacts--sm .contact-item { padding-top: 4px; padding-bottom: 4px; }
-.contacts--sm .contact-item__avatar { width: 24px; height: 24px; }
-.contacts--sm .contact-item__sub { display: none; }
+   Cada <li> já sabe seu próprio modo via data-mode no
+   .contact-item__avatar (calculado por seção em renderContacts/
+   fillList) — não depende de nenhuma classe no container/ancestral,
+   então funciona igual em qualquer lista (favoritos, grupo, disponível
+   ou offline). "large" é o padrão (mesmo tamanho de sempre, 38px). */
+.contact-item:has(.contact-item__avatar[data-mode="huge"]) { padding-top: 14px; padding-bottom: 14px; }
+.contact-item__avatar[data-mode="huge"] { width: 78px; height: 78px; }
 
-.contacts--list .contact-item { padding-top: 4px; padding-bottom: 4px; padding-left: 12px; }
-.contacts--list .contact-item__avatar { display: none; }
-.contacts--list .contact-item__sub { display: none; }
+.contact-item__avatar[data-mode="large"],
+.contact-item__avatar[data-mode="classic"] { width: 38px; height: 38px; }
 
-/* Tamanho de foto por seção (Opções > Layout) — independente do Modo
-   de exibição acima, que é global. Favoritos usa o próprio container
-   (#group-favorites); "Outros contatos" (Grupos + Disponível +
-   Offline) usa a classe .contact-group--other compartilhada por eles. */
-#group-favorites.size-small .contact-item__avatar { width: 24px; height: 24px; }
-#group-favorites.size-list .contact-item__avatar { display: none; }
-#group-favorites.size-list .contact-item { padding-left: 12px; }
-#group-favorites.size-list .contact-item__sub { display: none; }
+.contact-item:has(.contact-item__avatar[data-mode="tiny"]) { padding-top: 4px; padding-bottom: 4px; }
+.contact-item__avatar[data-mode="tiny"] { width: 18px; height: 18px; }
 
-.contacts-other-size-small .contact-group--other .contact-item__avatar { width: 24px; height: 24px; }
-.contacts-other-size-list .contact-group--other .contact-item__avatar { display: none; }
-.contacts-other-size-list .contact-group--other .contact-item { padding-left: 12px; }
-.contacts-other-size-list .contact-group--other .contact-item__sub { display: none; }
+/* "Pequeno": usa o mesmo ícone de status (imagem) da tela de login em
+   vez de qualquer foto — ver .signin-as .status-dot, mesma técnica
+   (pixelated, já que a imagem original é minúscula). */
+.contact-status-icon-img {
+  display: block;
+  width: 100%; height: 100%;
+  border-radius: 3px;
+  background-size: contain;
+  background-repeat: no-repeat;
+  background-position: center;
+  image-rendering: pixelated;
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.35);
+}
+.contact-status-icon-img[data-status="online"] { background-image: url("../assets/icons/available.webp"); }
+.contact-status-icon-img[data-status="busy"] { background-image: url("../assets/icons/ocupado.webp"); }
+.contact-status-icon-img[data-status="away"] { background-image: url("../assets/icons/ausente.webp"); }
+.contact-status-icon-img[data-status="invisible"],
+.contact-status-icon-img[data-status="offline"] { background-image: url("../assets/icons/invisivel.webp"); }
 
 /* ---------- Barra de busca com ícones ---------- */
 .dash-search-wrap { position: relative; flex: 1 1 auto; }
@@ -2369,10 +2411,46 @@ body[data-login-theme="cenario1"] #screen-connecting::before {
   border: 2px solid transparent;
   border-radius: 4px;
   box-sizing: border-box;
+  margin: 6px;
 }
-.options-size-option__avatar--md { width: 32px; height: 32px; }
-.options-size-option__avatar--sm { width: 20px; height: 20px; margin: 6px; }
-.options-size-option__avatar--list { width: 32px; height: 8px; margin-top: 12px; border-radius: 2px; }
+.options-size-option__avatar--huge { width: 32px; height: 32px; margin: 0; }
+.options-size-option__avatar--large { width: 22px; height: 22px; margin: 5px; }
+/* As duas últimas mostram o ícone de verdade em miniatura (em vez de
+   um retângulo genérico), já que aqui a diferença não é só tamanho —
+   é o que aparece no lugar da foto (ver .contact-classic-icon e
+   .contact-status-icon-img). */
+.options-size-option__avatar--classic {
+  width: 26px; height: 26px; margin: 3px;
+  background: #dbe4ea;
+}
+.options-size-option__avatar--classic::before {
+  content: "";
+  display: block;
+  width: 100%; height: 100%;
+  --tint: #3c7431;
+  background-image: linear-gradient(var(--tint), var(--tint)), url("../assets/icons/contato_icon.webp");
+  background-size: contain, contain;
+  background-repeat: no-repeat, no-repeat;
+  background-position: center, center;
+  background-blend-mode: color, normal;
+  -webkit-mask-image: url("../assets/icons/contato_icon.webp");
+  mask-image: url("../assets/icons/contato_icon.webp");
+  -webkit-mask-size: contain;
+  mask-size: contain;
+  -webkit-mask-repeat: no-repeat;
+  mask-repeat: no-repeat;
+  -webkit-mask-position: center;
+  mask-position: center;
+}
+.options-size-option__avatar--tiny {
+  width: 14px; height: 14px; margin: 9px;
+  border-radius: 3px;
+  background-image: url("../assets/icons/available.webp");
+  background-size: contain;
+  background-repeat: no-repeat;
+  background-position: center;
+  image-rendering: pixelated;
+}
 .options-size-option input:checked + .options-size-option__avatar {
   border-color: #1f7fd0;
   box-shadow: 0 0 0 2px rgba(31, 127, 208, 0.3);
