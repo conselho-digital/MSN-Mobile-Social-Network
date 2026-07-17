@@ -2614,11 +2614,10 @@ body[data-login-theme="cenario1"] #screen-connecting::before {
    esticavam a moldura de forma desproporcional (mask-size:100% 100%
    força o encaixe, então um retângulo distorcia o desenho do anel). */
 .chat-sidebar__avatar { position: relative; width: 108px; height: 108px; flex: 0 0 auto; }
-/* A foto do contato "sobe" pra cobrir mais ou menos metade da altura
-   do banner — só ela, não a minha lá embaixo (ver comentário grande
-   acima de .chat-sidebar). Metade de 97.5px (altura do banner, ver
-   .chat-header). */
-.chat-sidebar__avatar:first-child { margin-top: -49px; }
+/* A foto do contato "sobe" pra cobrir o banner com metade da ALTURA
+   DELA MESMA (não do banner) — só ela, não a minha lá embaixo (ver
+   comentário grande acima de .chat-sidebar). Metade de 108px. */
+.chat-sidebar__avatar:first-child { margin-top: -54px; }
 .chat-sidebar__avatar:last-child { margin-top: auto; }
 /* Recolhida: encolhe pra 0 (não só "hidden") pra animar a largura em
    vez de sumir de uma vez — sem o botão de recolher no meio do fluxo
