@@ -2072,15 +2072,12 @@ const Dashboard = (() => {
     }
 
     // Com o contato offline, "Chamar a atenção" (nudge, ninguém do
-    // outro lado pra tremer a tela na hora) e "Enviar uma imagem"
-    // deveriam sumir da barra — só ficam emoji, fonte e plano de
-    // fundo. TEMPORARIAMENTE desligado a pedido (deixar os dois
-    // aparecerem sempre, mesmo offline, enquanto ainda estão sendo
-    // construídos) — reative as duas linhas abaixo quando terminar.
+    // outro lado pra tremer a tela na hora) deveria sumir da barra —
+    // TEMPORARIAMENTE desligado a pedido (deixar aparecer sempre,
+    // mesmo offline, enquanto ainda está sendo construído) — reative a
+    // linha abaixo quando terminar.
     const nudgeBtn = document.getElementById("chat-nudge-btn");
     if (nudgeBtn) nudgeBtn.hidden = false; // era: isOffline
-    const imageBtn = document.getElementById("chat-image-btn");
-    if (imageBtn) imageBtn.hidden = false; // era: isOffline
 
     applyChatBlockedLockdown(isBlockedByContact);
   }
@@ -2094,7 +2091,7 @@ const Dashboard = (() => {
   function applyChatBlockedLockdown(isBlocked) {
     const compose = document.querySelector(".chat-compose");
     if (compose) compose.classList.toggle("is-blocked-lockdown", isBlocked);
-    ["chat-input", "chat-send-btn", "chat-emoji-btn", "chat-image-btn", "chat-nudge-btn", "chat-bg-btn"].forEach((id) => {
+    ["chat-input", "chat-send-btn", "chat-emoji-btn", "chat-nudge-btn", "chat-bg-btn"].forEach((id) => {
       const el = document.getElementById(id);
       if (el) el.disabled = isBlocked;
     });
@@ -2257,6 +2254,7 @@ const Dashboard = (() => {
   async function sendChatNudge() {
     if (!currentChatContact || isChatLockedByBlock()) return;
     triggerNudgeShake();
+    SoundManager.play("nudge");
     try { await MSNSupabase.sendNudge(currentChatContact.id); } catch (_) {}
   }
 

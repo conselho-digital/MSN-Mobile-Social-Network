@@ -3021,6 +3021,17 @@ body[data-login-theme="cenario1"] #screen-connecting::before {
 }
 .chat-toolbar__btn:hover:not(:disabled) { background: #eef1f4; border-color: #d7dee4; }
 .chat-toolbar__btn:disabled { opacity: 0.4; cursor: default; }
+/* "Pressionado" enquanto o menu dele está aberto (emoji/plano de
+   fundo) — direto do estado real do picker (:has), então volta ao
+   normal sozinho não importa COMO o menu fechou (clicar fora,
+   escolher um item, etc.), sem precisar sincronizar uma classe à
+   parte em cada lugar que fecha o picker. */
+.chat-emoji-wrap:has(> #chat-emoji-picker:not([hidden])) > #chat-emoji-btn,
+.chat-bg-wrap:has(> #chat-bg-picker:not([hidden])) > #chat-bg-btn {
+  background: #dce6ee;
+  border-color: #a9bdc9;
+  box-shadow: inset 0 1px 3px rgba(0, 0, 0, 0.25);
+}
 .chat-toolbar__btn--send {
   margin-left: auto;
   padding: 0 14px;
