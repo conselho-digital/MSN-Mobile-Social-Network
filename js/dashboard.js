@@ -543,6 +543,102 @@ const Dashboard = (() => {
     }
   }
 
+  /* ---------- Conta (Opções > Segurança) ----------
+     Trocar e-mail e senha usam supabase.auth.updateUser() direto do
+     navegador. Excluir conta chama a função delete_my_account() no
+     banco (ver supabase/account_management.sql) — o app nunca tem a
+     service_role key, então apagar de auth.users só é possível assim
+     (a função roda com privilégio elevado só internamente, e só apaga
+     a PRÓPRIA conta de quem chamou). */
+  function loadSecurityIntoForm() {
+    document.getElementById("opt-new-email").value = "";
+    document.getElementById("opt-new-password").value = "";
+    document.getElementById("opt-new-password2").value = "";
+    document.getElementById("opt-delete-confirm").value = "";
+    ["opt-email-message", "opt-password-message", "opt-delete-message"].forEach((id) => {
+      const el = document.getElementById(id);
+      if (el) el.hidden = true;
+    });
+    updateDeleteAccountButtonState();
+  }
+
+  async function changeAccountEmail() {
+    const input = document.getElementById("opt-new-email");
+    const msg = document.getElementById("opt-email-message");
+    const val = input.value.trim();
+    msg.hidden = true;
+    msg.classList.remove("modal__message--info");
+    if (!val) {
+      msg.textContent = "Digite o novo e-mail.";
+      msg.hidden = false;
+      return;
+    }
+    try {
+      await MSNSupabase.updateEmail(val);
+      input.value = "";
+      msg.textContent = "Enviamos um link de confirmação para o novo e-mail. A troca só vale depois de confirmar.";
+      msg.classList.add("modal__message--info");
+      msg.hidden = false;
+    } catch (err) {
+      msg.textContent = err.message || "Não foi possível trocar o e-mail.";
+      msg.hidden = false;
+    }
+  }
+
+  async function changeAccountPassword() {
+    const pass1 = document.getElementById("opt-new-password");
+    const pass2 = document.getElementById("opt-new-password2");
+    const msg = document.getElementById("opt-password-message");
+    msg.hidden = true;
+    msg.classList.remove("modal__message--info");
+    if (!pass1.value || pass1.value.length < 6) {
+      msg.textContent = "A senha deve ter pelo menos 6 caracteres.";
+      msg.hidden = false;
+      return;
+    }
+    if (pass1.value !== pass2.value) {
+      msg.textContent = "As senhas não coincidem.";
+      msg.hidden = false;
+      return;
+    }
+    try {
+      await MSNSupabase.updatePassword(pass1.value);
+      pass1.value = "";
+      pass2.value = "";
+      msg.textContent = "Senha alterada com sucesso.";
+      msg.classList.add("modal__message--info");
+      msg.hidden = false;
+    } catch (err) {
+      msg.textContent = err.message || "Não foi possível trocar a senha.";
+      msg.hidden = false;
+    }
+  }
+
+  // O botão de excluir só liga depois de digitar "EXCLUIR" — barreira
+  // simples contra clique acidental num botão sem volta.
+  function updateDeleteAccountButtonState() {
+    const input = document.getElementById("opt-delete-confirm");
+    const btn = document.getElementById("opt-delete-account-btn");
+    if (!input || !btn) return;
+    btn.disabled = input.value.trim().toUpperCase() !== "EXCLUIR";
+  }
+
+  async function deleteAccountFlow() {
+    const msg = document.getElementById("opt-delete-message");
+    msg.hidden = true;
+    const email = profile && profile.email;
+    try {
+      await MSNSupabase.deleteMyAccount();
+    } catch (err) {
+      msg.textContent = err.message || "Não foi possível excluir a conta.";
+      msg.hidden = false;
+      return;
+    }
+    closeOptionsDialog();
+    await doSignOut();
+    try { App.forgetAccount(email); } catch (_) {}
+  }
+
   /* ---------- Permissões do dispositivo (Opções > Alertas) ----------
      Estado de verdade do navegador (Permissions API / Notification /
      Storage), não é uma preferência do app — só mostra o que já está
@@ -1482,6 +1578,7 @@ const Dashboard = (() => {
     document.getElementById("options-pane-messages").hidden = true;
     document.getElementById("options-pane-alerts").hidden = true;
     document.getElementById("options-pane-privacy").hidden = true;
+    document.getElementById("options-pane-security").hidden = true;
     document.getElementById("options-pane-blank").hidden = true;
   }
 
@@ -1883,17 +1980,19 @@ const Dashboard = (() => {
         item.classList.add("is-active");
         document.getElementById("options-nav-current").textContent = item.textContent;
         const tab = item.dataset.tab;
-        const knownTabs = ["personal", "layout", "messages", "alerts", "privacy"];
+        const knownTabs = ["personal", "layout", "messages", "alerts", "privacy", "security"];
         document.getElementById("options-pane-personal").hidden = tab !== "personal";
         document.getElementById("options-pane-layout").hidden = tab !== "layout";
         document.getElementById("options-pane-messages").hidden = tab !== "messages";
         document.getElementById("options-pane-alerts").hidden = tab !== "alerts";
         document.getElementById("options-pane-privacy").hidden = tab !== "privacy";
+        document.getElementById("options-pane-security").hidden = tab !== "security";
         document.getElementById("options-pane-blank").hidden = knownTabs.includes(tab);
         if (tab === "layout") loadLayoutPrefsIntoForm();
         if (tab === "messages") loadMessagePrefsIntoForm();
         if (tab === "alerts") renderPermissions();
         if (tab === "privacy") renderBlockedList();
+        if (tab === "security") loadSecurityIntoForm();
         if (optNav) optNav.hidden = true;
         if (optNavToggle) optNavToggle.setAttribute("aria-expanded", "false");
       });
@@ -1916,6 +2015,15 @@ const Dashboard = (() => {
     if (optBlockEmail) optBlockEmail.addEventListener("keydown", (e) => {
       if (e.key === "Enter") blockPersonByEmail();
     });
+    // Trocar e-mail / senha / excluir conta (aba Segurança)
+    const optChangeEmailBtn = document.getElementById("opt-change-email-btn");
+    if (optChangeEmailBtn) optChangeEmailBtn.addEventListener("click", changeAccountEmail);
+    const optChangePasswordBtn = document.getElementById("opt-change-password-btn");
+    if (optChangePasswordBtn) optChangePasswordBtn.addEventListener("click", changeAccountPassword);
+    const optDeleteConfirm = document.getElementById("opt-delete-confirm");
+    if (optDeleteConfirm) optDeleteConfirm.addEventListener("input", updateDeleteAccountButtonState);
+    const optDeleteBtn = document.getElementById("opt-delete-account-btn");
+    if (optDeleteBtn) optDeleteBtn.addEventListener("click", deleteAccountFlow);
     // OK (salva e fecha) / Aplicar (salva, mantém aberto) / Cancelar e X
     // (descartam)
     const optOk = document.getElementById("options-ok");

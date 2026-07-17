@@ -894,5 +894,15 @@ const App = (function () {
     });
   }
 
-  return { updateRememberedTheme };
+  // Chamado pelo Dashboard depois de excluir a conta (Opções >
+  // Segurança) — tira a conta apagada da lista de "lembradas" neste
+  // aparelho, já que não dá mais pra entrar com ela.
+  function forgetAccount(email) {
+    if (!email) return;
+    removeAccount(email);
+    renderAccountMenu();
+    updateWelcomeHeading();
+  }
+
+  return { updateRememberedTheme, forgetAccount };
 })();

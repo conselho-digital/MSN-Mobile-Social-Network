@@ -929,7 +929,10 @@ body[data-login-theme="cenario1"] #screen-connecting::before {
      altura de cenário. */
   padding: calc(9.75px + env(safe-area-inset-top)) 12px 9.75px;
   /* Linha branca + sombra na base do banner, igual ao cliente clássico
-     (mesmo efeito usado no banner do login). */
+     (mesmo efeito usado no banner do login). Em cenários claros essa
+     linha branca soma com o fundo e some — ver .is-light-scene abaixo,
+     que troca pra uma linha escura na mesma situação em que o texto
+     também troca de cor. */
   border-bottom: 1px solid rgba(255, 255, 255, 0.85);
   box-shadow: 0 4px 6px rgba(0, 0, 0, 0.3);
 }
@@ -1127,7 +1130,10 @@ body[data-login-theme="cenario1"] #screen-connecting::before {
    texto branco ilegível — dashboard.js mede o brilho médio da imagem
    do cenário (canvas) e alterna esta classe no cabeçalho conforme o
    resultado, trocando o texto para escuro automaticamente. */
-.dash-header.is-light-scene { color: #23313b; }
+.dash-header.is-light-scene {
+  color: #23313b;
+  border-bottom-color: rgba(0, 0, 0, 0.2);
+}
 .dash-header.is-light-scene .my-name {
   color: #23313b;
   text-shadow: 0 1px 1px rgba(255, 255, 255, 0.75);
@@ -2138,6 +2144,21 @@ body[data-login-theme="cenario1"] #screen-connecting::before {
 }
 .options-section__heading { margin: 0 0 10px; font-size: 0.85rem; font-weight: 600; color: #2f4a63; }
 .options-section__text { margin: 0 0 10px; font-size: 0.82rem; color: #5a6b78; line-height: 1.45; }
+
+/* Excluir conta (Segurança) — mesmo cartão, só destacado em vermelho */
+.options-section--danger .options-section__heading { color: #b3261e; }
+.scene-dialog__browse--danger {
+  color: #b3261e;
+  border-color: #e2a29c;
+}
+.scene-dialog__browse--danger:hover:not(:disabled) {
+  background: linear-gradient(#ffffff, #fbe4e2);
+  border-color: #d9433a;
+}
+.scene-dialog__browse:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
 
 /* Lista de pessoas bloqueadas (Privacidade) */
 .options-blocked-list {

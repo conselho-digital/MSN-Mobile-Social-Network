@@ -119,6 +119,32 @@ const MSNSupabase = (() => {
     return data;
   }
 
+  /* ---------- Conta (Opções > Segurança) ---------- */
+  // O Supabase manda um e-mail de confirmação pro endereço novo — a
+  // troca só vale de verdade depois que a pessoa confirmar por lá.
+  async function updateEmail(newEmail) {
+    if (!isConfigured()) return;
+    const { error } = await client.auth.updateUser({ email: newEmail });
+    if (error) throw error;
+  }
+
+  async function updatePassword(newPassword) {
+    if (!isConfigured()) return;
+    const { error } = await client.auth.updateUser({ password: newPassword });
+    if (error) throw error;
+  }
+
+  // Apagar a própria conta exige privilégio elevado sobre auth.users,
+  // que o app NUNCA deve ter direto no navegador (a service_role key
+  // ignora RLS). Em vez disso chama uma função no banco que roda com
+  // privilégio elevado só internamente e só apaga quem chamou (ver
+  // supabase/account_management.sql).
+  async function deleteMyAccount() {
+    if (!isConfigured()) return;
+    const { error } = await client.rpc("delete_my_account");
+    if (error) throw error;
+  }
+
   /* ---------- Foto de exibição (avatar) ---------- */
   async function uploadAvatar(file) {
     if (!isConfigured()) throw new Error("Configure o Supabase para enviar fotos.");
@@ -449,7 +475,8 @@ const MSNSupabase = (() => {
 
   return {
     init, isConfigured, signIn, signUp, getSession, signOut, resendConfirmation,
-    getMyProfile, updateMyProfile, getContacts, addContactByEmail, setFavorite,
+    getMyProfile, updateMyProfile, updateEmail, updatePassword, deleteMyAccount,
+    getContacts, addContactByEmail, setFavorite,
     subscribeContacts, unsubscribeContacts,
     createGroup, getGroups,
     getBlockedUsers, blockUserByEmail, unblockUser,

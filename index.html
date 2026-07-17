@@ -740,6 +740,7 @@
           <button type="button" class="options-nav__item" data-tab="alerts">Alertas</button>
           <button type="button" class="options-nav__item" data-tab="sounds">Sons</button>
           <button type="button" class="options-nav__item" data-tab="privacy">Privacidade</button>
+          <button type="button" class="options-nav__item" data-tab="security">Segurança</button>
         </nav>
 
         <div class="options-pane" id="options-pane-personal">
@@ -916,6 +917,46 @@
             <p id="opt-block-message" class="modal__message" hidden></p>
             <ul class="options-blocked-list" id="options-blocked-list"></ul>
             <p class="options-section__text" id="options-blocked-empty" hidden>Você ainda não bloqueou ninguém.</p>
+          </section>
+        </div>
+
+        <div class="options-pane" id="options-pane-security" hidden>
+          <h3 class="options-pane__title">Segurança</h3>
+
+          <section class="options-section">
+            <h4 class="options-section__heading">Trocar e-mail</h4>
+            <p class="options-section__text">Você vai precisar confirmar o novo endereço antes que a troca valha.</p>
+            <label class="options-field">
+              Novo e-mail
+              <input type="email" id="opt-new-email" class="options-field__input" autocomplete="off" />
+            </label>
+            <button type="button" id="opt-change-email-btn" class="scene-dialog__browse">Salvar novo e-mail</button>
+            <p id="opt-email-message" class="modal__message" hidden></p>
+          </section>
+
+          <section class="options-section">
+            <h4 class="options-section__heading">Trocar senha</h4>
+            <label class="options-field">
+              Nova senha
+              <input type="password" id="opt-new-password" class="options-field__input" autocomplete="new-password" />
+            </label>
+            <label class="options-field">
+              Confirmar nova senha
+              <input type="password" id="opt-new-password2" class="options-field__input" autocomplete="new-password" />
+            </label>
+            <button type="button" id="opt-change-password-btn" class="scene-dialog__browse">Salvar nova senha</button>
+            <p id="opt-password-message" class="modal__message" hidden></p>
+          </section>
+
+          <section class="options-section options-section--danger">
+            <h4 class="options-section__heading">Excluir conta</h4>
+            <p class="options-section__text">Isso apaga sua conta e todos os seus dados (perfil, contatos, mensagens) permanentemente. Não é possível desfazer.</p>
+            <label class="options-field">
+              Digite EXCLUIR para confirmar
+              <input type="text" id="opt-delete-confirm" class="options-field__input" autocomplete="off" placeholder="EXCLUIR" />
+            </label>
+            <button type="button" id="opt-delete-account-btn" class="scene-dialog__browse scene-dialog__browse--danger" disabled>Excluir minha conta</button>
+            <p id="opt-delete-message" class="modal__message" hidden></p>
           </section>
         </div>
 
