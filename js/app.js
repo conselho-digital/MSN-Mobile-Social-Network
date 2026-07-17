@@ -351,7 +351,10 @@ const App = (function () {
         // (Authentication > Logs) quando a mensagem amigável não é
         // suficiente pra saber a causa real.
         console.error("Erro ao criar conta:", err);
-        showSignupMessage(friendlyError(err));
+        // Temporário, só pra diagnosticar o cadastro que está falhando:
+        // mostra o erro técnico bruto (status/código/mensagem) embaixo da
+        // mensagem amigável, pra dar pra tirar print e identificar a causa.
+        showSignupMessage(friendlyError(err) + "\n" + debugErrorDetail(err));
       } finally {
         btn.disabled = false;
         btn.textContent = "Criar conta";
@@ -810,6 +813,21 @@ const App = (function () {
       return "Não foi possível completar a operação (resposta inesperada do servidor). Tente novamente em instantes.";
     }
     return msg;
+  }
+
+  // Temporário, só pra diagnosticar o erro de cadastro em produção: monta
+  // uma linha com os campos técnicos do erro (status HTTP, código do
+  // Supabase e a mensagem crua), pra dar pra tirar print de tela e ver
+  // exatamente o que o servidor respondeu. Remover depois que a causa
+  // real do "resposta inesperada do servidor" for identificada.
+  function debugErrorDetail(err) {
+    if (!err) return "[detalhe técnico: erro vazio]";
+    const parts = [];
+    if (err.status) parts.push("status=" + err.status);
+    if (err.code) parts.push("code=" + err.code);
+    const raw = err.message || err.error_description || err.msg || err.error;
+    parts.push("msg=" + (raw ? String(raw) : JSON.stringify(err)));
+    return "[detalhe técnico: " + parts.join(" ") + "]";
   }
 
   /* ---------- Service Worker (PWA) ---------- */
