@@ -3182,7 +3182,7 @@ body[data-login-theme="cenario1"] #screen-connecting::before {
   background-repeat: no-repeat;
   border-radius: 8px;
   overflow: hidden;
-  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.4);
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.55);
   transform: translateX(130%);
   transition: transform 0.35s ease;
 }
@@ -3222,7 +3222,13 @@ body[data-login-theme="cenario1"] #screen-connecting::before {
   gap: 14px;
   padding: 12px 14px 14px;
 }
-.online-toast__avatar { position: relative; width: 68px; height: 68px; flex: 0 0 auto; }
+.online-toast__avatar {
+  position: relative;
+  width: 68px; height: 68px;
+  flex: 0 0 auto;
+  border-radius: 4px;
+  box-shadow: 0 3px 8px rgba(0, 0, 0, 0.5);
+}
 .online-toast__text {
   flex: 1 1 auto;
   display: flex;
