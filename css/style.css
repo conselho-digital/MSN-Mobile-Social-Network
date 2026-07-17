@@ -1254,6 +1254,32 @@ body[data-login-theme="cenario1"] #screen-connecting::before {
   background: #e4e9ee;
 }
 
+/* ---------- Menu de contexto (segurar um contato apertado) ---------- */
+/* Reaproveita a aparência do .my-menu, mas com posição livre — o JS
+   calcula left/top no ponto exato onde o toque/clique aconteceu (ver
+   positionContactCtxMenu em dashboard.js), então "position" precisa
+   ser "fixed" (não "absolute" ancorado num pai) e "top/left" do HTML
+   base não se aplicam aqui. */
+.ctx-menu {
+  position: fixed;
+  top: 0;
+  left: 0;
+  min-width: 240px;
+}
+.ctx-menu__item { gap: 10px; }
+.ctx-menu__check {
+  flex: 0 0 auto;
+  width: 14px;
+  height: 14px;
+  border: 1px solid #9aa7b1;
+  border-radius: 3px;
+  background: #fff;
+}
+.ctx-menu__item.is-checked .ctx-menu__check {
+  background: #1f7fd0 url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16'%3E%3Cpath d='M3 8.5l3 3 7-7' fill='none' stroke='white' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E") center/10px no-repeat;
+  border-color: #1f7fd0;
+}
+
 /* ---------- Corpo do Dashboard (toolbar + lista) ---------- */
 /* Envolve a barra de ferramentas e a lista de contatos com um único
    degradê contínuo: cor do tema no topo e no fim, branco no meio —
@@ -2942,6 +2968,12 @@ body[data-login-theme="cenario1"] #screen-connecting::before {
   outline: none;
 }
 .chat-compose__input:focus { border-color: var(--field-border-focus); box-shadow: 0 0 0 2px rgba(75,160,230,0.2); }
+.chat-compose__input:disabled { background: #eef1f4; color: #9aa7b1; cursor: not-allowed; }
+/* Contato me bloqueou (ver applyChatBlockedLockdown em dashboard.js) —
+   os próprios botões já ficam com a cara de "desligado" via
+   .chat-toolbar__btn:disabled acima; isso aqui só garante que nada na
+   caixa de mensagem pareça clicável nem por acidente. */
+.chat-compose.is-blocked-lockdown { cursor: not-allowed; }
 
 .chat-toolbar { display: flex; align-items: center; gap: 4px; }
 .chat-emoji-wrap { position: relative; flex: 0 0 auto; }

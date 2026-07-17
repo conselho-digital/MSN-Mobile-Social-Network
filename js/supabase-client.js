@@ -358,17 +358,31 @@ const MSNSupabase = (() => {
     const { data: { user } } = await client.auth.getUser();
     if (!user) return [];
     const { data: rows, error } = await client
-      .from("contacts").select("contact_id, is_favorite").eq("owner_id", user.id);
+      .from("contacts").select("contact_id, is_favorite, is_muted, appear_offline").eq("owner_id", user.id);
     if (error) throw error;
     const ids = (rows || []).map((r) => r.contact_id);
     if (!ids.length) return [];
-    // is_favorite mora na linha de "contacts" (marcação própria de cada
-    // dono sobre o contato), não em "profiles" — junta na mão aqui.
-    const favMap = new Map((rows || []).map((r) => [r.contact_id, r.is_favorite]));
-    const { data: profs, error: e2 } = await client
-      .from("profiles").select("*").in("id", ids);
-    if (e2) throw e2;
-    return (profs || []).map((p) => ({ ...p, is_favorite: favMap.get(p.id) || false }));
+    // is_favorite/is_muted/appear_offline moram na linha de "contacts"
+    // (marcação própria de cada dono sobre o contato), não em
+    // "profiles" — junta na mão aqui (ver supabase/contact_settings.sql).
+    const ownMap = new Map((rows || []).map((r) => [r.contact_id, r]));
+    // get_contact_profiles() é igual a ler "profiles" direto, só que
+    // esconde foto/cenário/cor do tema de quem me bloqueou (ver
+    // supabase/contact_settings.sql) — cai pro select direto se essa
+    // migração ainda não tiver rodado nesse projeto Supabase.
+    let profs;
+    const rpcResult = await client.rpc("get_contact_profiles", { target_ids: ids });
+    if (!rpcResult.error) {
+      profs = rpcResult.data;
+    } else {
+      const { data, error: e2 } = await client.from("profiles").select("*").in("id", ids);
+      if (e2) throw e2;
+      profs = data;
+    }
+    return (profs || []).map((p) => {
+      const own = ownMap.get(p.id) || {};
+      return { ...p, is_favorite: own.is_favorite || false, is_muted: own.is_muted || false, appear_offline: own.appear_offline || false };
+    });
   }
 
   // Marca/desmarca um contato como favorito (ver supabase/favorites.sql).
@@ -383,6 +397,49 @@ const MSNSupabase = (() => {
       .eq("contact_id", contactId);
     if (error) throw error;
     return { ok: true };
+  }
+
+  // Silencia/reativa notificações desse contato (mensagens, "ficou
+  // online" etc. — decidido no cliente, ver dashboard.js).
+  async function setContactMuted(contactId, muted) {
+    if (!isConfigured()) return { ok: true, demo: true };
+    const { data: { user } } = await client.auth.getUser();
+    if (!user) throw new Error("Sessão expirada. Entre novamente.");
+    const { error } = await client
+      .from("contacts")
+      .update({ is_muted: muted })
+      .eq("owner_id", user.id)
+      .eq("contact_id", contactId);
+    if (error) throw error;
+    return { ok: true };
+  }
+
+  // "Aparecer offline" só pra esse contato específico — meu status de
+  // verdade continua igual pros outros (ver
+  // get_forced_offline_contacts em supabase/contact_settings.sql).
+  async function setAppearOffline(contactId, appearOffline) {
+    if (!isConfigured()) return { ok: true, demo: true };
+    const { data: { user } } = await client.auth.getUser();
+    if (!user) throw new Error("Sessão expirada. Entre novamente.");
+    const { error } = await client
+      .from("contacts")
+      .update({ appear_offline: appearOffline })
+      .eq("owner_id", user.id)
+      .eq("contact_id", contactId);
+    if (error) throw error;
+    return { ok: true };
+  }
+
+  // Pra cada contato meu, diz se eu devo aparecer OFFLINE pra ele —
+  // porque ele me bloqueou, ou porque eu escolhi aparecer offline só
+  // pra ele (ver get_forced_offline_contacts em
+  // supabase/contact_settings.sql). Uma consulta só pra todos os
+  // contatos, em vez de perguntar um por um.
+  async function getForcedOfflineContacts() {
+    if (!isConfigured()) return [];
+    const { data, error } = await client.rpc("get_forced_offline_contacts");
+    if (error) throw error;
+    return data || [];
   }
 
   /* ---------- Plano de fundo pessoal por conversa ---------- */
@@ -603,6 +660,7 @@ const MSNSupabase = (() => {
     init, isConfigured, signIn, signUp, getSession, signOut,
     getMyProfile, updateMyProfile, updateEmail, updatePassword, deleteMyAccount,
     getContacts, addContactByEmail, setFavorite,
+    setContactMuted, setAppearOffline, getForcedOfflineContacts,
     getChatBackgrounds, setChatBackground,
     subscribeContacts, unsubscribeContacts,
     createGroup, getGroups,

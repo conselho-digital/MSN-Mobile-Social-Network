@@ -26,9 +26,35 @@ const Dashboard = (() => {
   // logout, casos em que ninguém atualiza a coluna status "avisando"
   // que ficou offline (a conexão simplesmente para de existir).
   function contactVisibleStatus(status, contactId) {
+    // Prioridade máxima: quem me bloqueou, ou quem eu escolhi "aparecer
+    // offline" no menu de segurar apertado, sempre me vê offline — não
+    // é sobre conectividade, é uma escolha deliberada (minha ou dele)
+    // que não pode ser sobreposta por presença/status real (ver
+    // forcedOfflineReasons/get_forced_offline_contacts em
+    // supabase/contact_settings.sql).
+    if (contactId && forcedOfflineReasons.has(String(contactId))) return "offline";
     if (status === "invisible") return "offline";
     if (presenceReady && contactId && !presenceOnlineIds.has(String(contactId))) return "offline";
     return status;
+  }
+  // contact_id (string) -> "blocked" | "appear_offline", carregado uma
+  // vez no load() (ver refreshForcedOffline) — "blocked" quer dizer que
+  // ESSE contato me bloqueou (não o contrário).
+  let forcedOfflineReasons = new Map();
+  async function refreshForcedOffline() {
+    try {
+      const rows = await MSNSupabase.getForcedOfflineContacts();
+      const map = new Map();
+      (rows || []).forEach((r) => {
+        // "blocked" tem prioridade sobre "appear_offline" se as duas
+        // razões existirem ao mesmo tempo pro mesmo contato — não muda
+        // o resultado visível (as duas viram "offline" do mesmo jeito),
+        // só a mensagem do banner amarelo (ver renderChatHeader).
+        const prev = map.get(r.contact_id);
+        if (!prev || r.reason === "blocked") map.set(r.contact_id, r.reason);
+      });
+      forcedOfflineReasons = map;
+    } catch (_) {}
   }
   // Gradiente/animação da moldura da foto por status — compartilhado
   // com a tela de login em js/scenes.js (MSNScenes.frameGradient /
@@ -383,11 +409,12 @@ const Dashboard = (() => {
   async function load() {
     try {
       let chatBgRows;
-      [profile, contacts, groups, , chatBgRows] = await Promise.all([
+      [profile, contacts, groups, , , chatBgRows] = await Promise.all([
         MSNSupabase.getMyProfile(),
         MSNSupabase.getContacts(),
         MSNSupabase.getGroups(),
         refreshBlockedIds(),
+        refreshForcedOffline(),
         MSNSupabase.getChatBackgrounds().catch(() => []),
       ]);
       mergeChatBackgroundsFromServer(chatBgRows);
@@ -437,8 +464,23 @@ const Dashboard = (() => {
     MSNSupabase.subscribeContacts((updated) => {
       const c = contacts.find((x) => x.id === updated.id);
       if (!c) return; // não é um dos nossos contatos, ignora
-      Object.assign(c, updated);
+      // O tempo real lê "profiles" direto (sem passar pela máscara de
+      // get_contact_profiles(), ver getContacts() em
+      // supabase-client.js) — se esse contato me bloqueou, ignora foto/
+      // cenário/cor do tema vindos por aqui, senão a atualização "ao
+      // vivo" vazaria por essa porta mesmo com o carregamento inicial
+      // mascarado.
+      const masked = { ...updated };
+      if (forcedOfflineReasons.get(String(updated.id)) === "blocked") {
+        delete masked.avatar_url;
+        delete masked.scene;
+        delete masked.color_scheme;
+        delete masked.scene_image_url;
+        delete masked.sub_nick;
+      }
+      Object.assign(c, masked);
       renderContacts(currentFilter);
+      if (currentChatContact && currentChatContact.id === c.id) renderChatHeader();
     });
   }
 
@@ -453,11 +495,33 @@ const Dashboard = (() => {
     if (presenceSubscribed) return;
     presenceSubscribed = true;
     MSNSupabase.subscribePresence((onlineIds) => {
+      // Só depois da primeira sincronização (senão soaria um "login"
+      // pra cada contato que já estava online ao abrir o Dashboard).
+      if (presenceReady) {
+        const newlyOnline = [...onlineIds].filter((id) => !presenceOnlineIds.has(id));
+        notifyContactsCameOnline(newlyOnline);
+      }
       presenceOnlineIds = onlineIds;
       presenceReady = true;
       renderContacts(currentFilter);
       if (currentChatContact) renderChatHeader();
     }).catch(() => {});
+  }
+
+  // Som de "entrou" (reaproveita o mesmo áudio do login, ver
+  // sound-manager.js) quando um contato meu fica online — respeita
+  // "silenciar notificações desse contato" e nunca toca pra quem está
+  // em forcedOfflineReasons (me bloqueou, ou aparece offline pra mim de
+  // propósito — nesses casos nem deveria "aparecer" ficando online).
+  function notifyContactsCameOnline(newlyOnlineIds) {
+    if (!newlyOnlineIds || !newlyOnlineIds.length) return;
+    const anyAudible = newlyOnlineIds.some((id) => {
+      const c = contacts.find((x) => String(x.id) === String(id));
+      if (!c || c.is_muted) return false;
+      if (forcedOfflineReasons.has(String(id))) return false;
+      return true;
+    });
+    if (anyAudible) SoundManager.play("login");
   }
 
   /* ---------- Perfil próprio ---------- */
@@ -1083,6 +1147,143 @@ const Dashboard = (() => {
     c.is_favorite = !c.is_favorite;
     renderContacts(currentFilter);
     try { await MSNSupabase.setFavorite(c.id, c.is_favorite); } catch (_) {}
+  }
+
+  // Silenciar/aparecer offline: mesma ideia de toggleFavorite acima,
+  // só que sem precisar re-renderizar a lista toda — quem muda de
+  // aparência aqui é o menu de contexto (ver renderContactCtxMenu),
+  // não o <li> em si.
+  async function toggleMuted(id) {
+    const c = contacts.find((x) => String(x.id) === String(id));
+    if (!c) return;
+    c.is_muted = !c.is_muted;
+    try { await MSNSupabase.setContactMuted(c.id, c.is_muted); } catch (_) {}
+  }
+  async function toggleAppearOffline(id) {
+    const c = contacts.find((x) => String(x.id) === String(id));
+    if (!c) return;
+    c.appear_offline = !c.appear_offline;
+    try { await MSNSupabase.setAppearOffline(c.id, c.appear_offline); } catch (_) {}
+  }
+
+  /* ---------- Menu de contexto: segurar um contato apertado ----------
+     Abre um dropdown no ponto exato onde o dedo/mouse ficou parado,
+     com opções pessoais sobre aquele contato (favoritar, silenciar
+     notificações, aparecer offline só pra ele) — de propósito SEM
+     opção de bloquear aqui (isso fica em Opções > Privacidade, pra não
+     virar uma ação acidental de segurar demais um contato). */
+  const CTX_MENU_HOLD_MS = 500;
+  const CTX_MENU_MOVE_TOLERANCE = 10;
+  let ctxMenuContactId = null;
+  let ctxHoldTimer = null;
+  let ctxHoldStart = null;
+  // Depois que segurar apertado abre o menu, o "pointerup" que solta o
+  // dedo/mouse ainda dispara um "click" logo em seguida — sem essa
+  // trava, esse click abriria a conversa com o contato bem embaixo do
+  // menu recém-aberto. Fica ligada só até o próximo click no documento.
+  let ctxMenuJustOpened = false;
+
+  function closeContactCtxMenu() {
+    const menu = document.getElementById("contact-ctx-menu");
+    if (menu) menu.hidden = true;
+    ctxMenuContactId = null;
+  }
+
+  function renderContactCtxMenu() {
+    const c = contacts.find((x) => String(x.id) === String(ctxMenuContactId));
+    if (!c) return;
+    const items = [
+      ["favorite", c.is_favorite, c.is_favorite ? "Remover dos favoritos" : "Adicionar aos favoritos"],
+      ["mute", c.is_muted, c.is_muted ? "Reativar notificações" : "Silenciar notificações"],
+      ["appear-offline", c.appear_offline, c.appear_offline ? "Parar de aparecer offline" : "Aparecer offline para este contato"],
+    ];
+    items.forEach(([action, checked, label]) => {
+      const item = document.querySelector('.ctx-menu__item[data-action="' + action + '"]');
+      if (!item) return;
+      item.classList.toggle("is-checked", !!checked);
+      const labelEl = document.getElementById("ctx-label-" + action);
+      if (labelEl) labelEl.textContent = label;
+    });
+  }
+
+  function positionContactCtxMenu(x, y) {
+    const menu = document.getElementById("contact-ctx-menu");
+    if (!menu) return;
+    const margin = 8;
+    const rect = menu.getBoundingClientRect();
+    let left = Math.min(x, window.innerWidth - rect.width - margin);
+    let top = Math.min(y, window.innerHeight - rect.height - margin);
+    left = Math.max(margin, left);
+    top = Math.max(margin, top);
+    menu.style.left = left + "px";
+    menu.style.top = top + "px";
+  }
+
+  function openContactCtxMenu(id, x, y) {
+    ctxMenuContactId = id;
+    const menu = document.getElementById("contact-ctx-menu");
+    if (!menu) return;
+    menu.hidden = false;
+    renderContactCtxMenu();
+    positionContactCtxMenu(x, y);
+    ctxMenuJustOpened = true;
+    if (navigator.vibrate) navigator.vibrate(15);
+  }
+
+  function cancelCtxHold() {
+    if (ctxHoldTimer) clearTimeout(ctxHoldTimer);
+    ctxHoldTimer = null;
+    ctxHoldStart = null;
+  }
+
+  // Detecta "segurar apertado" via Pointer Events (unifica toque e
+  // mouse) — dispara o menu depois de CTX_MENU_HOLD_MS parado no mesmo
+  // contato; qualquer arrasto maior que a tolerância (rolando a lista,
+  // por exemplo) cancela em vez de abrir o menu.
+  function bindContactLongPress() {
+    const container = document.getElementById("contacts-container");
+    if (!container) return;
+    container.addEventListener("pointerdown", (e) => {
+      if (e.pointerType === "mouse" && e.button !== 0) return;
+      const item = e.target.closest(".contact-item[data-id]");
+      if (!item || e.target.closest(".contact-item__fav")) return;
+      cancelCtxHold();
+      ctxHoldStart = { x: e.clientX, y: e.clientY, id: item.dataset.id };
+      ctxHoldTimer = setTimeout(() => {
+        openContactCtxMenu(ctxHoldStart.id, ctxHoldStart.x, ctxHoldStart.y);
+        cancelCtxHold();
+      }, CTX_MENU_HOLD_MS);
+    });
+    container.addEventListener("pointermove", (e) => {
+      if (!ctxHoldStart) return;
+      const dx = e.clientX - ctxHoldStart.x;
+      const dy = e.clientY - ctxHoldStart.y;
+      if (Math.hypot(dx, dy) > CTX_MENU_MOVE_TOLERANCE) cancelCtxHold();
+    });
+    ["pointerup", "pointercancel", "pointerleave"].forEach((evt) => {
+      container.addEventListener(evt, cancelCtxHold);
+    });
+    // Impede o menu do navegador (copiar/compartilhar imagem) de
+    // competir com o nosso próprio menu de segurar apertado.
+    container.addEventListener("contextmenu", (e) => {
+      if (e.target.closest(".contact-item[data-id]")) e.preventDefault();
+    });
+
+    document.getElementById("contact-ctx-menu").addEventListener("click", (e) => {
+      const item = e.target.closest(".ctx-menu__item[data-action]");
+      if (!item || !ctxMenuContactId) return;
+      const id = ctxMenuContactId;
+      const action = item.dataset.action;
+      if (action === "favorite") { toggleFavorite(id); }
+      else if (action === "mute") { toggleMuted(id); }
+      else if (action === "appear-offline") { toggleAppearOffline(id); }
+      renderContactCtxMenu();
+    });
+    document.addEventListener("click", (e) => {
+      const menu = document.getElementById("contact-ctx-menu");
+      if (menu && !menu.hidden && !e.target.closest("#contact-ctx-menu")) closeContactCtxMenu();
+    });
+    window.addEventListener("scroll", closeContactCtxMenu, true);
   }
 
   // Atualiza os <li> existentes no lugar (em vez de recriar tudo com
@@ -1784,18 +1985,29 @@ const Dashboard = (() => {
     myAvatar.innerHTML = chatStatusFrameMarkup(profile && profile.avatar_url, (profile && profile.status) || "online");
 
     const isOffline = !["online", "busy", "away"].includes(status);
+    // "blocked" (ver forcedOfflineReasons/refreshForcedOffline): ESSE
+    // contato me bloqueou — não é "parece estar offline" comum, é
+    // bloqueio de verdade, então o aviso e a caixa de mensagem inteira
+    // mudam (ver isBlockedByContact abaixo).
+    const isBlockedByContact = forcedOfflineReasons.get(String(c.id)) === "blocked";
     const banner = document.getElementById("chat-offline-banner");
     banner.hidden = !isOffline;
     if (isOffline) {
       const textEl = document.getElementById("chat-offline-banner-text");
       textEl.innerHTML = "";
-      textEl.appendChild(document.createTextNode(
-        (c.email || c.display_name) + " parece estar offline. As mensagens serão entregues quando esse contato entrar. "
-      ));
-      const mailLink = document.createElement("a");
-      mailLink.href = "mailto:" + (c.email || "");
-      mailLink.textContent = "Enviar um e-mail para este contato";
-      textEl.appendChild(mailLink);
+      if (isBlockedByContact) {
+        textEl.appendChild(document.createTextNode(
+          (c.email || c.display_name) + " bloqueou você. Não é possível enviar mensagens, imagens ou emoticons para esse contato, e ele não verá atualizações da sua foto, cenário ou cor do tema."
+        ));
+      } else {
+        textEl.appendChild(document.createTextNode(
+          (c.email || c.display_name) + " parece estar offline. As mensagens serão entregues quando esse contato entrar. "
+        ));
+        const mailLink = document.createElement("a");
+        mailLink.href = "mailto:" + (c.email || "");
+        mailLink.textContent = "Enviar um e-mail para este contato";
+        textEl.appendChild(mailLink);
+      }
     }
 
     // Com o contato offline, "Chamar a atenção" (nudge, ninguém do
@@ -1808,6 +2020,27 @@ const Dashboard = (() => {
     if (nudgeBtn) nudgeBtn.hidden = false; // era: isOffline
     const imageBtn = document.getElementById("chat-image-btn");
     if (imageBtn) imageBtn.hidden = false; // era: isOffline
+
+    applyChatBlockedLockdown(isBlockedByContact);
+  }
+
+  // Trava a caixa de mensagem inteira quando o contato aberto me
+  // bloqueou — diferente do "offline" comum (nudge/imagem continuam
+  // ligados de propósito, ver comentário acima), aqui NADA pode ser
+  // enviado: emoji, imagem, "chamar a atenção", plano de fundo, texto
+  // e o botão Enviar. disabled=true (não só "hidden") pra também
+  // bloquear o teclado/Enter, não só o clique no botão.
+  function applyChatBlockedLockdown(isBlocked) {
+    const compose = document.querySelector(".chat-compose");
+    if (compose) compose.classList.toggle("is-blocked-lockdown", isBlocked);
+    ["chat-input", "chat-send-btn", "chat-emoji-btn", "chat-image-btn", "chat-nudge-btn", "chat-bg-btn"].forEach((id) => {
+      const el = document.getElementById(id);
+      if (el) el.disabled = isBlocked;
+    });
+    if (isBlocked) {
+      document.getElementById("chat-emoji-picker").hidden = true;
+      document.getElementById("chat-bg-picker").hidden = true;
+    }
   }
 
   // Só guardamos texto puro no banco (ver supabase/schema.sql) — GIFs e
@@ -1896,7 +2129,7 @@ const Dashboard = (() => {
       if (!involved) return;
       document.getElementById("chat-messages").appendChild(chatMessageBubble(msg));
       scrollChatToBottom();
-      SoundManager.play("message");
+      if (!currentChatContact.is_muted) SoundManager.play("message");
     });
     chatMessagesSubscribed = true;
   }
@@ -1908,7 +2141,7 @@ const Dashboard = (() => {
       if (String(nudge.sender_id) !== String(currentChatContact.id)) return;
       if (String(nudge.receiver_id) !== String(profile && profile.id)) return;
       triggerNudgeShake();
-      SoundManager.play("nudge");
+      if (!currentChatContact.is_muted) SoundManager.play("nudge");
     });
     chatNudgeSubscribed = true;
   }
@@ -1932,7 +2165,16 @@ const Dashboard = (() => {
     win.addEventListener("animationend", () => win.classList.remove("nudge-shake"), { once: true });
   }
 
+  // Alguém que me bloqueou também nunca deve conseguir mandar nada pra
+  // mim (server já recusa via RLS, ver supabase/security_hardening.sql
+  // e contact_settings.sql — isso aqui é só pra nem tentar a chamada e
+  // não deixar a caixa de texto "funcionando" visualmente por engano).
+  function isChatLockedByBlock() {
+    return !!(currentChatContact && forcedOfflineReasons.get(String(currentChatContact.id)) === "blocked");
+  }
+
   async function sendChatMessage() {
+    if (isChatLockedByBlock()) return;
     const input = document.getElementById("chat-input");
     const text = input.value.trim();
     if (!text || !currentChatContact) return;
@@ -1952,7 +2194,7 @@ const Dashboard = (() => {
   }
 
   async function sendChatNudge() {
-    if (!currentChatContact) return;
+    if (!currentChatContact || isChatLockedByBlock()) return;
     triggerNudgeShake();
     try { await MSNSupabase.sendNudge(currentChatContact.id); } catch (_) {}
   }
@@ -2057,6 +2299,13 @@ const Dashboard = (() => {
     loadChatMessages();
     subscribeChatRealtime();
     subscribeChatNudges();
+    // Confere de novo se fui bloqueado nesse meio-tempo (desde o
+    // último load() do Dashboard) — sem isso, um bloqueio recente só
+    // travaria a caixa de mensagem na próxima vez que o Dashboard
+    // inteiro recarregasse, não na hora de abrir essa conversa.
+    refreshForcedOffline().then(() => {
+      if (currentChatContact && currentChatContact.id === contact.id) renderChatHeader();
+    });
     setTimeout(() => document.getElementById("chat-input").focus(), 30);
     // Empilha um estado só pra isso: o botão "voltar" do aparelho
     // (Android) volta pro Dashboard em vez de sair do app/PWA — ver o
@@ -2651,6 +2900,7 @@ const Dashboard = (() => {
 
     // Abrir conversa
     document.getElementById("contacts-container").addEventListener("click", (e) => {
+      if (ctxMenuJustOpened) { ctxMenuJustOpened = false; return; }
       const item = e.target.closest(".contact-item");
       if (!item || e.target.closest(".contact-item__fav")) return;
       const contact = contacts.find((c) => String(c.id) === item.dataset.id);
@@ -2658,6 +2908,7 @@ const Dashboard = (() => {
       SoundManager.play("message");
       openChat(contact);
     });
+    bindContactLongPress();
 
     // Janela de conversa: fechar, enviar, chamar atenção, emoticons,
     // plano de fundo pessoal

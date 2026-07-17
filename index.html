@@ -471,6 +471,26 @@
     </div>
     </div>
 
+    <!-- Menu de contexto (segurar um contato apertado): favoritar,
+         silenciar notificações e aparecer offline só pra ele — sem
+         opção de bloquear aqui (bloqueio fica em Opções > Privacidade).
+         Posicionado via "position: fixed" calculado em JS, no ponto
+         onde o toque/clique aconteceu (ver positionContactCtxMenu). -->
+    <div id="contact-ctx-menu" class="my-menu ctx-menu" role="menu" hidden>
+      <button type="button" class="my-menu__item ctx-menu__item" role="menuitemcheckbox" data-action="favorite">
+        <span class="ctx-menu__check" id="ctx-check-favorite" aria-hidden="true"></span>
+        <span id="ctx-label-favorite">Adicionar aos favoritos</span>
+      </button>
+      <button type="button" class="my-menu__item ctx-menu__item" role="menuitemcheckbox" data-action="mute">
+        <span class="ctx-menu__check" id="ctx-check-mute" aria-hidden="true"></span>
+        <span id="ctx-label-mute">Silenciar notificações</span>
+      </button>
+      <button type="button" class="my-menu__item ctx-menu__item" role="menuitemcheckbox" data-action="appear-offline">
+        <span class="ctx-menu__check" id="ctx-check-appear-offline" aria-hidden="true"></span>
+        <span id="ctx-label-appear-offline">Aparecer offline para este contato</span>
+      </button>
+    </div>
+
     <!-- Banner promocional: compartilhar link de convite -->
     <button type="button" class="dash-promo" id="dash-promo">
       <img src="assets/icons/favicon.png" alt="" class="dash-promo__logo" />
