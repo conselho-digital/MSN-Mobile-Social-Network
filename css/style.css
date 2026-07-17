@@ -2609,16 +2609,16 @@ body[data-login-theme="cenario1"] #screen-connecting::before {
   overflow: visible;
   transition: width 0.2s ease, padding 0.2s ease, opacity 0.2s ease;
 }
-/* Retangular (mais alta que larga, igual ao cliente clássico — não é
-   mais uma foto quadrada pequena) — o mask-image da moldura (ver
-   .status-frame__tint) estica proporcionalmente, "mask-size: 100%
-   100%" já cobre isso. */
-.chat-sidebar__avatar { position: relative; width: 108px; height: 132px; flex: 0 0 auto; }
+/* Quadrada — mesma proporção largura:altura da foto do Dashboard
+   (.my-avatar, 78px = 1:1), só que maior. Largura/altura diferentes
+   esticavam a moldura de forma desproporcional (mask-size:100% 100%
+   força o encaixe, então um retângulo distorcia o desenho do anel). */
+.chat-sidebar__avatar { position: relative; width: 108px; height: 108px; flex: 0 0 auto; }
 /* A foto do contato "sobe" pra cobrir mais ou menos metade da altura
-   do banner (não da própria foto — ela é bem mais alta que o banner)
-   — só ela, não a minha lá embaixo (ver comentário grande acima de
-   .chat-sidebar). */
-.chat-sidebar__avatar:first-child { margin-top: -28px; }
+   do banner — só ela, não a minha lá embaixo (ver comentário grande
+   acima de .chat-sidebar). Metade de 97.5px (altura do banner, ver
+   .chat-header). */
+.chat-sidebar__avatar:first-child { margin-top: -49px; }
 .chat-sidebar__avatar:last-child { margin-top: auto; }
 /* Recolhida: encolhe pra 0 (não só "hidden") pra animar a largura em
    vez de sumir de uma vez — sem o botão de recolher no meio do fluxo
@@ -2683,6 +2683,11 @@ body[data-login-theme="cenario1"] #screen-connecting::before {
   display: flex;
   align-items: center;
   padding: 10px 14px;
+  /* Mesma altura do banner do Dashboard (.dash-header: 9.75px de
+     cima/baixo + 78px do avatar = 97.5px) — aqui não tem avatar
+     dentro pra "empurrar" a altura sozinho (a foto do contato fica na
+     coluna ao lado, só sobrepondo por cima), por isso o valor fixo. */
+  min-height: 97.5px;
   --chat-scene: none;
   background: var(--chat-scene, #ffffff);
   background-size: cover;
