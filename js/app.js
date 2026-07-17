@@ -153,10 +153,16 @@ const App = (function () {
 
     // Só esconde quando rodando como o app instalado (standalone).
     // No navegador comum, o botão permanece visível mesmo que o app
-    // já esteja instalado no aparelho.
+    // já esteja instalado no aparelho (útil pra reinstalar depois).
     setInstallButtonsHidden(isRunningStandalone());
+    // Mas no exato momento em que a instalação acontece NESTA aba, some
+    // na hora — sem isso, o botão continuava visível na mesma aba logo
+    // depois de instalar com sucesso, o que parecia que não tinha
+    // funcionado. Isso não afeta o comportamento em futuras aberturas
+    // do site numa aba comum (o botão volta a aparecer normalmente).
     window.addEventListener("appinstalled", () => {
       deferredInstallPrompt = null;
+      setInstallButtonsHidden(true);
     });
 
     btns.forEach((btn) => {
@@ -772,17 +778,27 @@ const App = (function () {
 
   /* ---------- Mensagens de erro amigáveis ---------- */
   function friendlyError(err) {
-    const msg = (err && err.message) || "";
+    // Alguns erros do Supabase não vêm como um Error de verdade (ex.:
+    // resposta sem o formato esperado) — .message pode faltar, ou o
+    // cliente já cai pra um JSON.stringify do corpo como mensagem
+    // ("{}", "[object Object]"), o que aparecia cru na tela.
+    const msg = (err && (err.message || err.error_description || err.msg || err.error)) || "";
     if (/invalid login credentials/i.test(msg)) {
       return "E-mail ou senha incorretos. Tente novamente.";
     }
     if (/email not confirmed/i.test(msg)) {
       return "Confirme seu e-mail antes de entrar.";
     }
+    if (/already registered|already exists|user already/i.test(msg)) {
+      return "Já existe uma conta com esse e-mail. Tente entrar em vez de criar uma nova.";
+    }
     if (/network|fetch/i.test(msg)) {
       return "Sem conexão com o servidor. Verifique sua internet.";
     }
-    return msg || "Não foi possível entrar. Tente novamente.";
+    if (!msg || msg === "{}" || /^\[object /.test(msg)) {
+      return "Não foi possível completar a operação (resposta inesperada do servidor). Tente novamente em instantes.";
+    }
+    return msg;
   }
 
   /* ---------- Service Worker (PWA) ---------- */
