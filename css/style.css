@@ -2576,28 +2576,39 @@ body[data-login-theme="cenario1"] #screen-connecting::before {
   display: flex;
   min-height: 0;
 }
-/* Largura = mesmo tamanho da foto de perfil do Dashboard (.my-avatar,
-   78px) + o padding lateral (9px de cada lado). Contato em cima, eu
-   embaixo (ordem no HTML) — "space-between" empurra as duas fotos pras
-   pontas: uma alinhada com o topo do cabeçalho, a outra com a caixa de
-   texto lá embaixo. */
+/* Largura = mesma da célula de nome no banner (.chat-header__info,
+   108px) — as duas ficam alinhadas, a foto do contato "gruda" embaixo
+   do texto (ver margin-top negativo em .chat-sidebar__avatar:first-
+   child). Foto do contato em cima, a minha embaixo (ordem no HTML);
+   a de cima fica presa no topo (com a sobreposição no banner), a de
+   baixo é empurrada pro fim da coluna via margin-top:auto. */
 .chat-sidebar {
   flex: 0 0 auto;
-  width: 96px;
+  width: 108px;
   display: flex;
   flex-direction: column;
   align-items: center;
-  justify-content: space-between;
-  gap: 12px;
-  /* Padding de baixo maior que o de cima: sobe a minha foto (a de
-     baixo) pra ficar alinhada com o topo da caixa de texto, em vez de
-     descer até a base da barra de ferramentas. */
-  padding: 14px 9px 20px;
+  padding: 0 8px 12px;
   background: transparent;
-  overflow: hidden;
+  /* Só esconde o que sobra na horizontal durante a animação de
+     recolher (ver .is-collapsed abaixo) — overflow-y precisa ficar
+     visível, senão corta a metade da foto do contato que sobe por
+     cima do banner (ver margin-top negativo logo abaixo). */
+  overflow-x: hidden;
+  overflow-y: visible;
   transition: width 0.2s ease, padding 0.2s ease, opacity 0.2s ease;
 }
-.chat-sidebar__avatar { position: relative; width: 78px; height: 78px; flex: 0 0 auto; }
+/* Retangular (mais alta que larga, igual ao cliente clássico — não é
+   mais uma foto quadrada pequena) — o mask-image da moldura (ver
+   .status-frame__tint) estica proporcionalmente, "mask-size: 100%
+   100%" já cobre isso. */
+.chat-sidebar__avatar { position: relative; width: 92px; height: 132px; flex: 0 0 auto; }
+/* A foto do contato "sobe" pra cobrir mais ou menos metade da altura
+   do banner (não da própria foto — ela é bem mais alta que o banner)
+   — só ela, não a minha lá embaixo (ver comentário grande acima de
+   .chat-sidebar). */
+.chat-sidebar__avatar:first-child { margin-top: -28px; }
+.chat-sidebar__avatar:last-child { margin-top: auto; }
 /* Recolhida: encolhe pra 0 (não só "hidden") pra animar a largura em
    vez de sumir de uma vez — sem o botão de recolher no meio do fluxo
    (ver .chat-sidebar-toggle abaixo), a área principal agora usa todo o
@@ -2615,7 +2626,7 @@ body[data-login-theme="cenario1"] #screen-connecting::before {
 .chat-sidebar-toggle {
   position: absolute;
   top: 50%;
-  left: 96px;
+  left: 108px;
   z-index: 4;
   width: 18px;
   height: 46px;
@@ -2644,63 +2655,74 @@ body[data-login-theme="cenario1"] #screen-connecting::before {
   flex-direction: column;
 }
 
-/* Banner com o cenário/foto do CONTATO (nunca o meu — ver
-   applyChatHeaderScene em dashboard.js). Mesma técnica de camadas do
-   .dash-header (--chat-scene já vem pronta do resolveSceneBg): tinge
-   o texto pra escuro em cenários claros via .is-light-scene. */
+/* Banner: duas células lado a lado, sem espaço nenhum entre elas nem
+   nas bordas (a foto/cenário do CONTATO — nunca o meu, ver
+   applyChatHeaderScene em dashboard.js — preenche a célula da direita
+   até a borda). Textos ficam só na célula da esquerda, sobre fundo
+   liso — não precisam mais de contraste dinâmico (is-light-scene) já
+   que não ficam mais em cima da foto. */
 .chat-header {
   flex: 0 0 auto;
   display: flex;
-  align-items: center;
-  gap: 12px;
-  padding: 14px;
-  --chat-scene: none;
-  background: var(--chat-scene, #ffffff);
-  background-size: cover;
-  background-position: center;
+  align-items: stretch;
   border-bottom: 1px solid #e3e8ec;
-  color: #ffffff;
 }
-.chat-header__info { min-width: 0; display: flex; flex-direction: column; gap: 2px; }
+/* Mesma largura da coluna lateral das fotos (.chat-sidebar, 108px) —
+   a foto do contato fica alinhada embaixo desta célula (ver
+   .chat-sidebar__avatar:first-child). */
+.chat-header__info {
+  flex: 0 0 108px;
+  width: 108px;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  gap: 2px;
+  padding: 8px 10px;
+  background: #eef1f4;
+  color: #23313b;
+}
 /* Status na frente do nome, na mesma linha (igual ao cliente clássico)
    — a frase pessoal (sub_nick) vai numa segunda linha, embaixo. */
 .chat-header__name-row { display: flex; align-items: baseline; gap: 6px; min-width: 0; }
 .chat-header__name {
+  flex: 1 1 auto;
   min-width: 0;
-  font-size: 1.15rem;
-  color: #ffffff;
-  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.45);
+  font-size: 1rem;
+  color: #23313b;
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
 }
+/* Encolhe/trunca também (não fica com largura livre) — numa coluna de
+   108px o nome tem prioridade, o status cede espaço primeiro. */
 .chat-header__status {
-  flex: 0 0 auto;
-  font-size: 0.8rem;
-  color: rgba(255, 255, 255, 0.88);
-  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.45);
+  flex: 0 1 auto;
+  max-width: 42%;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  font-size: 0.7rem;
+  color: #5a6b78;
   white-space: nowrap;
 }
 .chat-header__subnick {
-  font-size: 0.78rem;
+  font-size: 0.74rem;
   font-style: italic;
-  color: rgba(255, 255, 255, 0.85);
-  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.4);
+  color: #7a8a97;
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
 }
-.chat-header.is-light-scene .chat-header__name {
-  color: #23313b;
-  text-shadow: none;
-}
-.chat-header.is-light-scene .chat-header__status {
-  color: #4a5b68;
-  text-shadow: none;
-}
-.chat-header.is-light-scene .chat-header__subnick {
-  color: #5b6b74;
-  text-shadow: none;
+/* Célula da direita: só o cenário/tema, sem respiro nenhum (preenche
+   a célula inteira — ver resolveSceneBg em dashboard.js pras 3 camadas
+   que compõem --chat-scene). */
+.chat-header__banner {
+  flex: 1 1 auto;
+  min-width: 0;
+  --chat-scene: none;
+  background: var(--chat-scene, #ffffff);
+  background-size: cover;
+  background-position: center;
 }
 
 .chat-offline-banner {

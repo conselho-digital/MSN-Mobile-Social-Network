@@ -1567,16 +1567,18 @@ const Dashboard = (() => {
   let chatMessagesSubscribed = false;
   let chatNudgeSubscribed = false;
 
-  // Cenário do CONTATO no banner do topo da conversa — sempre o
-  // dele, sem opção de trocar (ver comentário acima).
+  // Cenário do CONTATO na célula da direita do banner — sempre o
+  // dele, sem opção de trocar (ver comentário acima). Nome/status
+  // ficam na célula da esquerda, sobre fundo liso (não precisa mais de
+  // contraste dinâmico — só a foto muda de cor/brilho, o texto não
+  // fica mais em cima dela).
   function applyChatHeaderScene() {
-    const header = document.querySelector(".chat-header");
-    if (!header || !currentChatContact) return;
+    const banner = document.querySelector(".chat-header__banner");
+    if (!banner || !currentChatContact) return;
     const c = currentChatContact;
     const sceneId = c.scene || SCENES[0].id;
     const tintHex = MSNScenes.colorSchemeHex(c.color_scheme);
-    header.style.setProperty("--chat-scene", resolveSceneBg(sceneId, c.scene_image_url, tintHex));
-    updateHeaderTextContrast(header, sceneId, c.scene_image_url);
+    banner.style.setProperty("--chat-scene", resolveSceneBg(sceneId, c.scene_image_url, tintHex));
     // Mesma cor de tema do banner também embaixo (borda da caixa de
     // composição) — pra dar a sensação de "moldura" colorida na janela
     // inteira, não só no topo (ver .chat-compose no CSS).

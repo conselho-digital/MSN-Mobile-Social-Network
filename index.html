@@ -494,9 +494,10 @@
       <button type="button" id="chat-close" class="chat-titlebar__close" aria-label="Voltar">&times;</button>
     </header>
 
-    <!-- Banner do cenário/tema do CONTATO — ocupa toda a largura da
-         janela (igual ao cliente clássico), por cima da coluna lateral
-         das fotos, não só da área principal. -->
+    <!-- Duas células lado a lado: nome/status (mesma largura da coluna
+         lateral das fotos, fundo liso) + banner do cenário/tema do
+         CONTATO (preenche o resto da largura da janela, sem sobrar
+         nenhuma borda/respiro — ver .chat-header__banner). -->
     <div class="chat-header">
       <div class="chat-header__info">
         <div class="chat-header__name-row">
@@ -505,6 +506,7 @@
         </div>
         <span class="chat-header__subnick" id="chat-contact-subnick"></span>
       </div>
+      <div class="chat-header__banner"></div>
     </div>
 
     <div class="chat-body">
