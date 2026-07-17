@@ -292,12 +292,15 @@ const Dashboard = (() => {
 
   async function load() {
     try {
-      [profile, contacts, groups] = await Promise.all([
+      let chatBgRows;
+      [profile, contacts, groups, , chatBgRows] = await Promise.all([
         MSNSupabase.getMyProfile(),
         MSNSupabase.getContacts(),
         MSNSupabase.getGroups(),
         refreshBlockedIds(),
+        MSNSupabase.getChatBackgrounds().catch(() => []),
       ]);
+      mergeChatBackgroundsFromServer(chatBgRows);
       // Aplica o status escolhido na tela de login, se houver
       const chosen = sessionStorage.getItem("msn:status");
       if (chosen && profile && profile.status !== chosen) {
@@ -1239,19 +1242,35 @@ const Dashboard = (() => {
   let originalCustomImageUrl = null;
   let originalChatBackground = null;
 
+  // Cada modo usa seu próprio diálogo: "profile" reaproveita o
+  // #scene-picker de sempre (cenário da conta + esquema de cores);
+  // "chatBackground" usa o #bg-dialog dedicado (só a galeria de planos
+  // de fundo + Procurar/Remover — sem seção de cor, ver screenshot do
+  // cliente clássico enviado). Mesmo assim toda a lógica de seleção
+  // (bindSceneTileClicks/commitScene/revertScene) é compartilhada.
+  function sceneDialogOverlay() {
+    return document.getElementById(scenePickerMode === "chatBackground" ? "bg-dialog" : "scene-picker");
+  }
+  function sceneDialogGrid() {
+    return document.getElementById(scenePickerMode === "chatBackground" ? "bg-grid" : "scene-grid");
+  }
+
   function openScenePicker(mode) {
     scenePickerMode = mode || "profile";
-    const overlay = document.getElementById("scene-picker");
-    const grid = document.getElementById("scene-grid");
-    const colorGrid = document.getElementById("color-scheme-grid");
-    const titleText = document.getElementById("scene-dialog-title-text");
-    if (scenePickerMode === "chatBackground") {
+    const isChatBg = scenePickerMode === "chatBackground";
+    const overlay = sceneDialogOverlay();
+    const grid = sceneDialogGrid();
+    const colorGrid = isChatBg ? null : document.getElementById("color-scheme-grid");
+    if (isChatBg) {
       const bg = currentChatContact ? getPersonalChatBackground(currentChatContact.id) : null;
-      originalChatBackground = bg ? { scene: bg.scene, colorScheme: bg.colorScheme || null } : null;
-      stagedScene = (bg && bg.scene) || SCENES[0].id;
+      originalChatBackground = bg
+        ? { scene: bg.scene, colorScheme: bg.colorScheme || null, sceneImageUrl: bg.sceneImageUrl || null }
+        : null;
+      // Sem escolha pessoal ainda: abre com "Padrão" selecionado (não um
+      // cenário qualquer) — mais claro sobre o que está em vigor agora.
+      stagedScene = (bg && bg.scene) || "";
       stagedColorScheme = (bg && bg.colorScheme) || null;
-      stagedCustomImageUrl = null;
-      if (titleText) titleText.textContent = "Plano de Fundo";
+      stagedCustomImageUrl = (bg && bg.sceneImageUrl) || null;
     } else {
       originalScene = (profile && profile.scene) || SCENES[0].id;
       originalColorScheme = (profile && profile.color_scheme) || null;
@@ -1259,14 +1278,15 @@ const Dashboard = (() => {
       stagedScene = originalScene;
       stagedColorScheme = originalColorScheme;
       stagedCustomImageUrl = originalCustomImageUrl;
-      if (titleText) titleText.textContent = "Cenário";
     }
 
-    grid.innerHTML = SCENES.map((s) =>
-      '<button type="button" class="scene-swatch' + (s.id === stagedScene ? " is-selected" : "") +
-      '" data-scene="' + s.id + '" style="background:' + sceneBg(s.id) +
-      '" aria-label="' + esc(s.name) + '" title="' + esc(s.name) + '"></button>'
-    ).join("");
+    grid.innerHTML =
+      (isChatBg ? noneSwatchHtml(stagedScene === "") : "") +
+      SCENES.map((s) =>
+        '<button type="button" class="scene-swatch' + (s.id === stagedScene ? " is-selected" : "") +
+        '" data-scene="' + s.id + '" style="background:' + sceneBg(s.id) +
+        '" aria-label="' + esc(s.name) + '" title="' + esc(s.name) + '"></button>'
+      ).join("");
     if (stagedScene === "custom" && stagedCustomImageUrl) {
       grid.insertAdjacentHTML("afterbegin", customTileHtml(stagedCustomImageUrl, true));
     }
@@ -1283,6 +1303,17 @@ const Dashboard = (() => {
 
     updateCurrentColorSwatch();
     overlay.hidden = false;
+  }
+
+  // "Padrão": sem plano de fundo próprio pra essa conversa — usa a cor
+  // do tema do contato (ver applyChatBackground). Só existe no diálogo
+  // de Plano de Fundo (a conta sempre tem um cenário próprio, nunca
+  // "nenhum").
+  function noneSwatchHtml(selected) {
+    return (
+      '<button type="button" class="scene-swatch scene-swatch--none' + (selected ? " is-selected" : "") +
+      '" data-scene="" aria-label="Padrão (cor do tema do contato)" title="Padrão (cor do tema do contato)"></button>'
+    );
   }
 
   function customTileHtml(url, selected) {
@@ -1328,23 +1359,25 @@ const Dashboard = (() => {
     });
   }
 
-  // Envio de um cenário próprio ("Procurar...").
+  // Envio de um cenário/plano de fundo próprio ("Procurar...") — mesmo
+  // fluxo pros dois diálogos, só muda o grid alvo (ver sceneDialogGrid).
   async function onSceneImageSelected(e) {
     const file = e.target.files && e.target.files[0];
     e.target.value = "";
     if (!file) return;
+    const dialogLabel = scenePickerMode === "chatBackground" ? "Plano de Fundo" : "Cenário";
     if (!file.type.startsWith("image/")) {
-      return infoModal("Cenário", "Selecione um arquivo de imagem.");
+      return infoModal(dialogLabel, "Selecione um arquivo de imagem.");
     }
     if (file.size > 4 * 1024 * 1024) {
-      return infoModal("Cenário", "A imagem deve ter no máximo 4 MB.");
+      return infoModal(dialogLabel, "A imagem deve ter no máximo 4 MB.");
     }
 
     const previewUrl = URL.createObjectURL(file);
     stagedScene = "custom";
     stagedCustomImageUrl = previewUrl;
 
-    const grid = document.getElementById("scene-grid");
+    const grid = sceneDialogGrid();
     const existing = grid.querySelector('.scene-swatch[data-scene="custom"]');
     grid.querySelectorAll(".scene-swatch").forEach((x) => x.classList.remove("is-selected"));
     if (existing) {
@@ -1362,7 +1395,7 @@ const Dashboard = (() => {
       const tile = grid.querySelector('.scene-swatch[data-scene="custom"]');
       if (tile) tile.style.background = "url('" + url + "') center/cover no-repeat";
     } catch (err) {
-      infoModal("Cenário", err.message || "Não foi possível enviar a imagem.");
+      infoModal(dialogLabel, err.message || "Não foi possível enviar a imagem.");
     }
   }
 
@@ -1383,7 +1416,7 @@ const Dashboard = (() => {
   async function commitScene() {
     if (scenePickerMode === "chatBackground") {
       if (!currentChatContact) return;
-      setPersonalChatBackground(currentChatContact.id, stagedScene, stagedColorScheme);
+      setPersonalChatBackground(currentChatContact.id, stagedScene, stagedColorScheme, stagedCustomImageUrl);
       addRecentChatScene(stagedScene);
       applyChatBackground();
       return;
@@ -1416,8 +1449,9 @@ const Dashboard = (() => {
       const curColor = (cur && cur.colorScheme) || null;
       const origScene = originalChatBackground && originalChatBackground.scene;
       const origColor = (originalChatBackground && originalChatBackground.colorScheme) || null;
+      const origImageUrl = (originalChatBackground && originalChatBackground.sceneImageUrl) || null;
       if (curScene !== origScene || curColor !== origColor) {
-        setPersonalChatBackground(currentChatContact.id, origScene, origColor);
+        setPersonalChatBackground(currentChatContact.id, origScene, origColor, origImageUrl);
         applyChatBackground();
       }
       return;
@@ -1438,7 +1472,7 @@ const Dashboard = (() => {
   // passagem (ver revertScene).
   async function closeScenePicker() {
     await revertScene();
-    document.getElementById("scene-picker").hidden = true;
+    sceneDialogOverlay().hidden = true;
   }
 
   /* ============================================================
@@ -1453,11 +1487,15 @@ const Dashboard = (() => {
        se eu nunca escolhi um pra ESSA conta específica (ou limpei a
        escolha), mostra só a COR de tema dela (sólida, sem foto). Se
        eu escolhi um, mostra esse — só EU vejo, e só nessa conversa
-       (guardado por contato, não vale pras outras).
+       (guardado por contato). Fica em cache local (localStorage, pra
+       aplicar na hora, sem esperar rede) e também é salvo em
+       public.chat_backgrounds (ver supabase/chat_backgrounds.sql) pra
+       acompanhar a conta em qualquer aparelho — carregado uma vez ao
+       abrir o Dashboard (ver load()/mergeChatBackgroundsFromServer).
      ============================================================ */
   // Um plano de fundo pessoal por contato: { "<contactId>": { scene,
-  // colorScheme } }. Sem entrada pra um contato = usa a cor do tema
-  // dele (ver applyChatBackground).
+  // colorScheme, sceneImageUrl } }. Sem entrada pra um contato = usa a
+  // cor do tema dele (ver applyChatBackground).
   function getChatBackgrounds() {
     try {
       const raw = localStorage.getItem("msn:chatBackgrounds");
@@ -1468,14 +1506,40 @@ const Dashboard = (() => {
     if (!contactId) return null;
     return getChatBackgrounds()[contactId] || null;
   }
-  // scene=null limpa a escolha pra esse contato (volta a usar a cor
-  // do tema dele).
-  function setPersonalChatBackground(contactId, scene, colorScheme) {
+  // scene=null limpa a escolha pra esse contato (volta a usar a cor do
+  // tema dele). Grava local na hora (síncrono) e manda pro Supabase em
+  // segundo plano (não bloqueia a UI nem tem retry — se falhar, o
+  // cache local já refletiu a escolha, e o próximo load() tenta
+  // sincronizar nesse aparelho de novo mais tarde).
+  function setPersonalChatBackground(contactId, scene, colorScheme, sceneImageUrl) {
     if (!contactId) return;
+    const imageUrl = scene === "custom" ? (sceneImageUrl || null) : null;
     try {
       const all = getChatBackgrounds();
-      if (scene) all[contactId] = { scene, colorScheme: colorScheme || null };
+      if (scene) all[contactId] = { scene, colorScheme: colorScheme || null, sceneImageUrl: imageUrl };
       else delete all[contactId];
+      localStorage.setItem("msn:chatBackgrounds", JSON.stringify(all));
+    } catch (_) {}
+    MSNSupabase.setChatBackground(contactId, scene || null, colorScheme || null, imageUrl).catch(() => {});
+  }
+
+  // Traz os planos de fundo salvos no Supabase pra dentro do cache
+  // local (chamado uma vez ao carregar o Dashboard — ver load()) —
+  // assim uma escolha feita em outro aparelho aparece aqui também.
+  // Sobrescreve o cache local por contato (o servidor é quem manda);
+  // não afeta contatos sem linha salva ainda no servidor.
+  function mergeChatBackgroundsFromServer(rows) {
+    if (!Array.isArray(rows) || !rows.length) return;
+    try {
+      const all = getChatBackgrounds();
+      rows.forEach((r) => {
+        if (!r || !r.contact_id) return;
+        all[r.contact_id] = {
+          scene: r.scene || null,
+          colorScheme: r.color_scheme || null,
+          sceneImageUrl: r.scene_image_url || null,
+        };
+      });
       localStorage.setItem("msn:chatBackgrounds", JSON.stringify(all));
     } catch (_) {}
   }
@@ -1526,7 +1590,7 @@ const Dashboard = (() => {
       // MSNScenes.bg()/resolveSceneBg() devolvem um valor pra
       // propriedade "background" (shorthand) — não pra
       // "background-image" sozinha (ver .dash-header, mesma técnica).
-      thread.style.background = resolveSceneBg(myBg.scene, null, tintHex);
+      thread.style.background = resolveSceneBg(myBg.scene, myBg.sceneImageUrl, tintHex);
     } else {
       // Sem escolha pessoal pra esse contato: só a cor do tema dele,
       // sólida (a foto/cenário fica reservada pro banner do topo).
@@ -1735,6 +1799,25 @@ const Dashboard = (() => {
     const open = picker.hidden;
     if (open) renderChatBgPicker();
     picker.hidden = !open;
+    if (open) positionChatBgPicker();
+  }
+
+  // Posiciona via "position: fixed" calculado em JS (não mais
+  // "absolute" ancorado num ancestral) — mais confiável em telas
+  // pequenas/teclado aberto, e nunca fica cortado por overflow de
+  // algum elemento no meio do caminho até o botão. Ancorado pelo
+  // canto superior direito do botão 🖌, com folga das bordas da tela.
+  const CHAT_BG_PICKER_WIDTH = 268;
+  function positionChatBgPicker() {
+    const btn = document.getElementById("chat-bg-btn");
+    const picker = document.getElementById("chat-bg-picker");
+    if (!btn || !picker) return;
+    const rect = btn.getBoundingClientRect();
+    const margin = 8;
+    let left = rect.right - CHAT_BG_PICKER_WIDTH;
+    left = Math.max(margin, Math.min(left, window.innerWidth - CHAT_BG_PICKER_WIDTH - margin));
+    picker.style.left = left + "px";
+    picker.style.bottom = (window.innerHeight - rect.top + 6) + "px";
   }
 
   function renderChatBgPicker() {
@@ -2182,6 +2265,37 @@ const Dashboard = (() => {
       sceneBrowse.addEventListener("click", () => sceneImageInput.click());
       sceneImageInput.addEventListener("change", onSceneImageSelected);
     }
+
+    // Diálogo "Planos de fundo" (conversa) — mesmos botões/fluxo do
+    // seletor de cenário acima (OK/Aplicar/Fechar/X/Procurar), só que
+    // no diálogo dedicado (ver openScenePicker("chatBackground")).
+    const bgOk = document.getElementById("bg-ok");
+    if (bgOk) bgOk.addEventListener("click", async () => {
+      await commitScene();
+      sceneDialogOverlay().hidden = true;
+    });
+    const bgApply = document.getElementById("bg-apply");
+    if (bgApply) bgApply.addEventListener("click", commitScene);
+    const bgClose = document.getElementById("bg-close");
+    if (bgClose) bgClose.addEventListener("click", closeScenePicker);
+    const bgX = document.getElementById("bg-dialog-x");
+    if (bgX) bgX.addEventListener("click", closeScenePicker);
+    const bgBrowse = document.getElementById("bg-browse");
+    if (bgBrowse && sceneImageInput) bgBrowse.addEventListener("click", () => sceneImageInput.click());
+    const bgRemove = document.getElementById("bg-remove");
+    if (bgRemove) bgRemove.addEventListener("click", () => {
+      stagedScene = "";
+      stagedColorScheme = null;
+      stagedCustomImageUrl = null;
+      const grid = document.getElementById("bg-grid");
+      if (grid) {
+        grid.querySelectorAll(".scene-swatch").forEach((x) => x.classList.remove("is-selected"));
+        const none = grid.querySelector(".scene-swatch--none");
+        if (none) none.classList.add("is-selected");
+        const custom = grid.querySelector('.scene-swatch[data-scene="custom"]');
+        if (custom) custom.remove();
+      }
+    });
 
     // "Mais cores..." (seletor de cor nativo)
     const colorMoreBtn = document.getElementById("color-scheme-more-btn");

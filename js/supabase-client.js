@@ -297,6 +297,50 @@ const MSNSupabase = (() => {
     return { ok: true };
   }
 
+  /* ---------- Plano de fundo pessoal por conversa ---------- */
+  // Ver supabase/chat_backgrounds.sql — uma linha por (eu, contato),
+  // só eu leio/escrevo a minha (RLS). Sem linha pra um contato = usa a
+  // cor do tema dele (decidido no cliente, ver dashboard.js).
+  async function getChatBackgrounds() {
+    if (!isConfigured()) return [];
+    const { data: { user } } = await client.auth.getUser();
+    if (!user) return [];
+    const { data, error } = await client
+      .from("chat_backgrounds")
+      .select("contact_id, scene, color_scheme, scene_image_url")
+      .eq("owner_id", user.id);
+    if (error) throw error;
+    return data || [];
+  }
+
+  // scene falsy = apaga a linha (volta a usar a cor do tema do contato).
+  async function setChatBackground(contactId, scene, colorScheme, sceneImageUrl) {
+    if (!isConfigured()) return { ok: true, demo: true };
+    const { data: { user } } = await client.auth.getUser();
+    if (!user) throw new Error("Sessão expirada. Entre novamente.");
+    if (!scene) {
+      const { error } = await client
+        .from("chat_backgrounds")
+        .delete()
+        .eq("owner_id", user.id)
+        .eq("contact_id", contactId);
+      if (error) throw error;
+      return { ok: true };
+    }
+    const { error } = await client
+      .from("chat_backgrounds")
+      .upsert({
+        owner_id: user.id,
+        contact_id: contactId,
+        scene,
+        color_scheme: colorScheme || null,
+        scene_image_url: scene === "custom" ? (sceneImageUrl || null) : null,
+        updated_at: new Date().toISOString(),
+      }, { onConflict: "owner_id,contact_id" });
+    if (error) throw error;
+    return { ok: true };
+  }
+
   // Escuta mudanças em profiles (status, nome, mensagem pessoal, foto)
   // em tempo real, via Supabase Realtime — assim a lista de contatos
   // (e a cor da moldura) atualiza sozinha quando alguém troca de
@@ -466,6 +510,7 @@ const MSNSupabase = (() => {
     init, isConfigured, signIn, signUp, getSession, signOut,
     getMyProfile, updateMyProfile, updateEmail, updatePassword, deleteMyAccount,
     getContacts, addContactByEmail, setFavorite,
+    getChatBackgrounds, setChatBackground,
     subscribeContacts, unsubscribeContacts,
     createGroup, getGroups,
     getBlockedUsers, blockUserByEmail, unblockUser,

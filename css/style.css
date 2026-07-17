@@ -2024,6 +2024,24 @@ body[data-login-theme="cenario1"] #screen-connecting::before {
   justify-content: center;
   box-shadow: 0 1px 3px rgba(0, 0, 0, 0.4);
 }
+/* "Padrão" (usar a cor do tema do contato) — só no diálogo de Plano de
+   Fundo da conversa, primeira posição da grade (ver noneSwatchHtml em
+   dashboard.js). */
+.scene-swatch--none {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: #ffffff !important;
+  font-size: 1.4rem;
+  color: #b0454a;
+}
+.scene-swatch--none::before { content: "🚫"; }
+
+/* Diálogo "Planos de fundo" da conversa — mesmo layout de duas colunas
+   do seletor de foto de exibição (grade à esquerda, Procurar/Remover
+   empilhados à direita, ver .avatar-picker__layout/__side/__actions
+   logo abaixo). */
+.avatar-picker__layout .scene-grid { flex: 1 1 auto; min-width: 0; margin-bottom: 0; }
 
 /* ---------- Galeria de fotos de exibição ----------
    Layout de duas colunas, igual ao diálogo clássico: grade de 3
@@ -2846,15 +2864,15 @@ body[data-login-theme="cenario1"] #screen-connecting::before {
 .chat-emoji-picker button:hover { background: #eef1f4; }
 
 /* Menu "Seus Planos de Fundo" (botão 🖌) — mesma ideia do picker de
-   emoji (popover ancorado, some ao clicar fora ou de novo no botão),
-   mas ancorado pela direita: o botão fica perto do fim da barra de
-   ferramentas, então abrir pra esquerda evita vazar da tela. */
+   emoji (popover, some ao clicar fora ou de novo no botão), mas com
+   "left"/"bottom" calculados em JS a cada abertura (ver
+   positionChatBgPicker em dashboard.js) em vez de fixos no CSS — mais
+   confiável em telas pequenas/teclado aberto, sempre visível inteiro
+   dentro da tela e nunca cortado por overflow de um ancestral. */
 .chat-bg-wrap { position: relative; flex: 0 0 auto; }
 .chat-bg-picker {
-  position: absolute;
-  bottom: 34px;
-  right: -8px;
-  z-index: 5;
+  position: fixed;
+  z-index: 50;
   width: 268px;
   padding: 10px 10px 8px;
   background: #ffffff;

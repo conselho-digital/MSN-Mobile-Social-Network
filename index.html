@@ -632,6 +632,42 @@
     </div>
   </div>
 
+  <!-- Plano de fundo pessoal da conversa (diálogo próprio, separado do
+       Cenário da conta — "Padrão" = usa a cor do tema do contato). -->
+  <div id="bg-dialog" class="modal-overlay scene-dialog-overlay" hidden>
+    <div class="scene-dialog" role="dialog" aria-modal="true" aria-label="Planos de fundo">
+      <header class="scene-dialog__titlebar">
+        <span class="scene-dialog__titlebar-app">
+          <img src="assets/icons/favicon.png" alt="" />
+          Planos de fundo
+        </span>
+        <button type="button" id="bg-dialog-x" class="scene-dialog__x" aria-label="Fechar">&times;</button>
+      </header>
+
+      <div class="scene-dialog__body">
+        <h3 class="scene-dialog__heading">Selecione um Plano de Fundo</h3>
+        <p class="scene-dialog__intro">
+          Só você vê esse plano de fundo, e só nesta conversa. Escolha "Padrão" pra usar a cor do tema deste contato.
+        </p>
+        <div class="avatar-picker__layout">
+          <div class="scene-grid" id="bg-grid"></div>
+          <div class="avatar-picker__side">
+            <div class="avatar-picker__actions">
+              <button type="button" id="bg-browse" class="scene-dialog__browse">Procurar...</button>
+              <button type="button" id="bg-remove" class="scene-dialog__browse">Remover</button>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <footer class="scene-dialog__footer">
+        <button type="button" id="bg-ok" class="btn-signin btn-signin--sm">OK</button>
+        <button type="button" id="bg-close" class="btn-signin btn-signin--sm">Fechar</button>
+        <button type="button" id="bg-apply" class="btn-signin btn-signin--sm">Aplicar</button>
+      </footer>
+    </div>
+  </div>
+
   <!-- Criar um grupo: nome + seleção de contatos (botões, sem checkbox) -->
   <div id="group-picker" class="modal-overlay scene-dialog-overlay" hidden>
     <div class="scene-dialog" role="dialog" aria-modal="true" aria-label="Criar um grupo">
