@@ -1899,7 +1899,7 @@ const Dashboard = (() => {
        CONTATO — simétrico, quando essa pessoa fala comigo ela vê o
        MEU cenário no topo dela (ver applyChatHeaderScene). Não dá
        pra escolher, é sempre de quem eu tô conversando.
-     - "Plano de Fundo" (atrás do texto das mensagens, .chat-thread):
+     - "Plano de Fundo" (atrás do texto das mensagens, #chat-messages):
        se eu nunca escolhi um pra ESSA conta específica (ou limpei a
        escolha), mostra só a COR de tema dela (sólida, sem foto). Se
        eu escolhi um, mostra esse — só EU vejo, e só nessa conversa
@@ -2004,21 +2004,29 @@ const Dashboard = (() => {
   }
 
   // Resolve e aplica o "Plano de Fundo" (atrás do texto das
-  // mensagens) da conversa atualmente aberta.
+  // mensagens) da conversa atualmente aberta — no PRÓPRIO
+  // #chat-messages (não mais em #chat-thread, que só "embrulha" ele e
+  // a barrinha de esconder fotos lado a lado). Antes, com o fundo no
+  // .chat-thread, uma pequena diferença de altura entre a barrinha e a
+  // lista (min-height:100% de #chat-messages arredondando de um jeito
+  // diferente do "stretch" da barrinha) deixava um pedacinho do verde
+  // vazando embaixo da barrinha branca — botando o fundo direto na
+  // lista, ele sempre cobre exatamente a própria caixa dela, não
+  // importa o que a barrinha ao lado estiver fazendo.
   function applyChatBackground() {
-    const thread = document.getElementById("chat-thread");
-    if (!thread || !currentChatContact) return;
+    const messages = document.getElementById("chat-messages");
+    if (!messages || !currentChatContact) return;
     const myBg = getPersonalChatBackground(currentChatContact.id);
     if (myBg && myBg.scene) {
       const tintHex = MSNScenes.colorSchemeHex(myBg.colorScheme);
       // MSNScenes.bg()/resolveSceneBg() devolvem um valor pra
       // propriedade "background" (shorthand) — não pra
       // "background-image" sozinha (ver .dash-header, mesma técnica).
-      thread.style.background = resolveSceneBg(myBg.scene, myBg.sceneImageUrl, tintHex);
+      messages.style.background = resolveSceneBg(myBg.scene, myBg.sceneImageUrl, tintHex);
     } else {
       // Sem escolha pessoal pra esse contato: só a cor do tema dele,
       // sólida (a foto/cenário fica reservada pro banner do topo).
-      thread.style.background = MSNScenes.effectiveTheme(currentChatContact.scene, currentChatContact.color_scheme);
+      messages.style.background = MSNScenes.effectiveTheme(currentChatContact.scene, currentChatContact.color_scheme);
     }
   }
 

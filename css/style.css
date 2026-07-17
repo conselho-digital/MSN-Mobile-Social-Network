@@ -2739,7 +2739,6 @@ body[data-login-theme="cenario1"] #screen-connecting::before {
   margin: 0;
   padding: 0;
   border: none;
-  border-right: 1px solid #d7dee4;
   background: #ffffff;
   cursor: pointer;
   transition: background-color 0.35s ease;
@@ -2910,8 +2909,6 @@ body[data-login-theme="cenario1"] #screen-connecting::before {
   flex: 1 1 auto;
   display: flex;
   min-height: 0;
-  /* O "background" completo (imagem + posição/tamanho/repetição) é
-     definido via JS em applyChatBackground() — ver dashboard.js. */
 }
 .chat-messages {
   flex: 1 1 auto;
@@ -2925,6 +2922,12 @@ body[data-login-theme="cenario1"] #screen-connecting::before {
   flex-direction: column;
   gap: 8px;
   min-height: 100%;
+  /* O "background" completo (imagem + posição/tamanho/repetição) é
+     definido via JS em applyChatBackground() — ver dashboard.js. Fica
+     aqui (na lista em si, não em .chat-thread que só embrulha ela +
+     a barrinha) pra sempre cobrir exatamente essa caixa, sem depender
+     de "esticar igual" à barrinha do lado (ver comentário em
+     applyChatBackground). */
 }
 .chat-message {
   max-width: 78%;
