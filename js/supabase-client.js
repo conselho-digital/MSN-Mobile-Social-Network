@@ -231,6 +231,45 @@ const MSNSupabase = (() => {
     }
   }
 
+  /* ---------- Presença em tempo real ---------- */
+  // profiles.status é a ESCOLHA da pessoa (Disponível/Ocupado/Ausente)
+  // — não muda sozinha quando o aparelho perde a conexão de verdade
+  // (internet caiu, aba fechou, deslogou). Um canal de "presença" do
+  // Supabase Realtime resolve isso: cada aparelho/aba conectado
+  // "marca presença" agrupada pela própria conta (key = user.id), e o
+  // servidor detecta sozinho quando a conexão cai (sem precisar que o
+  // cliente avise nada — funciona até se a internet cair de vez, ver
+  // dashboard.js). Só volta a "offline" quando NENHUM aparelho/aba
+  // daquela conta estiver mais conectado.
+  let presenceChannel = null;
+  async function subscribePresence(onSync) {
+    if (!isConfigured()) return null;
+    unsubscribePresence();
+    const { data: { user } } = await client.auth.getUser();
+    if (!user) return null;
+    presenceChannel = client.channel("online-users", {
+      config: { presence: { key: user.id } },
+    });
+    presenceChannel
+      .on("presence", { event: "sync" }, () => {
+        // presenceState() agrupa por key (o id de quem está
+        // conectado) — várias abas/aparelhos da mesma conta caem na
+        // mesma chave, então ela some da lista só quando a última
+        // conexão encerrar.
+        onSync(new Set(Object.keys(presenceChannel.presenceState())));
+      })
+      .subscribe((status) => {
+        if (status === "SUBSCRIBED") presenceChannel.track({ online_at: new Date().toISOString() });
+      });
+    return presenceChannel;
+  }
+  function unsubscribePresence() {
+    if (presenceChannel) {
+      client.removeChannel(presenceChannel);
+      presenceChannel = null;
+    }
+  }
+
   /* ---------- Chamar a atenção (nudge) ---------- */
   async function sendNudge(contactId) {
     if (!isConfigured()) return { ok: true, demo: true };
@@ -515,6 +554,7 @@ const MSNSupabase = (() => {
     createGroup, getGroups,
     getBlockedUsers, blockUserByEmail, unblockUser,
     getMessages, sendMessage, subscribeMessages, unsubscribeMessages,
+    subscribePresence, unsubscribePresence,
     sendNudge, subscribeNudges, unsubscribeNudges,
     uploadAvatar,
     uploadSceneImage,

@@ -18,8 +18,17 @@ const Dashboard = (() => {
   // como offline: mesmo rótulo, mesma cor de moldura, mesma posição
   // na lista (grupo "Offline"). Ponto único de normalização pra não
   // vazar o status real em algum lugar novo no futuro.
-  function contactVisibleStatus(status) {
-    return status === "invisible" ? "offline" : status;
+  //
+  // Além disso, se o contato não tem NENHUM aparelho/aba com conexão
+  // em tempo real ativa agora (ver presenceOnlineIds/subscribePresence
+  // em supabase-client.js), força "offline" mesmo que profiles.status
+  // ainda diga "online" — isso cobre internet caindo, aba fechando ou
+  // logout, casos em que ninguém atualiza a coluna status "avisando"
+  // que ficou offline (a conexão simplesmente para de existir).
+  function contactVisibleStatus(status, contactId) {
+    if (status === "invisible") return "offline";
+    if (presenceReady && contactId && !presenceOnlineIds.has(String(contactId))) return "offline";
+    return status;
   }
   // Gradiente/animação da moldura da foto por status — compartilhado
   // com a tela de login em js/scenes.js (MSNScenes.frameGradient /
@@ -121,6 +130,13 @@ const Dashboard = (() => {
   let bound = false;
   let currentFilter = "";
   let contactsSubscribed = false;
+  // Quem tem pelo menos um aparelho/aba com conexão em tempo real
+  // ativa agora (ver subscribePresence em supabase-client.js).
+  // "presenceReady" começa false pra não piscar todo mundo "offline"
+  // antes da primeira sincronização chegar — até lá, contactVisibleStatus
+  // confia só em profiles.status, igual antes desse recurso existir.
+  let presenceOnlineIds = new Set();
+  let presenceReady = false;
   // IDs de quem esta conta bloqueou — usado só pra filtrar a lista
   // principal quando "Mostrar contatos bloqueados" (Opções > Layout)
   // estiver desligado (ver renderContacts).
@@ -311,6 +327,7 @@ const Dashboard = (() => {
       renderGroupShells();
       renderContacts(currentFilter);
       subscribeContactUpdates();
+      subscribePresenceUpdates();
       maybeRequestNotificationPermission();
     } catch (err) {
       console.error("Falha ao carregar o dashboard:", err);
@@ -349,6 +366,24 @@ const Dashboard = (() => {
       Object.assign(c, updated);
       renderContacts(currentFilter);
     });
+  }
+
+  let presenceSubscribed = false;
+  // Assina o canal de presença (ver subscribePresence em
+  // supabase-client.js) — cada sincronização traz a lista atual de
+  // quem tem pelo menos uma conexão em tempo real ativa agora, usada
+  // por contactVisibleStatus pra forçar "offline" em quem perdeu a
+  // conexão de verdade (internet caiu, aba fechou, deslogou) mesmo que
+  // profiles.status ainda diga outra coisa.
+  function subscribePresenceUpdates() {
+    if (presenceSubscribed) return;
+    presenceSubscribed = true;
+    MSNSupabase.subscribePresence((onlineIds) => {
+      presenceOnlineIds = onlineIds;
+      presenceReady = true;
+      renderContacts(currentFilter);
+      if (currentChatContact) renderChatHeader();
+    }).catch(() => {});
   }
 
   /* ---------- Perfil próprio ---------- */
@@ -905,7 +940,7 @@ const Dashboard = (() => {
       if (!showBlockedContacts && blockedContactIds.has(String(c.id))) return false;
       return !q || (c.display_name || "").toLowerCase().includes(q);
     };
-    const isOnline = (c) => ["online", "busy", "away"].includes(contactVisibleStatus(c.status));
+    const isOnline = (c) => ["online", "busy", "away"].includes(contactVisibleStatus(c.status, c.id));
 
     // Só "puxa" contatos pra fora de Disponível/Offline quando a
     // respectiva seção está de fato visível (Opções > Layout) — senão
@@ -1020,7 +1055,7 @@ const Dashboard = (() => {
     // Um contato invisível aparece como offline pra qualquer outra
     // pessoa — ver contactVisibleStatus. Tudo abaixo usa "status"
     // (normalizado), nunca c.status direto.
-    const status = contactVisibleStatus(c.status);
+    const status = contactVisibleStatus(c.status, c.id);
     const isOnline = ["online", "busy", "away"].includes(status);
     li.className = "contact-item " + (isOnline ? "contact-item--" + status : "contact-item--offline");
 
@@ -1615,7 +1650,7 @@ const Dashboard = (() => {
     if (!c) return;
     // Mesma regra da lista de contatos: contato invisível aparece como
     // offline aqui também (ver contactVisibleStatus).
-    const status = contactVisibleStatus(c.status);
+    const status = contactVisibleStatus(c.status, c.id);
     document.getElementById("chat-titlebar-text").textContent = c.email || c.display_name || "";
     document.getElementById("chat-contact-name").textContent = c.display_name || c.email || "";
     document.getElementById("chat-contact-status").textContent = "(" + (STATUS_LABEL[status] || "Offline") + ")";
@@ -1722,14 +1757,21 @@ const Dashboard = (() => {
     if (chatMessagesSubscribed) return;
     MSNSupabase.subscribeMessages((msg) => {
       if (!currentChatContact) return;
+      // As minhas próprias mensagens já aparecem na hora em
+      // sendChatMessage() (assim que o envio confirma, sem esperar o
+      // tempo real) — o subscribe não filtra por remetente no
+      // Supabase (ver subscribeMessages em supabase-client.js), então
+      // ecoa de volta pra mim também; sem este "return" cedo, a
+      // mensagem aparecia duas vezes (uma da confirmação do envio,
+      // outra do próprio eco). Esse listener cuida só das mensagens
+      // QUE CHEGAM de quem eu estou conversando.
+      if (String(msg.sender_id) === String(profile && profile.id)) return;
       const cid = String(currentChatContact.id);
-      const involved =
-        (String(msg.sender_id) === cid && String(msg.receiver_id) === String(profile && profile.id)) ||
-        (String(msg.receiver_id) === cid && String(msg.sender_id) === String(profile && profile.id));
+      const involved = String(msg.sender_id) === cid && String(msg.receiver_id) === String(profile && profile.id);
       if (!involved) return;
       document.getElementById("chat-messages").appendChild(chatMessageBubble(msg));
       scrollChatToBottom();
-      if (String(msg.sender_id) !== String(profile && profile.id)) SoundManager.play("message");
+      SoundManager.play("message");
     });
     chatMessagesSubscribed = true;
   }
@@ -2089,6 +2131,15 @@ const Dashboard = (() => {
   async function doSignOut() {
     MSNSupabase.unsubscribeContacts();
     contactsSubscribed = false;
+    // Sai do canal de presença antes de deslogar de fato — isso avisa
+    // os outros na hora que esse aparelho não conta mais (ver
+    // subscribePresence em supabase-client.js). Se ainda houver outro
+    // aparelho/aba conectado nessa mesma conta, ela continua "online"
+    // normalmente (a chave só some quando a última conexão cai).
+    MSNSupabase.unsubscribePresence();
+    presenceSubscribed = false;
+    presenceReady = false;
+    presenceOnlineIds = new Set();
     // Antes de sair, atualiza o cenário/tema/foto lembrados dessa conta
     // (caso tenham mudado durante a sessão) — assim a tela de login já
     // mostra a versão mais recente na próxima vez, e não só a que
