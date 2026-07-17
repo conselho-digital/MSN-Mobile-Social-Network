@@ -429,6 +429,7 @@ const Dashboard = (() => {
       renderContacts(currentFilter);
       subscribeContactUpdates();
       subscribePresenceUpdates();
+      subscribeChatRealtime();
       maybeRequestNotificationPermission();
     } catch (err) {
       console.error("Falha ao carregar o dashboard:", err);
@@ -509,19 +510,68 @@ const Dashboard = (() => {
   }
 
   // Som de "entrou" (reaproveita o mesmo áudio do login, ver
-  // sound-manager.js) quando um contato meu fica online — respeita
-  // "silenciar notificações desse contato" e nunca toca pra quem está
-  // em forcedOfflineReasons (me bloqueou, ou aparece offline pra mim de
+  // sound-manager.js) + o aviso deslizante (ver showOnlineToast) quando
+  // um contato meu fica online — respeita "silenciar notificações
+  // desse contato" e nunca dispara pra quem está em
+  // forcedOfflineReasons (me bloqueou, ou aparece offline pra mim de
   // propósito — nesses casos nem deveria "aparecer" ficando online).
   function notifyContactsCameOnline(newlyOnlineIds) {
     if (!newlyOnlineIds || !newlyOnlineIds.length) return;
-    const anyAudible = newlyOnlineIds.some((id) => {
+    let played = false;
+    newlyOnlineIds.forEach((id) => {
       const c = contacts.find((x) => String(x.id) === String(id));
-      if (!c || c.is_muted) return false;
-      if (forcedOfflineReasons.has(String(id))) return false;
-      return true;
+      if (!c || c.is_muted) return;
+      if (forcedOfflineReasons.has(String(id))) return;
+      if (!played) { SoundManager.play("login"); played = true; }
+      queueOnlineToast(c);
     });
-    if (anyAudible) SoundManager.play("login");
+  }
+
+  /* ---------- Aviso "fulano acabou de entrar" (desliza da direita) ----------
+     Fila simples — se mais de um contato ficar online ao mesmo tempo,
+     mostra um de cada vez em vez de empilhar/trocar no meio da
+     animação. */
+  let onlineToastQueue = [];
+  let onlineToastTimer = null;
+  const ONLINE_TOAST_DURATION_MS = 6000;
+
+  function queueOnlineToast(contact) {
+    onlineToastQueue.push(contact);
+    const toast = document.getElementById("online-toast");
+    if (toast && toast.hidden) processOnlineToastQueue();
+  }
+
+  function processOnlineToastQueue() {
+    const toast = document.getElementById("online-toast");
+    if (!toast) return;
+    const contact = onlineToastQueue.shift();
+    if (!contact) return;
+    document.getElementById("online-toast-name").textContent = contact.display_name || contact.email || "Contato";
+    document.getElementById("online-toast-avatar").innerHTML = chatStatusFrameMarkup(contact.avatar_url, "online");
+    toast.hidden = false;
+    // Só entra a classe (que dispara a transição CSS) DEPOIS do
+    // navegador pintar o estado inicial (hidden removido, ainda fora
+    // da tela) — um requestAnimationFrame só às vezes roda antes desse
+    // primeiro paint; dois encadeados garantem que já pintou.
+    requestAnimationFrame(() => {
+      requestAnimationFrame(() => toast.classList.add("is-visible"));
+    });
+    if (onlineToastTimer) clearTimeout(onlineToastTimer);
+    onlineToastTimer = setTimeout(hideOnlineToast, ONLINE_TOAST_DURATION_MS);
+  }
+
+  function hideOnlineToast() {
+    const toast = document.getElementById("online-toast");
+    if (!toast || toast.hidden) return;
+    if (onlineToastTimer) clearTimeout(onlineToastTimer);
+    onlineToastTimer = null;
+    toast.classList.remove("is-visible");
+    // Espera a transição de saída (ver .online-toast no CSS) antes de
+    // "hidden" de verdade — senão some sem deslizar de volta.
+    setTimeout(() => {
+      toast.hidden = true;
+      if (onlineToastQueue.length) processOnlineToastQueue();
+    }, 350);
   }
 
   /* ---------- Perfil próprio ---------- */
@@ -646,6 +696,25 @@ const Dashboard = (() => {
       localStorage.setItem("msn:showStatusLabel", String(showStatusLabel));
       localStorage.setItem("msn:sortBy", sortBy);
     } catch (_) {}
+  }
+
+  // Liga/desliga TODOS os sons de notificação (Opções > Sons) — não
+  // confundir com "silenciar" um contato específico (menu de segurar
+  // apertado), que continua funcionando por cima disso.
+  let soundsEnabled = true;
+  function loadSoundPrefs() {
+    try {
+      const v = localStorage.getItem("msn:soundsEnabled");
+      if (v !== null) soundsEnabled = v === "true";
+    } catch (_) {}
+    SoundManager.setEnabled(soundsEnabled);
+  }
+  function saveSoundPrefs() {
+    try { localStorage.setItem("msn:soundsEnabled", String(soundsEnabled)); } catch (_) {}
+  }
+  function loadSoundPrefsIntoForm() {
+    const cb = document.getElementById("opt-sounds-enabled");
+    if (cb) cb.checked = soundsEnabled;
   }
 
   // Aplica visibilidade — o tamanho/estilo do avatar é decidido por
@@ -1337,7 +1406,7 @@ const Dashboard = (() => {
       else if (action === "message") {
         closeContactCtxMenu();
         const contact = contacts.find((x) => String(x.id) === String(id));
-        if (contact) { SoundManager.play("message"); openChat(contact); }
+        if (contact) openChat(contact);
       }
     });
     document.addEventListener("click", (e) => {
@@ -2177,25 +2246,36 @@ const Dashboard = (() => {
     if (messages) messages.scrollTop = messages.scrollHeight;
   }
 
+  // Assinado uma vez só, no load() do Dashboard (não mais só depois de
+  // abrir alguma conversa) — assim o som de "chegou mensagem" toca
+  // mesmo sem nenhuma janela de conversa aberta ainda, não só depois
+  // da primeira vez que a pessoa abre alguma.
   function subscribeChatRealtime() {
     if (chatMessagesSubscribed) return;
     MSNSupabase.subscribeMessages((msg) => {
-      if (!currentChatContact) return;
       // As minhas próprias mensagens já aparecem na hora em
       // sendChatMessage() (assim que o envio confirma, sem esperar o
       // tempo real) — o subscribe não filtra por remetente no
       // Supabase (ver subscribeMessages em supabase-client.js), então
       // ecoa de volta pra mim também; sem este "return" cedo, a
       // mensagem aparecia duas vezes (uma da confirmação do envio,
-      // outra do próprio eco). Esse listener cuida só das mensagens
-      // QUE CHEGAM de quem eu estou conversando.
+      // outra do próprio eco).
       if (String(msg.sender_id) === String(profile && profile.id)) return;
-      const cid = String(currentChatContact.id);
-      const involved = String(msg.sender_id) === cid && String(msg.receiver_id) === String(profile && profile.id);
-      if (!involved) return;
-      document.getElementById("chat-messages").appendChild(chatMessageBubble(msg));
-      scrollChatToBottom();
-      if (!currentChatContact.is_muted) SoundManager.play("message");
+      if (String(msg.receiver_id) !== String(profile && profile.id)) return; // não é pra mim
+      const senderId = String(msg.sender_id);
+      const chatOpenWithSender = currentChatContact && String(currentChatContact.id) === senderId;
+      if (chatOpenWithSender) {
+        // Já estou vendo essa conversa — mostra a bolha na hora, mas
+        // sem som (a pessoa já está olhando pra tela).
+        document.getElementById("chat-messages").appendChild(chatMessageBubble(msg));
+        scrollChatToBottom();
+        return;
+      }
+      // Conversa com quem mandou NÃO está aberta (outra conversa
+      // aberta, ou nenhuma): só o som de notificação, respeitando
+      // "silenciar" desse contato específico.
+      const sender = contacts.find((c) => String(c.id) === senderId);
+      if (!sender || !sender.is_muted) SoundManager.play("message");
     });
     chatMessagesSubscribed = true;
   }
@@ -2398,13 +2478,20 @@ const Dashboard = (() => {
      cliente clássico, mas sem a funcionalidade por trás delas ainda.
      A lista de categorias fica recolhida por padrão (botão-toggle) pra
      poupar espaço na tela do mobile. */
-  function openOptionsDialog() {
+  // "tab" opcional: abre já numa categoria específica (ex.: o link
+  // "Opções" do aviso de "fulano entrou" abre direto em Sons — ver
+  // showOnlineToast) em vez de sempre cair em Pessoal.
+  function openOptionsDialog(tab) {
     document.getElementById("opt-display-name").value = profile ? profile.display_name || "" : "";
     document.getElementById("opt-sub-nick").value = profile ? profile.sub_nick || "" : "";
     document.getElementById("opt-auto-away").checked = autoAwayEnabled;
     document.getElementById("opt-auto-away-minutes").value = autoAwayMinutes;
     resetOptionsNav();
     document.getElementById("options-dialog").hidden = false;
+    if (tab) {
+      const item = document.querySelector('.options-nav__item[data-tab="' + tab + '"]');
+      if (item) item.click();
+    }
   }
 
   function resetOptionsNav() {
@@ -2417,6 +2504,7 @@ const Dashboard = (() => {
     document.getElementById("options-pane-layout").hidden = true;
     document.getElementById("options-pane-messages").hidden = true;
     document.getElementById("options-pane-alerts").hidden = true;
+    document.getElementById("options-pane-sounds").hidden = true;
     document.getElementById("options-pane-privacy").hidden = true;
     document.getElementById("options-pane-security").hidden = true;
     document.getElementById("options-pane-blank").hidden = true;
@@ -2613,6 +2701,7 @@ const Dashboard = (() => {
     loadLayoutPrefs();
     applyLayoutVisuals();
     loadMessagePrefs();
+    loadSoundPrefs();
     bindSceneBannerPullToRefresh();
 
     // Se a pessoa conceder uma permissão fora do app (ex.: configurações
@@ -2853,17 +2942,19 @@ const Dashboard = (() => {
         item.classList.add("is-active");
         document.getElementById("options-nav-current").textContent = item.textContent;
         const tab = item.dataset.tab;
-        const knownTabs = ["personal", "layout", "messages", "alerts", "privacy", "security"];
+        const knownTabs = ["personal", "layout", "messages", "alerts", "sounds", "privacy", "security"];
         document.getElementById("options-pane-personal").hidden = tab !== "personal";
         document.getElementById("options-pane-layout").hidden = tab !== "layout";
         document.getElementById("options-pane-messages").hidden = tab !== "messages";
         document.getElementById("options-pane-alerts").hidden = tab !== "alerts";
+        document.getElementById("options-pane-sounds").hidden = tab !== "sounds";
         document.getElementById("options-pane-privacy").hidden = tab !== "privacy";
         document.getElementById("options-pane-security").hidden = tab !== "security";
         document.getElementById("options-pane-blank").hidden = knownTabs.includes(tab);
         if (tab === "layout") loadLayoutPrefsIntoForm();
         if (tab === "messages") loadMessagePrefsIntoForm();
         if (tab === "alerts") renderPermissions();
+        if (tab === "sounds") loadSoundPrefsIntoForm();
         if (tab === "privacy") renderBlockedList();
         if (tab === "security") loadSecurityIntoForm();
         if (optNav) optNav.hidden = true;
@@ -2881,6 +2972,25 @@ const Dashboard = (() => {
     // histórico" ligado — desliga/liga junto, igual ao cliente clássico.
     const optKeepHistory = document.getElementById("opt-keep-history");
     if (optKeepHistory) optKeepHistory.addEventListener("change", updateLastConversationCheckbox);
+    // Ligar/desligar todos os sons (aba Sons) — aplica na hora, sem
+    // precisar de "Aplicar"/"OK".
+    const optSoundsEnabled = document.getElementById("opt-sounds-enabled");
+    if (optSoundsEnabled) optSoundsEnabled.addEventListener("change", () => {
+      soundsEnabled = optSoundsEnabled.checked;
+      SoundManager.setEnabled(soundsEnabled);
+      saveSoundPrefs();
+    });
+
+    // Aviso "fulano acabou de entrar": X fecha; "Opções" fecha e abre
+    // Opções > Sons, pra mudar essa configuração.
+    const onlineToastClose = document.getElementById("online-toast-close");
+    if (onlineToastClose) onlineToastClose.addEventListener("click", hideOnlineToast);
+    const onlineToastOptions = document.getElementById("online-toast-options");
+    if (onlineToastOptions) onlineToastOptions.addEventListener("click", (e) => {
+      e.preventDefault();
+      hideOnlineToast();
+      openOptionsDialog("sounds");
+    });
     // Bloquear pessoa pelo e-mail (aba Privacidade)
     const optBlockBtn = document.getElementById("opt-block-btn");
     if (optBlockBtn) optBlockBtn.addEventListener("click", blockPersonByEmail);
@@ -2971,7 +3081,6 @@ const Dashboard = (() => {
       if (!item || e.target.closest(".contact-item__fav")) return;
       const contact = contacts.find((c) => String(c.id) === item.dataset.id);
       if (!contact) return;
-      SoundManager.play("message");
       openChat(contact);
     });
     bindContactLongPress();

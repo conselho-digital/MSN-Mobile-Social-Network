@@ -3154,3 +3154,85 @@ body[data-login-theme="cenario1"] #screen-connecting::before {
   line-height: 14px;
   text-align: center;
 }
+
+/* ---------- Aviso "fulano acabou de entrar" ---------- */
+/* Desliza da direita pra esquerda, fixo na parte de baixo da tela (ver
+   showOnlineToast em dashboard.js) — igual ao balão clássico do
+   Messenger. position:fixed independe de qual tela (Dashboard ou
+   conversa) está aberta no momento; z-index alto o bastante pra ficar
+   por cima de tudo, inclusive diálogos. */
+.online-toast {
+  position: fixed;
+  right: 12px;
+  bottom: 12px;
+  z-index: 300;
+  width: min(300px, calc(100vw - 24px));
+  background: linear-gradient(#eef6fc, #d7e9f5);
+  border: 1px solid #7fa8c4;
+  border-radius: 6px;
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.4);
+  overflow: hidden;
+  transform: translateX(130%);
+  transition: transform 0.35s ease;
+}
+.online-toast.is-visible { transform: translateX(0); }
+.online-toast__titlebar {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 5px 6px;
+  background: linear-gradient(#4a90d9, #2f6fb8);
+  color: #fff;
+}
+.online-toast__title-icon { font-size: 0.85rem; }
+.online-toast__title {
+  flex: 1 1 auto;
+  min-width: 0;
+  font-size: 0.76rem;
+  font-weight: 600;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.online-toast__close {
+  flex: 0 0 auto;
+  width: 18px; height: 18px;
+  border: none;
+  background: transparent;
+  color: #fff;
+  font-size: 0.95rem;
+  line-height: 1;
+  cursor: pointer;
+  border-radius: 3px;
+}
+.online-toast__close:hover { background: rgba(255, 255, 255, 0.25); }
+.online-toast__body {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 10px;
+}
+.online-toast__avatar { position: relative; width: 52px; height: 52px; flex: 0 0 auto; }
+.online-toast__text {
+  display: flex;
+  flex-direction: column;
+  gap: 1px;
+  min-width: 0;
+}
+.online-toast__name {
+  font-weight: 700;
+  font-size: 0.88rem;
+  color: #1a3a55;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.online-toast__msg { font-size: 0.82rem; color: #2b3f4d; }
+.online-toast__options {
+  align-self: flex-end;
+  margin-top: 2px;
+  font-size: 0.78rem;
+  color: #1a6fbb;
+  text-decoration: none;
+}
+.online-toast__options:hover { text-decoration: underline; }

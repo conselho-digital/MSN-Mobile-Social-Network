@@ -393,7 +393,6 @@ const App = (function () {
     const status = UIManager.getStatus();
     setConnectingText("Entrando...");
     UIManager.showScreen("screen-connecting");
-    SoundManager.play("login");
 
     try {
       const result = await MSNSupabase.signIn(email, password);

@@ -1092,6 +1092,24 @@
           </section>
         </div>
 
+        <div class="options-pane" id="options-pane-sounds" hidden>
+          <h3 class="options-pane__title">Sons</h3>
+
+          <section class="options-section">
+            <label class="checkbox">
+              <input type="checkbox" id="opt-sounds-enabled" checked />
+              <span class="checkbox__box"></span>
+              <span class="checkbox__text">Reproduzir sons de notificação</span>
+            </label>
+            <p class="options-section__text">
+              Toca quando um contato fica online, quando chega uma mensagem nova (com a conversa fechada) e quando alguém chama sua atenção.
+            </p>
+            <p class="options-section__text">
+              Pra silenciar só UM contato específico (sem desligar os sons de todo mundo), segure apertado — ou clique com o botão direito no computador — o contato na sua lista.
+            </p>
+          </section>
+        </div>
+
         <div class="options-pane options-pane--blank" id="options-pane-blank" hidden></div>
       </div>
 
@@ -1100,6 +1118,26 @@
         <button type="button" id="options-cancel" class="btn-signin btn-signin--sm">Cancelar</button>
         <button type="button" id="options-apply" class="btn-signin btn-signin--sm">Aplicar</button>
       </footer>
+    </div>
+  </div>
+
+  <!-- Aviso "fulano acabou de entrar" — desliza da direita pra
+       esquerda, na parte de baixo da tela (ver showOnlineToast em
+       dashboard.js). "Opções" abre Opções > Sons, pra mudar/desligar
+       esse aviso. -->
+  <div id="online-toast" class="online-toast" hidden>
+    <div class="online-toast__titlebar">
+      <span class="online-toast__title-icon" aria-hidden="true">👥</span>
+      <span class="online-toast__title">Windows Live Messenger</span>
+      <button type="button" class="online-toast__close" id="online-toast-close" aria-label="Fechar">&times;</button>
+    </div>
+    <div class="online-toast__body">
+      <span class="status-frame online-toast__avatar" id="online-toast-avatar"></span>
+      <div class="online-toast__text">
+        <span class="online-toast__name" id="online-toast-name"></span>
+        <span class="online-toast__msg">acabou de entrar.</span>
+        <a href="#" class="online-toast__options" id="online-toast-options">Opções</a>
+      </div>
     </div>
   </div>
 
