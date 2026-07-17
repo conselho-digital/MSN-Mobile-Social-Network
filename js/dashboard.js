@@ -3261,13 +3261,9 @@ const Dashboard = (() => {
     }
     const chatSend = document.getElementById("chat-send-btn");
     if (chatSend) chatSend.addEventListener("click", sendChatMessage);
-    const chatInput = document.getElementById("chat-input");
-    if (chatInput) chatInput.addEventListener("keydown", (e) => {
-      if (e.key === "Enter" && !e.shiftKey) {
-        e.preventDefault();
-        sendChatMessage();
-      }
-    });
+    // Enter quebra linha (comportamento padrão de <textarea>, sem
+    // nenhum listener pra Enter aqui) — só o botão "Enviar" manda a
+    // mensagem de verdade.
     const chatNudgeBtn = document.getElementById("chat-nudge-btn");
     if (chatNudgeBtn) chatNudgeBtn.addEventListener("click", sendChatNudge);
     const chatEmojiBtn = document.getElementById("chat-emoji-btn");
