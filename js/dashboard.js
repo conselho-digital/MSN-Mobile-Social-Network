@@ -2343,6 +2343,10 @@ const Dashboard = (() => {
     if (!currentChatContact || isChatLockedByBlock()) return;
     triggerNudgeShake();
     SoundManager.play("nudge");
+    // Buzz-pausa-buzz — só em aparelhos que suportam (ver
+    // navigator.vibrate; a maioria dos navegadores desktop não tem,
+    // por isso o "if").
+    if (navigator.vibrate) navigator.vibrate([80, 40, 80]);
     try { await MSNSupabase.sendNudge(currentChatContact.id); } catch (_) {}
   }
 
