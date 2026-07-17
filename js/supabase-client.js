@@ -27,6 +27,38 @@ const MSNSupabase = (() => {
     return client;
   }
 
+  // Reenvia em caso de falha de REDE (não de erro de negócio, tipo
+  // "e-mail já cadastrado") — o upload de foto/cenário costuma falhar
+  // sozinho de vez em quando numa conexão de celular instável ("Failed
+  // to fetch"), mesmo com o arquivo/permissões corretos; tentar de novo
+  // sozinho resolve a maioria dos casos sem precisar que a pessoa clique
+  // em enviar de novo. Espera crescente entre tentativas (300ms, depois
+  // 900ms) pra dar tempo da conexão se recuperar.
+  async function withRetry(fn, attempts = 3) {
+    let lastErr;
+    for (let i = 0; i < attempts; i++) {
+      try {
+        return await fn();
+      } catch (err) {
+        lastErr = err;
+        const isNetworkError = err instanceof TypeError || /fetch/i.test(err.message || "");
+        if (!isNetworkError || i === attempts - 1) throw err;
+        await new Promise((resolve) => setTimeout(resolve, 300 * Math.pow(3, i)));
+      }
+    }
+    throw lastErr;
+  }
+
+  // "Failed to fetch" (e outras TypeError de rede) é a mensagem crua do
+  // próprio navegador quando o fetch nem chega a completar — não diz
+  // nada útil pra quem está usando o app. Troca por uma mensagem em
+  // português que explica o que realmente aconteceu.
+  function friendlyError(err, fallback) {
+    const isNetworkError = err instanceof TypeError || /fetch/i.test(err.message || "");
+    if (isNetworkError) return "Não foi possível conectar. Verifique sua internet e tente novamente.";
+    return err.message || fallback;
+  }
+
   /* ---------- Autenticação ---------- */
   async function signIn(email, password) {
     if (!isConfigured()) {
@@ -143,10 +175,12 @@ const MSNSupabase = (() => {
     const ext = (file.name.split(".").pop() || "png").toLowerCase();
     const path = user.id + "/avatar_" + Date.now() + "." + ext;
 
-    const { error } = await client.storage
-      .from("avatars")
-      .upload(path, file, { upsert: true, contentType: file.type || "image/png" });
-    if (error) throw error;
+    await withRetry(async () => {
+      const { error } = await client.storage
+        .from("avatars")
+        .upload(path, file, { upsert: true, contentType: file.type || "image/png" });
+      if (error) throw error;
+    });
 
     const { data: pub } = client.storage.from("avatars").getPublicUrl(path);
     const url = pub.publicUrl;
@@ -163,10 +197,12 @@ const MSNSupabase = (() => {
     const ext = (file.name.split(".").pop() || "jpg").toLowerCase();
     const path = user.id + "/scene_" + Date.now() + "." + ext;
 
-    const { error } = await client.storage
-      .from("scenes")
-      .upload(path, file, { upsert: true, contentType: file.type || "image/jpeg" });
-    if (error) throw error;
+    await withRetry(async () => {
+      const { error } = await client.storage
+        .from("scenes")
+        .upload(path, file, { upsert: true, contentType: file.type || "image/jpeg" });
+      if (error) throw error;
+    });
 
     const { data: pub } = client.storage.from("scenes").getPublicUrl(path);
     const url = pub.publicUrl;
@@ -174,6 +210,11 @@ const MSNSupabase = (() => {
   }
 
   /* ---------- Mensagens ---------- */
+  // Formato bruto de um uuid do Postgres — só pra validar antes de
+  // colar o valor dentro da string de filtro do ".or()" abaixo (ver
+  // comentário logo ali). Não aceita nada fora desse formato.
+  const UUID_RE = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+
   // Histórico entre eu e um contato (as duas direções), mais antigas
   // primeiro. "content" é limitado a 2000 caracteres (ver schema.sql) —
   // por enquanto só texto, sem imagem/gif/anexo.
@@ -181,6 +222,14 @@ const MSNSupabase = (() => {
     if (!isConfigured()) return demoMessages(contactId);
     const { data: { user } } = await client.auth.getUser();
     if (!user) return [];
+    // contactId chega como string vinda do estado do app (não é um
+    // parâmetro tratado pelo PostgREST, é colado direto na sintaxe do
+    // filtro ".or()") — confere que é mesmo um uuid antes de montar a
+    // string, pra ninguém conseguir injetar vírgula/parênteses e
+    // alterar o filtro. A proteção de verdade continua sendo a RLS da
+    // tabela (só vejo o que sou remetente/destinatário de qualquer
+    // forma), isso aqui é só reforço.
+    if (!UUID_RE.test(String(contactId))) return [];
     const { data, error } = await client
       .from("messages")
       .select("*")
@@ -407,6 +456,17 @@ const MSNSupabase = (() => {
     }
   }
 
+  // Acha o id de alguém pelo e-mail EXATO (sem curinga de LIKE), via
+  // uma função no banco com privilégio elevado só internamente (ver
+  // find_profile_by_email em supabase/security_hardening.sql) — não lê
+  // a tabela profiles direto, pra não expor o e-mail/nome de quem não
+  // é contato nem devolver mais de uma linha por vez.
+  async function findProfileByEmail(email) {
+    const { data, error } = await client.rpc("find_profile_by_email", { target_email: email.trim() });
+    if (error) throw error;
+    return (data && data[0]) || null;
+  }
+
   // Adiciona um contato buscando pelo e-mail (identidade do Passport
   // clássico do MSN).
   async function addContactByEmail(email) {
@@ -414,17 +474,14 @@ const MSNSupabase = (() => {
     const { data: { user } } = await client.auth.getUser();
     if (!user) throw new Error("Sessão expirada. Entre novamente.");
 
-    const { data: found, error } = await client
-      .from("profiles").select("id, display_name, email")
-      .ilike("email", email.trim()).limit(1);
-    if (error) throw error;
-    if (!found || !found.length) throw new Error("Nenhum contato encontrado com esse e-mail.");
-    if (found[0].id === user.id) throw new Error("Você não pode adicionar a si mesmo.");
+    const found = await findProfileByEmail(email);
+    if (!found) throw new Error("Nenhum contato encontrado com esse e-mail.");
+    if (found.id === user.id) throw new Error("Você não pode adicionar a si mesmo.");
 
     const { error: insErr } = await client
-      .from("contacts").insert({ owner_id: user.id, contact_id: found[0].id });
+      .from("contacts").insert({ owner_id: user.id, contact_id: found.id });
     if (insErr && !/duplicate|unique/i.test(insErr.message)) throw insErr;
-    return { ok: true, name: found[0].display_name };
+    return { ok: true, name: found.display_name };
   }
 
   /* ---------- Pessoas bloqueadas (ver supabase/blocked_users.sql) ---------- */
@@ -448,17 +505,14 @@ const MSNSupabase = (() => {
     const { data: { user } } = await client.auth.getUser();
     if (!user) throw new Error("Sessão expirada. Entre novamente.");
 
-    const { data: found, error } = await client
-      .from("profiles").select("id, display_name, email")
-      .ilike("email", email.trim()).limit(1);
-    if (error) throw error;
-    if (!found || !found.length) throw new Error("Nenhuma pessoa encontrada com esse e-mail.");
-    if (found[0].id === user.id) throw new Error("Você não pode bloquear a si mesmo.");
+    const found = await findProfileByEmail(email);
+    if (!found) throw new Error("Nenhuma pessoa encontrada com esse e-mail.");
+    if (found.id === user.id) throw new Error("Você não pode bloquear a si mesmo.");
 
     const { error: insErr } = await client
-      .from("blocked_users").insert({ owner_id: user.id, blocked_id: found[0].id });
+      .from("blocked_users").insert({ owner_id: user.id, blocked_id: found.id });
     if (insErr && !/duplicate|unique/i.test(insErr.message)) throw insErr;
-    return { ok: true, name: found[0].display_name };
+    return { ok: true, name: found.display_name };
   }
 
   async function unblockUser(blockedId) {
@@ -558,6 +612,7 @@ const MSNSupabase = (() => {
     sendNudge, subscribeNudges, unsubscribeNudges,
     uploadAvatar,
     uploadSceneImage,
+    friendlyError,
     getClient: () => client,
   };
 })();

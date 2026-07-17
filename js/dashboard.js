@@ -299,6 +299,80 @@ const Dashboard = (() => {
     }[c]));
   }
 
+  /* ---------- Compressão de imagem antes do envio ----------
+     Em vez de simplesmente recusar uma foto grande demais, tenta
+     reduzir ela (via <canvas>) até caber no limite — recomprime pra
+     WEBP (que já costuma sair bem menor que JPEG/PNG na mesma
+     qualidade visual) e, se ainda não couber, vai diminuindo a
+     qualidade e depois as dimensões, algumas vezes, até caber ou
+     desistir e devolver o melhor resultado que conseguiu. */
+  const UPLOAD_HARD_LIMIT_BYTES = 20 * 1024 * 1024; // acima disso nem tenta processar
+  const COMPRESS_MAX_DIM = 1600; // lado maior, em pixels
+  const COMPRESS_EXT_BY_TYPE = { "image/webp": "webp", "image/jpeg": "jpg", "image/png": "png" };
+
+  function loadImageBitmapFrom(file) {
+    if (window.createImageBitmap) {
+      return createImageBitmap(file).catch(() => loadImageViaTag(file));
+    }
+    return loadImageViaTag(file);
+  }
+  function loadImageViaTag(file) {
+    return new Promise((resolve, reject) => {
+      const img = new Image();
+      const url = URL.createObjectURL(file);
+      img.onload = () => { URL.revokeObjectURL(url); resolve(img); };
+      img.onerror = () => { URL.revokeObjectURL(url); reject(new Error("Não foi possível ler a imagem.")); };
+      img.src = url;
+    });
+  }
+  function canvasToBlob(source, width, height, quality) {
+    return new Promise((resolve, reject) => {
+      const canvas = document.createElement("canvas");
+      canvas.width = width;
+      canvas.height = height;
+      const ctx = canvas.getContext("2d");
+      ctx.drawImage(source, 0, 0, width, height);
+      canvas.toBlob(
+        (blob) => (blob ? resolve(blob) : reject(new Error("Não foi possível processar a imagem."))),
+        "image/webp",
+        quality
+      );
+    });
+  }
+
+  // Só comprime se precisar (arquivo já cabe no limite = devolve como
+  // veio). Se qualquer etapa falhar (navegador sem suporte a
+  // canvas.toBlob("image/webp", ...), por exemplo), devolve o arquivo
+  // original — quem chamou decide se tenta enviar assim mesmo.
+  async function compressImageIfNeeded(file, maxBytes) {
+    if (file.size <= maxBytes) return file;
+    const source = await loadImageBitmapFrom(file);
+    let width = source.width || source.naturalWidth;
+    let height = source.height || source.naturalHeight;
+    if (!width || !height) return file;
+    if (width > COMPRESS_MAX_DIM || height > COMPRESS_MAX_DIM) {
+      const scale = COMPRESS_MAX_DIM / Math.max(width, height);
+      width = Math.round(width * scale);
+      height = Math.round(height * scale);
+    }
+    let quality = 0.85;
+    let blob = await canvasToBlob(source, width, height, quality);
+    let attempts = 0;
+    while (blob.size > maxBytes && attempts < 6) {
+      attempts++;
+      if (quality > 0.5) {
+        quality -= 0.15;
+      } else {
+        width = Math.round(width * 0.8);
+        height = Math.round(height * 0.8);
+      }
+      blob = await canvasToBlob(source, width, height, quality);
+    }
+    const ext = COMPRESS_EXT_BY_TYPE[blob.type] || "jpg";
+    const baseName = (file.name || "imagem").replace(/\.[^.]+$/, "");
+    return new File([blob], baseName + "." + ext, { type: blob.type });
+  }
+
   /* ---------- Abre o dashboard ---------- */
   async function show() {
     UIManager.showScreen("screen-dashboard");
@@ -1226,7 +1300,10 @@ const Dashboard = (() => {
     try { await MSNSupabase.updateMyProfile({ avatar_url: stagedAvatarUrl }); } catch (_) {}
   }
 
-  // Envio de uma foto própria ("Procurar..." dentro do diálogo).
+  // Envio de uma foto própria ("Procurar..." dentro do diálogo). Acima
+  // de 3 MB, comprime pra WEBP em vez de recusar — só recusa mesmo se
+  // passar de UPLOAD_HARD_LIMIT_BYTES (imagem grande demais até pra
+  // tentar processar no navegador).
   async function onAvatarSelected(e) {
     const file = e.target.files && e.target.files[0];
     e.target.value = ""; // permite reenviar o mesmo arquivo
@@ -1234,22 +1311,26 @@ const Dashboard = (() => {
     if (!file.type.startsWith("image/")) {
       return infoModal("Foto de exibição", "Selecione um arquivo de imagem.");
     }
+    if (file.size > UPLOAD_HARD_LIMIT_BYTES) {
+      return infoModal("Foto de exibição", "Essa imagem é grande demais (máx. 20 MB).");
+    }
+    let uploadFile = file;
     if (file.size > 3 * 1024 * 1024) {
-      return infoModal("Foto de exibição", "A imagem deve ter no máximo 3 MB.");
+      try { uploadFile = await compressImageIfNeeded(file, 3 * 1024 * 1024); } catch (_) {}
     }
 
     // Prévia imediata
-    const previewUrl = URL.createObjectURL(file);
+    const previewUrl = URL.createObjectURL(uploadFile);
     stagedAvatarUrl = previewUrl;
     document.querySelectorAll("#avatar-grid .avatar-swatch").forEach((x) => x.classList.remove("is-selected"));
     previewAvatar(previewUrl);
 
     try {
-      const url = await MSNSupabase.uploadAvatar(file);
+      const url = await MSNSupabase.uploadAvatar(uploadFile);
       stagedAvatarUrl = url;
       previewAvatar(url);
     } catch (err) {
-      infoModal("Foto de exibição", err.message || "Não foi possível enviar a imagem.");
+      infoModal("Foto de exibição", MSNSupabase.friendlyError(err, "Não foi possível enviar a imagem."));
     }
   }
 
@@ -1428,6 +1509,8 @@ const Dashboard = (() => {
 
   // Envio de um cenário/plano de fundo próprio ("Procurar...") — mesmo
   // fluxo pros dois diálogos, só muda o grid alvo (ver sceneDialogGrid).
+  // Acima de 4 MB, comprime pra WEBP em vez de recusar — só recusa
+  // mesmo se passar de UPLOAD_HARD_LIMIT_BYTES.
   async function onSceneImageSelected(e) {
     const file = e.target.files && e.target.files[0];
     e.target.value = "";
@@ -1436,11 +1519,15 @@ const Dashboard = (() => {
     if (!file.type.startsWith("image/")) {
       return infoModal(dialogLabel, "Selecione um arquivo de imagem.");
     }
+    if (file.size > UPLOAD_HARD_LIMIT_BYTES) {
+      return infoModal(dialogLabel, "Essa imagem é grande demais (máx. 20 MB).");
+    }
+    let uploadFile = file;
     if (file.size > 4 * 1024 * 1024) {
-      return infoModal(dialogLabel, "A imagem deve ter no máximo 4 MB.");
+      try { uploadFile = await compressImageIfNeeded(file, 4 * 1024 * 1024); } catch (_) {}
     }
 
-    const previewUrl = URL.createObjectURL(file);
+    const previewUrl = URL.createObjectURL(uploadFile);
     stagedScene = "custom";
     stagedCustomImageUrl = previewUrl;
 
@@ -1457,12 +1544,12 @@ const Dashboard = (() => {
     updateCurrentColorSwatch();
 
     try {
-      const url = await MSNSupabase.uploadSceneImage(file);
+      const url = await MSNSupabase.uploadSceneImage(uploadFile);
       stagedCustomImageUrl = url;
       const tile = grid.querySelector('.scene-swatch[data-scene="custom"]');
       if (tile) tile.style.background = "url('" + url + "') center/cover no-repeat";
     } catch (err) {
-      infoModal(dialogLabel, err.message || "Não foi possível enviar a imagem.");
+      infoModal(dialogLabel, MSNSupabase.friendlyError(err, "Não foi possível enviar a imagem."));
     }
   }
 
