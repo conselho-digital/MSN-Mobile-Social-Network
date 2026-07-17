@@ -1668,6 +1668,12 @@ body[data-login-theme="cenario1"] #screen-connecting::before {
 
 /* ---------- Seletor de cenário (diálogo estilo clássico) ---------- */
 .scene-dialog-overlay { padding: 16px; align-items: center; }
+/* Opções: cada aba (Pessoal, Layout, Mensagens...) tem uma altura de
+   conteúdo diferente — com align-items:center isso fazia a barra de
+   título subir/descer/ficar no meio da tela ao trocar de aba. Fixa no
+   topo (mesma posição que "Pessoal", a aba padrão, já tinha) — só a
+   base do diálogo varia de altura conforme o conteúdo. */
+#options-dialog.scene-dialog-overlay { align-items: flex-start; }
 .scene-dialog {
   width: 100%;
   max-width: 380px;
