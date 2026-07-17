@@ -3222,8 +3222,9 @@ body[data-login-theme="cenario1"] #screen-connecting::before {
   gap: 14px;
   padding: 12px 14px 14px;
 }
-.online-toast__avatar { position: relative; width: 52px; height: 52px; flex: 0 0 auto; }
+.online-toast__avatar { position: relative; width: 68px; height: 68px; flex: 0 0 auto; }
 .online-toast__text {
+  flex: 1 1 auto;
   display: flex;
   flex-direction: column;
   gap: 5px;
