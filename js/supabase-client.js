@@ -44,7 +44,16 @@ const MSNSupabase = (() => {
     const { data, error } = await client.auth.signUp({
       email,
       password,
-      options: { data: { display_name: displayName, birthdate: birthdate || null } },
+      options: {
+        data: { display_name: displayName, birthdate: birthdate || null },
+        // Sem isso, o Supabase usa o "Site URL" configurado no painel pra
+        // redirecionar depois de confirmar o e-mail — se aquele campo
+        // estiver com o domínio errado (ex.: sem o caminho do repositório
+        // no GitHub Pages), o link do e-mail cai numa página 404. Manda a
+        // própria URL de onde o cadastro está rodando, então o redirect
+        // sempre volta pro app de verdade.
+        emailRedirectTo: window.location.href,
+      },
     });
     if (error) throw error;
     return data;
@@ -58,6 +67,17 @@ const MSNSupabase = (() => {
 
   async function signOut() {
     if (isConfigured()) await client.auth.signOut();
+  }
+
+  // Reenvia o e-mail de confirmação de cadastro. Usado quando o login
+  // falha e a causa pode ser conta ainda não confirmada — o Supabase
+  // devolve "Invalid login credentials" tanto pra senha errada quanto
+  // pra e-mail não confirmado (não dá pra diferenciar só pela resposta
+  // do login), então oferecemos o reenvio como ação à parte.
+  async function resendConfirmation(email) {
+    if (!isConfigured()) return;
+    const { error } = await client.auth.resend({ type: "signup", email });
+    if (error) throw error;
   }
 
   /* ---------- Perfil ---------- */
@@ -428,7 +448,7 @@ const MSNSupabase = (() => {
   }
 
   return {
-    init, isConfigured, signIn, signUp, getSession, signOut,
+    init, isConfigured, signIn, signUp, getSession, signOut, resendConfirmation,
     getMyProfile, updateMyProfile, getContacts, addContactByEmail, setFavorite,
     subscribeContacts, unsubscribeContacts,
     createGroup, getGroups,

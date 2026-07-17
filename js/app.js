@@ -82,6 +82,17 @@ const App = (function () {
     if (!MSNSupabase.isConfigured()) return;
     let session = null;
     try { session = await MSNSupabase.getSession(); } catch (_) {}
+
+    // Voltando de um link de confirmação de e-mail: o Supabase processa o
+    // token que vem no #hash da URL sozinho (biblioteca do cliente), mas
+    // sem isso a pessoa só caía na tela de login sem nenhum aviso do que
+    // aconteceu. Limpa o hash da URL também, pra não deixar o token
+    // exposto ali nem repetir esse processamento se a página recarregar.
+    if (/type=signup/.test(window.location.hash)) {
+      UIManager.showMessage("E-mail confirmado! Agora você já pode entrar.", "info");
+      history.replaceState(null, "", window.location.pathname + window.location.search);
+    }
+
     if (!session) return;
 
     const auto = localStorage.getItem("msn:autoSignin") === "true";
@@ -296,6 +307,7 @@ const App = (function () {
       }
 
       UIManager.clearMessage();
+      toggleResendConfirmLink(null);
       await startConnecting(email, password);
     });
   }
@@ -414,6 +426,11 @@ const App = (function () {
       console.error("Erro ao entrar:", err);
       UIManager.showScreen("screen-login");
       UIManager.showMessage(friendlyError(err));
+      // O Supabase devolve a mesma mensagem ("Invalid login credentials")
+      // tanto pra senha errada quanto pra e-mail ainda não confirmado —
+      // não dá pra saber qual é só pela resposta. Em vez de arriscar
+      // dizer o motivo errado, oferece o reenvio como ação à parte.
+      toggleResendConfirmLink(isInvalidCredentials(err) ? email : null);
     } finally {
       connecting = false;
     }
@@ -788,6 +805,42 @@ const App = (function () {
         );
       });
     }
+
+    const resendConfirm = document.getElementById("link-resend-confirm");
+    if (resendConfirm) {
+      resendConfirm.addEventListener("click", async (e) => {
+        e.preventDefault();
+        const email = resendConfirm.dataset.email;
+        if (!email) return;
+        try {
+          await MSNSupabase.resendConfirmation(email);
+          UIManager.showMessage("E-mail de confirmação reenviado. Confira sua caixa de entrada.", "info");
+        } catch (err) {
+          console.error("Erro ao reenviar confirmação:", err);
+          UIManager.showMessage(friendlyError(err));
+        }
+      });
+    }
+  }
+
+  // "Invalid login credentials" cobre tanto senha errada quanto e-mail
+  // não confirmado (ver friendlyError) — usado pra decidir se mostra o
+  // link de reenviar confirmação.
+  function isInvalidCredentials(err) {
+    const msg = (err && (err.message || err.error_description || err.msg || err.error)) || "";
+    return /invalid login credentials/i.test(msg);
+  }
+
+  function toggleResendConfirmLink(email) {
+    const link = document.getElementById("link-resend-confirm");
+    if (!link) return;
+    if (email) {
+      link.dataset.email = email;
+      link.hidden = false;
+    } else {
+      delete link.dataset.email;
+      link.hidden = true;
+    }
   }
 
   /* ---------- Mensagens de erro amigáveis ---------- */
@@ -798,7 +851,11 @@ const App = (function () {
     // ("{}", "[object Object]"), o que aparecia cru na tela.
     const msg = (err && (err.message || err.error_description || err.msg || err.error)) || "";
     if (/invalid login credentials/i.test(msg)) {
-      return "E-mail ou senha incorretos. Tente novamente.";
+      // O Supabase usa essa mesma mensagem tanto pra senha errada quanto
+      // pra e-mail ainda não confirmado (por segurança, não diferencia) —
+      // por isso o texto cobre os dois casos, e o link de reenviar
+      // confirmação aparece do lado (ver toggleResendConfirmLink).
+      return "E-mail ou senha incorretos, ou o e-mail ainda não foi confirmado.";
     }
     if (/email not confirmed/i.test(msg)) {
       return "Confirme seu e-mail antes de entrar.";
