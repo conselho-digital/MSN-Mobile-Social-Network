@@ -288,10 +288,18 @@ body[data-login-theme="cenario1"] #screen-connecting::before {
 }
 .help-icon .caret-down { border-top-color: #2f7fd0; }
 
-/* Botão "Adicionar App" (instalar PWA) */
+/* Botão "Adicionar App" (instalar PWA) — fora do fluxo normal (posição
+   absoluta) de propósito: ele aparece/some conforme o app já esteja
+   instalado (ver setInstallButtonsHidden em app.js), e antes disso sua
+   altura variável empurrava o título "Bem-vindo"/"Entrar" pra cima ou
+   pra baixo (ver .welcome/.signin-title, que agora têm posição fixa só
+   em relação ao avatar, sem depender deste botão). */
 .install-app {
-  align-self: flex-end;
-  margin: 10px 2px 2px;
+  position: absolute;
+  top: calc(env(safe-area-inset-top) + 10px);
+  right: 28px;
+  z-index: 2;
+  margin: 0;
   display: inline-flex;
   align-items: center;
   gap: 6px;
@@ -401,12 +409,12 @@ body[data-login-theme="cenario1"] #screen-connecting::before {
   font-weight: 400;
   color: var(--login-accent-text, #3a4a55);
   /* O avatar é position:absolute (ver .signin-avatar) e termina em
-     149.5px (45.5px de topo + 104px de altura); esse margin-top soma à
-     altura do botão "Adicionar App" (que continua no fluxo normal,
-     ~42px) pra sobrar só uns 18px de respiro até o título — a mesma
-     folga aproximada que existe do título até o cartão de login (26px
-     de margin-bottom), evitando o vão desigual de antes. */
-  margin: 125.5px 0 26px;
+     149.5px (45.5px de topo + 104px de altura); como o botão
+     "Adicionar App" agora também é position:absolute (não ocupa mais
+     espaço no fluxo — ver .install-app), esse margin-top é só
+     149.5px + 18px de respiro, um valor fixo que não muda mais
+     dependendo do botão estar visível ou escondido. */
+  margin: 167.5px 0 26px;
   letter-spacing: 0.2px;
   text-shadow: 0 1px 2px rgba(255, 255, 255, 0.6);
 }
@@ -418,7 +426,7 @@ body[data-login-theme="cenario1"] #screen-connecting::before {
   color: #2f4a63;
   /* Mesmo cálculo do .welcome (login/entrando) — o avatar do cadastro
      agora também flutua sobre o banner padrão (ver .signin-avatar). */
-  margin: 125.5px 0 4px;
+  margin: 167.5px 0 4px;
 }
 .signin-subtitle {
   font-size: 0.82rem;
@@ -1807,11 +1815,22 @@ body[data-login-theme="cenario1"] #screen-connecting::before {
   object-position: left top;
 }
 
+/* Área própria de rolagem só para os exemplos de cenário — evita ter
+   que descer o diálogo inteiro (passando pelas cores e pelos botões)
+   só pra ver mais fotos; o esquema de cores e o rodapé ficam à vista. */
 .scene-grid {
   display: grid;
   grid-template-columns: repeat(3, 1fr);
   gap: 8px;
-  padding-bottom: 12px;
+  padding: 8px;
+  margin-bottom: 12px;
+  max-height: 232px;
+  overflow-y: auto;
+  overflow-x: hidden;
+  border: 1px solid #a8b6c2;
+  border-radius: 4px;
+  background: #eef2f5;
+  box-shadow: inset 1px 1px 3px rgba(0, 0, 0, 0.18);
 }
 
 /* Botão "Procurar..." — enviar uma imagem própria como cenário */
