@@ -523,15 +523,11 @@
       <div class="chat-main">
         <div class="chat-offline-banner" id="chat-offline-banner" hidden>
           <span class="chat-offline-banner__icon" aria-hidden="true">ℹ</span>
-          <!-- No máximo 3 linhas (ver max-height no CSS) — rola com os
-               botões ao lado ou arrastando o próprio texto (overflow-y:
-               auto já aceita os dois). -->
+          <!-- No máximo 3 linhas (ver max-height no CSS) — o resto rola
+               arrastando o próprio texto, com uma mini barra de rolagem
+               (ver ::-webkit-scrollbar/scrollbar-width no CSS). -->
           <div class="chat-offline-banner__text" id="chat-offline-banner-text"></div>
-          <div class="chat-offline-banner__actions">
-            <button type="button" class="chat-offline-banner__scroll" id="chat-offline-banner-up" aria-label="Rolar aviso para cima">▲</button>
-            <button type="button" class="chat-offline-banner__scroll" id="chat-offline-banner-down" aria-label="Rolar aviso para baixo">▼</button>
-            <button type="button" class="chat-offline-banner__close" id="chat-offline-banner-close" aria-label="Fechar aviso">&times;</button>
-          </div>
+          <button type="button" class="chat-offline-banner__close" id="chat-offline-banner-close" aria-label="Fechar aviso">&times;</button>
         </div>
 
         <div class="chat-thread" id="chat-thread">

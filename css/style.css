@@ -2681,12 +2681,11 @@ body[data-login-theme="cenario1"] #screen-connecting::before {
   flex: 0 0 auto;
   display: flex;
   align-items: center;
-  padding: 10px 14px;
-  /* Mesma altura do banner do Dashboard (.dash-header: 9.75px de
-     cima/baixo + 78px do avatar = 97.5px) — aqui não tem avatar
-     dentro pra "empurrar" a altura sozinho (a foto do contato fica na
-     coluna ao lado, só sobrepondo por cima), por isso o valor fixo. */
-  min-height: 97.5px;
+  /* Baixo o suficiente pra caber justo o texto (nome/status/frase
+     pessoal) — a altura fica pertinho da foto do contato que sobrepõe
+     por cima dela (ver margin-top negativo em .chat-sidebar__avatar,
+     que continua igual — só a altura do banner encolheu). */
+  padding: 6px 14px;
   --chat-scene: none;
   background: var(--chat-scene, #ffffff);
   background-size: cover;
@@ -2776,35 +2775,24 @@ body[data-login-theme="cenario1"] #screen-connecting::before {
   justify-content: center;
 }
 /* No máximo 3 linhas visíveis (3 × 1.4 de line-height) — o resto rola
-   dentro da própria caixa, tanto pelos botões ▲/▼ (ver
-   .chat-offline-banner__scroll) quanto arrastando o texto direto
-   (overflow-y: auto já aceita os dois, sem precisar de nada a mais). */
+   arrastando o texto direto (overflow-y: auto já aceita isso sozinho),
+   com uma mini barra de rolagem fina (em vez de botões ▲/▼). */
 .chat-offline-banner__text {
   flex: 1 1 auto;
   min-width: 0;
   max-height: 4.2em;
   overflow-y: auto;
   -webkit-overflow-scrolling: touch;
+  scrollbar-width: thin;
+  scrollbar-color: #d8c876 transparent;
 }
-.chat-offline-banner__text a { color: #1a6fbb; text-decoration: underline; }
-.chat-offline-banner__actions {
-  flex: 0 0 auto;
-  display: flex;
-  align-items: center;
-  gap: 2px;
-}
-.chat-offline-banner__scroll {
-  width: 16px; height: 18px;
-  padding: 0;
-  border: none;
-  background: transparent;
-  color: #8a8156;
-  font-size: 0.55rem;
-  line-height: 1;
-  cursor: pointer;
+.chat-offline-banner__text::-webkit-scrollbar { width: 5px; }
+.chat-offline-banner__text::-webkit-scrollbar-track { background: transparent; }
+.chat-offline-banner__text::-webkit-scrollbar-thumb {
+  background: #d8c876;
   border-radius: 3px;
 }
-.chat-offline-banner__scroll:hover { background: rgba(0, 0, 0, 0.08); color: #5a5230; }
+.chat-offline-banner__text a { color: #1a6fbb; text-decoration: underline; }
 .chat-offline-banner__close {
   flex: 0 0 auto;
   width: 18px; height: 18px;

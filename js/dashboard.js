@@ -2492,18 +2492,6 @@ const Dashboard = (() => {
     if (chatOfflineBannerClose) chatOfflineBannerClose.addEventListener("click", () => {
       document.getElementById("chat-offline-banner").hidden = true;
     });
-    // Botões ▲/▼: rolam o aviso (que mostra só 3 linhas, ver CSS) uma
-    // linha por clique — além de dar pra arrastar o texto direto
-    // (overflow-y: auto já aceita isso sozinho).
-    const bannerLineHeight = 16 * 0.8 * 1.4; // font-size 0.8rem × line-height 1.4, raiz 16px
-    const chatOfflineBannerUp = document.getElementById("chat-offline-banner-up");
-    if (chatOfflineBannerUp) chatOfflineBannerUp.addEventListener("click", () => {
-      document.getElementById("chat-offline-banner-text").scrollBy({ top: -bannerLineHeight, behavior: "smooth" });
-    });
-    const chatOfflineBannerDown = document.getElementById("chat-offline-banner-down");
-    if (chatOfflineBannerDown) chatOfflineBannerDown.addEventListener("click", () => {
-      document.getElementById("chat-offline-banner-text").scrollBy({ top: bannerLineHeight, behavior: "smooth" });
-    });
     // Botão/gesto "voltar" do aparelho: se a janela de conversa estava
     // aberta, volta pro Dashboard em vez de sair do app ou ir pra uma
     // página anterior fora dele (ver o pushState em openChat).
