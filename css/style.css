@@ -1818,16 +1818,16 @@ body[data-login-theme="cenario1"] #screen-connecting::before {
 /* Área própria de rolagem só para os exemplos de cenário — evita ter
    que descer o diálogo inteiro (passando pelas cores e pelos botões)
    só pra ver mais fotos; o esquema de cores e o rodapé ficam à vista.
-   Altura pra mostrar 6 linhas inteiras (3 colunas cada) de uma vez:
-   6×58px (altura do .scene-swatch) + 5×8px (gap entre linhas) +
-   16px (padding de cima/baixo) = 404px. */
+   Altura pra mostrar 5 linhas inteiras (3 colunas cada) de uma vez:
+   5×58px (altura do .scene-swatch) + 4×8px (gap entre linhas) +
+   16px (padding de cima/baixo) = 338px. */
 .scene-grid {
   display: grid;
   grid-template-columns: repeat(3, 1fr);
   gap: 8px;
   padding: 8px;
   margin-bottom: 12px;
-  max-height: 404px;
+  max-height: 338px;
   overflow-y: auto;
   overflow-x: hidden;
   border: 1px solid #a8b6c2;
