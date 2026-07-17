@@ -1295,13 +1295,46 @@ const Dashboard = (() => {
     }
   }
 
+  // Só guardamos texto puro no banco (ver supabase/schema.sql) — GIFs e
+  // emojis não são armazenados como tal, são reconstruídos aqui na hora
+  // de exibir: um link de imagem vira uma tag <img>, e um "emoticon" de
+  // texto (":)" etc.) vira o emoji de verdade. Assim a mensagem
+  // continua sendo só texto pra qualquer finalidade (busca, limpeza
+  // automática por idade — ver supabase/retention.sql).
+  const CHAT_MEDIA_URL_RE = /^https?:\/\/\S+\.(gif|png|jpe?g|webp)(\?\S*)?$/i;
+  const EMOTICON_RULES = [
+    { re: /:'\(/g, emoji: "😢" },
+    { re: /:-?\)/g, emoji: "🙂" },
+    { re: /:-?\(/g, emoji: "🙁" },
+    { re: /:-?[Dd]/g, emoji: "😀" },
+    { re: /;-?\)/g, emoji: "😉" },
+    { re: /:-?[Pp]/g, emoji: "😛" },
+    { re: /:-?[Oo]/g, emoji: "😮" },
+    { re: /<3/g, emoji: "❤️" },
+    { re: /\bxd\b/gi, emoji: "😆" },
+  ];
+  function applyEmoticons(text) {
+    return EMOTICON_RULES.reduce((out, rule) => out.replace(rule.re, rule.emoji), text);
+  }
+
   function chatMessageBubble(msg) {
     const li = document.createElement("li");
     const mine = String(msg.sender_id) === String(profile && profile.id);
     li.className = "chat-message " + (mine ? "chat-message--mine" : "chat-message--theirs");
-    const text = document.createElement("span");
-    text.textContent = msg.content;
-    li.appendChild(text);
+    const content = msg.content || "";
+    const mediaUrl = CHAT_MEDIA_URL_RE.test(content.trim()) ? content.trim() : null;
+    if (mediaUrl) {
+      const img = document.createElement("img");
+      img.className = "chat-message__media";
+      img.src = mediaUrl;
+      img.alt = "";
+      img.loading = "lazy";
+      li.appendChild(img);
+    } else {
+      const text = document.createElement("span");
+      text.textContent = applyEmoticons(content);
+      li.appendChild(text);
+    }
     const time = document.createElement("span");
     time.className = "chat-message__time";
     try {

@@ -2440,6 +2440,21 @@ body[data-login-theme="cenario1"] #screen-connecting::before {
   font-size: 0.68rem;
   color: #7a8a97;
 }
+.chat-message__media {
+  display: block;
+  max-width: 100%;
+  max-height: 220px;
+  border-radius: 4px;
+  vertical-align: top;
+}
+/* Mensagem de GIF/imagem (link reconhecido — ver chatMessageBubble em
+   dashboard.js) não usa o balão colorido, só a foto/gif em si. */
+.chat-message--mine:has(.chat-message__media),
+.chat-message--theirs:has(.chat-message__media) {
+  background: transparent;
+  box-shadow: none;
+  padding: 0;
+}
 
 .chat-compose {
   flex: 0 0 auto;
