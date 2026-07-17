@@ -1710,11 +1710,14 @@ const Dashboard = (() => {
 
     // Com o contato offline, "Chamar a atenção" (nudge, ninguém do
     // outro lado pra tremer a tela na hora) e "Enviar uma imagem"
-    // somem da barra — só ficam emoji, fonte e plano de fundo.
+    // deveriam sumir da barra — só ficam emoji, fonte e plano de
+    // fundo. TEMPORARIAMENTE desligado a pedido (deixar os dois
+    // aparecerem sempre, mesmo offline, enquanto ainda estão sendo
+    // construídos) — reative as duas linhas abaixo quando terminar.
     const nudgeBtn = document.getElementById("chat-nudge-btn");
-    if (nudgeBtn) nudgeBtn.hidden = isOffline;
+    if (nudgeBtn) nudgeBtn.hidden = false; // era: isOffline
     const imageBtn = document.getElementById("chat-image-btn");
-    if (imageBtn) imageBtn.hidden = isOffline;
+    if (imageBtn) imageBtn.hidden = false; // era: isOffline
   }
 
   // Só guardamos texto puro no banco (ver supabase/schema.sql) — GIFs e
