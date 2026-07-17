@@ -2682,10 +2682,10 @@ body[data-login-theme="cenario1"] #screen-connecting::before {
   display: flex;
   align-items: center;
   padding: 6px 14px;
-  /* 3× a altura anterior (que era só o texto + padding, ~50px). A foto
-     do contato continua com o mesmo tamanho/posição de sempre (ver
-     .chat-sidebar__avatar) — só o banner ficou mais alto ao redor dela. */
-  min-height: 150px;
+  /* Reduzida pela metade do que estava (150px -> 75px, conforme a
+     linha marcada no print) — a foto do contato continua com o mesmo
+     tamanho/posição de sempre (ver .chat-sidebar__avatar). */
+  min-height: 75px;
   --chat-scene: none;
   background: var(--chat-scene, #ffffff);
   background-size: cover;
