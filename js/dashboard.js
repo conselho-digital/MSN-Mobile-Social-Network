@@ -94,6 +94,16 @@ const Dashboard = (() => {
   let bound = false;
   let currentFilter = "";
   let contactsSubscribed = false;
+  // IDs de quem esta conta bloqueou — usado só pra filtrar a lista
+  // principal quando "Mostrar contatos bloqueados" (Opções > Layout)
+  // estiver desligado (ver renderContacts).
+  let blockedContactIds = new Set();
+  async function refreshBlockedIds() {
+    try {
+      const blocked = await MSNSupabase.getBlockedUsers();
+      blockedContactIds = new Set((blocked || []).map((p) => String(p.id)));
+    } catch (_) {}
+  }
 
   /* ---------- Registro de dropdowns ----------
      Menu do nick, "Adicionar" e "Modo de exibição" são independentes
@@ -190,6 +200,15 @@ const Dashboard = (() => {
 
   const updateStatusFrame = MSNScenes.updateStatusFrame;
 
+  // Ícone "bonequinho" clássico (Opções > Layout > "Mostrar ícone
+  // clássico"), alternativa à foto de exibição na lista de contatos —
+  // a mesma imagem (verde) é usada como máscara e recolorida via CSS
+  // conforme o status (ver .contact-classic-icon no CSS), igual à
+  // técnica já usada em .status-frame__tint.
+  function classicIconMarkup(status) {
+    return '<span class="contact-classic-icon" data-status="' + esc(status) + '" aria-hidden="true"></span>';
+  }
+
   function esc(s) {
     return String(s || "").replace(/[&<>"']/g, (c) => ({
       "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;",
@@ -209,6 +228,7 @@ const Dashboard = (() => {
         MSNSupabase.getMyProfile(),
         MSNSupabase.getContacts(),
         MSNSupabase.getGroups(),
+        refreshBlockedIds(),
       ]);
       // Aplica o status escolhido na tela de login, se houver
       const chosen = sessionStorage.getItem("msn:status");
@@ -347,6 +367,8 @@ const Dashboard = (() => {
      exibição — não depende de coluna nova no Supabase. */
   let showFavoritesGroup = true;
   let showGroupsSection = true;
+  let showBlockedContacts = true;
+  let useClassicIcon = false;
   let favSize = "normal";
   let otherSize = "normal";
   let labelBy = "name";
@@ -358,6 +380,8 @@ const Dashboard = (() => {
       const get = (k, d) => { const v = localStorage.getItem(k); return v === null ? d : v; };
       showFavoritesGroup = get("msn:showFavorites", "true") === "true";
       showGroupsSection = get("msn:showGroups", "true") === "true";
+      showBlockedContacts = get("msn:showBlocked", "true") === "true";
+      useClassicIcon = get("msn:classicIcon", "false") === "true";
       favSize = get("msn:favSize", "normal");
       otherSize = get("msn:otherSize", "normal");
       labelBy = get("msn:labelBy", "name");
@@ -369,6 +393,8 @@ const Dashboard = (() => {
     try {
       localStorage.setItem("msn:showFavorites", String(showFavoritesGroup));
       localStorage.setItem("msn:showGroups", String(showGroupsSection));
+      localStorage.setItem("msn:showBlocked", String(showBlockedContacts));
+      localStorage.setItem("msn:classicIcon", String(useClassicIcon));
       localStorage.setItem("msn:favSize", favSize);
       localStorage.setItem("msn:otherSize", otherSize);
       localStorage.setItem("msn:labelBy", labelBy);
@@ -401,6 +427,8 @@ const Dashboard = (() => {
   function loadLayoutPrefsIntoForm() {
     document.getElementById("opt-show-favorites").checked = showFavoritesGroup;
     document.getElementById("opt-show-groups").checked = showGroupsSection;
+    document.getElementById("opt-show-blocked").checked = showBlockedContacts;
+    document.getElementById("opt-classic-icon").checked = useClassicIcon;
     document.getElementById("opt-label-by").value = labelBy;
     document.getElementById("opt-show-status-label").checked = showStatusLabel;
     document.getElementById("opt-sort-by").value = sortBy;
@@ -413,6 +441,8 @@ const Dashboard = (() => {
   function commitLayoutPrefs() {
     showFavoritesGroup = document.getElementById("opt-show-favorites").checked;
     showGroupsSection = document.getElementById("opt-show-groups").checked;
+    showBlockedContacts = document.getElementById("opt-show-blocked").checked;
+    useClassicIcon = document.getElementById("opt-classic-icon").checked;
     labelBy = document.getElementById("opt-label-by").value;
     showStatusLabel = document.getElementById("opt-show-status-label").checked;
     sortBy = document.getElementById("opt-sort-by").value;
@@ -515,6 +545,8 @@ const Dashboard = (() => {
         try {
           await MSNSupabase.unblockUser(person.id);
           renderBlockedList();
+          await refreshBlockedIds();
+          renderContacts(currentFilter);
         } catch (_) {}
       });
       li.appendChild(name);
@@ -537,6 +569,8 @@ const Dashboard = (() => {
       await MSNSupabase.blockUserByEmail(val);
       input.value = "";
       renderBlockedList();
+      await refreshBlockedIds();
+      renderContacts(currentFilter);
     } catch (err) {
       msg.textContent = err.message || "Não foi possível bloquear.";
       msg.hidden = false;
@@ -796,7 +830,10 @@ const Dashboard = (() => {
      mais de um lugar. */
   function renderContacts(filter = "") {
     const q = filter.trim().toLowerCase();
-    const matches = (c) => !q || (c.display_name || "").toLowerCase().includes(q);
+    const matches = (c) => {
+      if (!showBlockedContacts && blockedContactIds.has(String(c.id))) return false;
+      return !q || (c.display_name || "").toLowerCase().includes(q);
+    };
     const isOnline = (c) => ["online", "busy", "away"].includes(c.status);
 
     // Só "puxa" contatos pra fora de Disponível/Offline quando a
@@ -914,9 +951,17 @@ const Dashboard = (() => {
 
     const avatarBox = li.querySelector(".contact-item__avatar");
     if (avatarBox) {
+      const icon = avatarBox.querySelector(".contact-classic-icon");
       const ring = avatarBox.querySelector(".status-frame__ring");
-      if (!ring) {
+      // A troca entre foto e ícone clássico (Opções > Layout) exige
+      // remontar o miolo — os dois modos têm estruturas diferentes por
+      // dentro, ao contrário de uma simples atualização de status.
+      if (useClassicIcon && !icon) {
+        avatarBox.innerHTML = classicIconMarkup(c.status);
+      } else if (!useClassicIcon && !ring) {
         avatarBox.innerHTML = statusFrameMarkup(c.avatar_url, c.status);
+      } else if (useClassicIcon) {
+        icon.dataset.status = c.status;
       } else {
         updateStatusFrame(ring, c.status);
         const photoWrap = avatarBox.querySelector(".status-frame__photo");
