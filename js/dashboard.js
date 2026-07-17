@@ -2095,16 +2095,27 @@ const Dashboard = (() => {
     const messages = document.getElementById("chat-messages");
     if (!messages || !currentChatContact) return;
     const myBg = getPersonalChatBackground(currentChatContact.id);
+    // A borda de cima da caixa de composição (--chat-theme, ver
+    // .chat-compose no CSS) tinha SEMPRE a cor do tema do CONTATO,
+    // mesmo com um plano de fundo pessoal escolhido pra essa conversa
+    // — dava uma faixa da cor "errada" (do contato) bem embaixo do
+    // plano de fundo (meu, diferente). Segue a mesma regra do fundo:
+    // usa a cor do MEU plano de fundo pessoal quando existir, senão
+    // cai pra cor do tema do contato (igual antes).
+    const body = document.querySelector(".chat-body");
     if (myBg && myBg.scene) {
       const tintHex = MSNScenes.colorSchemeHex(myBg.colorScheme);
       // MSNScenes.bg()/resolveSceneBg() devolvem um valor pra
       // propriedade "background" (shorthand) — não pra
       // "background-image" sozinha (ver .dash-header, mesma técnica).
       messages.style.background = resolveSceneBg(myBg.scene, myBg.sceneImageUrl, tintHex);
+      if (body) body.style.setProperty("--chat-theme", MSNScenes.effectiveTheme(myBg.scene, myBg.colorScheme));
     } else {
       // Sem escolha pessoal pra esse contato: só a cor do tema dele,
       // sólida (a foto/cenário fica reservada pro banner do topo).
-      messages.style.background = MSNScenes.effectiveTheme(currentChatContact.scene, currentChatContact.color_scheme);
+      const contactTheme = MSNScenes.effectiveTheme(currentChatContact.scene, currentChatContact.color_scheme);
+      messages.style.background = contactTheme;
+      if (body) body.style.setProperty("--chat-theme", contactTheme);
     }
   }
 
