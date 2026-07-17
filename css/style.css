@@ -2728,13 +2728,13 @@ body[data-login-theme="cenario1"] #screen-connecting::before {
    caixa de mensagens (primeiro item do "row" .chat-thread — ver
    abaixo), não mais flutuando sobre a borda da lateral. Altura = a do
    próprio .chat-thread (item de flex, estica sozinho via
-   align-items:stretch); largura = 1.5% da largura da caixa (mesma
+   align-items:stretch); largura = 3% da largura da caixa (mesma
    base, ver .chat-thread). Branca; fica azul num flash rápido ao
    clicar e volta pra branca sozinha (ver .is-pressed, ligada/desligada
    em bindEvents). Seta = mesmo desenho das categorias do Dashboard
    (.group-caret), só trocando de lado conforme aria-expanded. */
 .chat-sidebar-toggle {
-  flex: 0 0 1.5%;
+  flex: 0 0 3%;
   min-width: 4px;
   display: flex;
   align-items: center;
