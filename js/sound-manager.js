@@ -10,7 +10,6 @@ const SoundManager = (() => {
     login: "assets/sounds/login.mp3",
     message: "assets/sounds/message.mp3",
     nudge: "assets/sounds/nudge.mp3",
-    logout: "assets/sounds/logout.mp3",
   };
 
   const cache = {};
