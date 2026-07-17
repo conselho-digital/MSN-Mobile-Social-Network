@@ -708,13 +708,15 @@ const Dashboard = (() => {
     }
   }
 
-  // O botão de excluir só liga depois de digitar "EXCLUIR" — barreira
-  // simples contra clique acidental num botão sem volta.
+  // O botão de excluir só liga depois de digitar o próprio e-mail da
+  // conta — barreira contra clique acidental num botão sem volta, mais
+  // específica que uma palavra fixa (confirma que é a conta certa).
   function updateDeleteAccountButtonState() {
     const input = document.getElementById("opt-delete-confirm");
     const btn = document.getElementById("opt-delete-account-btn");
     if (!input || !btn) return;
-    btn.disabled = input.value.trim().toUpperCase() !== "EXCLUIR";
+    const myEmail = (profile && profile.email) || "";
+    btn.disabled = !myEmail || input.value.trim().toLowerCase() !== myEmail.toLowerCase();
   }
 
   async function deleteAccountFlow() {
