@@ -16,6 +16,17 @@
   --banner-green-1: #0d1f0a;
   --banner-green-2: #2f6d1e;
   --banner-green-3: #5aa832;
+  /* Fonte das mensagens (Opções > Mensagens > "Alterar fonte...", ou
+     o botão "A" na caixa de mensagem) — vale pra conta inteira, todas
+     as conversas (ver applyChatFontPrefs em dashboard.js). Valores
+     aqui = aparência de sempre, sem nenhuma escolha customizada
+     ainda. */
+  --chat-font-family: "Segoe UI", Tahoma, Arial, sans-serif;
+  --chat-font-size: 0.88rem;
+  --chat-font-weight: 400;
+  --chat-font-style: normal;
+  --chat-font-decoration: none;
+  --chat-font-color: inherit;
   font-size: 16px;
 }
 
@@ -2860,6 +2871,18 @@ body[data-login-theme="cenario1"] #screen-connecting::before {
   font-size: 0.8rem;
   color: #5a5230;
   line-height: 1.4;
+  transition: margin-left 0.2s ease, padding-left 0.2s ease;
+}
+/* Com a coluna das fotos visível, a faixa amarela estica por baixo
+   dela (margin-left negativo do tamanho da coluna, ver .chat-sidebar)
+   em vez de parar exatamente na borda — sem isso, sobrava uma quebra/
+   emenda vertical bem no meio da tela, entre o branco da coluna e o
+   amarelo. O ícone/texto continuam alinhados com as mensagens (o
+   padding-left compensa o espaço que o margin-left tomou). Some
+   sozinho com a coluna escondida (mesma regra de .chat-header__info). */
+#screen-chat:has(.chat-sidebar:not(.is-collapsed)) .chat-offline-banner {
+  margin-left: -124px;
+  padding-left: 136px;
 }
 .chat-offline-banner__icon {
   flex: 0 0 auto;
@@ -2944,6 +2967,20 @@ body[data-login-theme="cenario1"] #screen-connecting::before {
   line-height: 1.4;
   word-wrap: break-word;
   box-shadow: 0 1px 3px rgba(0, 0, 0, 0.25);
+}
+/* Texto da mensagem (não a bolha inteira — carimbo de hora e imagem
+   ficam de fora de propósito, ver .chat-message__time/__media) — lê
+   as variáveis de "Alterar Fonte" (Opções > Mensagens ou botão "A",
+   ver applyChatFontPrefs em dashboard.js). --chat-font-color começa
+   "inherit" (sem override, mantém o azul/cinza de cada bolha) até a
+   pessoa escolher uma cor de propósito no diálogo. */
+.chat-message__text {
+  font-family: var(--chat-font-family);
+  font-size: var(--chat-font-size);
+  font-weight: var(--chat-font-weight);
+  font-style: var(--chat-font-style);
+  text-decoration: var(--chat-font-decoration);
+  color: var(--chat-font-color);
 }
 .chat-message--theirs {
   align-self: flex-start;
@@ -3256,3 +3293,93 @@ body[data-login-theme="cenario1"] #screen-connecting::before {
   text-decoration: none;
 }
 .online-toast__options:hover { text-decoration: underline; }
+
+/* ---------- "Alterar Fonte" (Opções > Mensagens, ou botão "A" da
+   caixa de mensagem) — vale pra conta inteira, não por conversa. ---------- */
+.font-dialog__body {
+  display: flex;
+  gap: 8px;
+  padding: 14px 14px 0;
+}
+.font-dialog__col { flex: 1 1 0; min-width: 0; display: flex; flex-direction: column; gap: 4px; }
+.font-dialog__col--size { flex: 0 0 64px; }
+.font-dialog__label {
+  font-size: 0.78rem;
+  color: #3d4f5a;
+}
+.font-dialog__list {
+  flex: 1 1 auto;
+  font: inherit;
+  font-size: 0.82rem;
+  padding: 2px;
+  background: #ffffff;
+  border: 1px solid var(--field-border);
+  border-radius: 3px;
+  overflow-y: auto;
+}
+.font-dialog__list option { padding: 3px 5px; }
+.font-dialog__row2 {
+  display: flex;
+  gap: 14px;
+  padding: 12px 14px 0;
+}
+.font-dialog__effects,
+.font-dialog__preview {
+  flex: 1 1 0;
+  min-width: 0;
+  margin: 0;
+  padding: 8px 10px 10px;
+  border: 1px solid #cfd8df;
+  border-radius: 4px;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+.font-dialog__effects legend,
+.font-dialog__preview legend {
+  padding: 0 4px;
+  font-size: 0.76rem;
+  color: #3d4f5a;
+}
+.font-dialog__label--color { margin-top: 4px; }
+#font-color {
+  width: 100%;
+  height: 26px;
+  padding: 1px;
+  border: 1px solid var(--field-border);
+  border-radius: 3px;
+  background: #fff;
+  cursor: pointer;
+}
+.font-dialog__preview { align-items: center; justify-content: center; }
+.font-dialog__example {
+  flex: 1 1 auto;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 100%;
+  min-height: 52px;
+  color: #000;
+  background: #fff;
+  border: 1px solid #cfd8df;
+  border-radius: 3px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.font-dialog__row3 {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 12px 14px 4px;
+}
+.font-dialog__row3 .font-dialog__label { flex: 0 0 auto; }
+.font-dialog__select {
+  flex: 1 1 auto;
+  font: inherit;
+  font-size: 0.82rem;
+  padding: 5px 8px;
+  background: #fff;
+  border: 1px solid var(--field-border);
+  border-radius: 3px;
+}

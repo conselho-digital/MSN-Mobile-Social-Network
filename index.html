@@ -578,7 +578,7 @@
                 <button type="button" id="chat-emoji-btn" class="chat-toolbar__btn" title="Emoticons">🙂<span class="caret-down"></span></button>
                 <div class="chat-emoji-picker" id="chat-emoji-picker" hidden></div>
               </div>
-              <button type="button" class="chat-toolbar__btn" title="Formatar texto" disabled>A</button>
+              <button type="button" id="chat-format-btn" class="chat-toolbar__btn" title="Alterar fonte">A</button>
               <button type="button" id="chat-nudge-btn" class="chat-toolbar__btn" title="Chamar a atenção">🔔</button>
               <div class="chat-bg-wrap">
                 <button type="button" id="chat-bg-btn" class="chat-toolbar__btn" title="Alterar plano de fundo">🖌</button>
@@ -1021,6 +1021,12 @@
               <button type="button" class="scene-dialog__browse" disabled>Alterar...</button>
             </div>
           </section>
+
+          <section class="options-section">
+            <h4 class="options-section__heading">Fonte das mensagens</h4>
+            <p class="options-section__text">Vale para todas as suas conversas, não só a que estiver aberta agora.</p>
+            <button type="button" id="opt-change-font-btn" class="scene-dialog__browse">Alterar fonte...</button>
+          </section>
         </div>
 
         <div class="options-pane" id="options-pane-privacy" hidden>
@@ -1117,6 +1123,90 @@
         <button type="button" id="options-ok" class="btn-signin btn-signin--sm">OK</button>
         <button type="button" id="options-cancel" class="btn-signin btn-signin--sm">Cancelar</button>
         <button type="button" id="options-apply" class="btn-signin btn-signin--sm">Aplicar</button>
+      </footer>
+    </div>
+  </div>
+
+  <!-- "Alterar Fonte" — vale pra conta inteira (não é por contato):
+       aberto tanto pelo botão "A" da caixa de mensagem quanto por
+       Opções > Mensagens > "Alterar fonte..." (ver openFontDialog em
+       dashboard.js). -->
+  <div id="font-dialog" class="modal-overlay scene-dialog-overlay" hidden>
+    <div class="scene-dialog font-dialog" role="dialog" aria-modal="true" aria-label="Alterar Fonte">
+      <header class="scene-dialog__titlebar">
+        <span class="scene-dialog__titlebar-app">
+          <img src="assets/icons/favicon.png" alt="" />
+          MSN - Mobile Social Network
+        </span>
+        <button type="button" id="font-dialog-x" class="scene-dialog__x" aria-label="Fechar">&times;</button>
+      </header>
+      <div class="scene-dialog__banner">
+        <h2 class="scene-dialog__banner-title">Alterar Fonte</h2>
+      </div>
+      <div class="font-dialog__body">
+        <div class="font-dialog__col">
+          <label class="font-dialog__label" for="font-family-list">Fonte:</label>
+          <select id="font-family-list" class="font-dialog__list" size="6">
+            <option value="'Segoe UI', Tahoma, Arial, sans-serif">Segoe UI</option>
+            <option value="'Segoe UI Emoji', 'Segoe UI', sans-serif">Segoe UI Emoji</option>
+            <option value="'Segoe UI Historic', 'Segoe UI', serif">Segoe UI Historic</option>
+            <option value="'Segoe UI Symbol', 'Segoe UI', sans-serif">Segoe UI Symbol</option>
+            <option value="'Segoe UI Variable', 'Segoe UI', sans-serif">Segoe UI Variable</option>
+          </select>
+        </div>
+        <div class="font-dialog__col">
+          <label class="font-dialog__label" for="font-style-list">Estilo da fonte:</label>
+          <select id="font-style-list" class="font-dialog__list" size="6">
+            <option value="regular">Regular</option>
+            <option value="italic">Itálico</option>
+            <option value="bold">Seminegrito</option>
+            <option value="bold-italic">Itálico e seminegrito</option>
+            <option value="black">Negrito</option>
+          </select>
+        </div>
+        <div class="font-dialog__col font-dialog__col--size">
+          <label class="font-dialog__label" for="font-size-list">Tamanho:</label>
+          <select id="font-size-list" class="font-dialog__list" size="6">
+            <option value="10">10</option>
+            <option value="11">11</option>
+            <option value="12">12</option>
+            <option value="14">14</option>
+            <option value="16">16</option>
+            <option value="18">18</option>
+            <option value="20">20</option>
+          </select>
+        </div>
+      </div>
+      <div class="font-dialog__row2">
+        <fieldset class="font-dialog__effects">
+          <legend>Efeitos</legend>
+          <label class="checkbox">
+            <input type="checkbox" id="font-strike" />
+            <span class="checkbox__box"></span>
+            <span class="checkbox__text">Riscado</span>
+          </label>
+          <label class="checkbox">
+            <input type="checkbox" id="font-underline" />
+            <span class="checkbox__box"></span>
+            <span class="checkbox__text">Sublinhado</span>
+          </label>
+          <label class="font-dialog__label font-dialog__label--color" for="font-color">Cor:</label>
+          <input type="color" id="font-color" value="#000000" />
+        </fieldset>
+        <fieldset class="font-dialog__preview">
+          <legend>Exemplo</legend>
+          <div class="font-dialog__example" id="font-example">AaBbYyZz</div>
+        </fieldset>
+      </div>
+      <div class="font-dialog__row3">
+        <label class="font-dialog__label" for="font-script">Script:</label>
+        <select id="font-script" class="font-dialog__select">
+          <option>Ocidental</option>
+        </select>
+      </div>
+      <footer class="scene-dialog__footer">
+        <button type="button" id="font-dialog-ok" class="btn-signin btn-signin--sm">OK</button>
+        <button type="button" id="font-dialog-cancel" class="btn-signin btn-signin--sm">Cancelar</button>
       </footer>
     </div>
   </div>

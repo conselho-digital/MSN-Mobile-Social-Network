@@ -726,6 +726,111 @@ const Dashboard = (() => {
     if (cb) cb.checked = soundsEnabled;
   }
 
+  /* ---------- "Alterar Fonte" (Opções > Mensagens, ou botão "A" da
+     caixa de mensagem) — UMA escolha pra conta inteira, aplicada em
+     TODAS as conversas (não por contato, ver "Plano de Fundo" acima
+     pra isso). Guardado local (localStorage) e aplicado via
+     propriedades CSS customizadas em <body> (--chat-font-*, ver
+     .chat-message__text no CSS), então não precisa re-renderizar
+     nenhuma bolha já na tela quando muda. */
+  const FONT_STYLE_MAP = {
+    regular: { fontStyle: "normal", fontWeight: 400 },
+    italic: { fontStyle: "italic", fontWeight: 400 },
+    bold: { fontStyle: "normal", fontWeight: 600 },
+    "bold-italic": { fontStyle: "italic", fontWeight: 600 },
+    black: { fontStyle: "normal", fontWeight: 700 },
+  };
+  let chatFontPrefs = {
+    family: "'Segoe UI', Tahoma, Arial, sans-serif",
+    styleKey: "regular",
+    size: 14,
+    strike: false,
+    underline: false,
+    // null = nunca customizada, mantém a cor própria de cada bolha
+    // (ver --chat-font-color:inherit no CSS) — vira um hex de verdade
+    // assim que a pessoa confirmar o diálogo (ver commitFontDialog).
+    color: null,
+  };
+  function loadChatFontPrefs() {
+    try {
+      const raw = localStorage.getItem("msn:chatFont");
+      if (raw) chatFontPrefs = Object.assign({}, chatFontPrefs, JSON.parse(raw));
+    } catch (_) {}
+    applyChatFontPrefs();
+  }
+  function saveChatFontPrefs() {
+    try { localStorage.setItem("msn:chatFont", JSON.stringify(chatFontPrefs)); } catch (_) {}
+  }
+  function applyChatFontPrefs() {
+    const root = document.body;
+    const style = FONT_STYLE_MAP[chatFontPrefs.styleKey] || FONT_STYLE_MAP.regular;
+    root.style.setProperty("--chat-font-family", chatFontPrefs.family);
+    root.style.setProperty("--chat-font-size", chatFontPrefs.size + "px");
+    root.style.setProperty("--chat-font-weight", String(style.fontWeight));
+    root.style.setProperty("--chat-font-style", style.fontStyle);
+    const decorations = [];
+    if (chatFontPrefs.underline) decorations.push("underline");
+    if (chatFontPrefs.strike) decorations.push("line-through");
+    root.style.setProperty("--chat-font-decoration", decorations.length ? decorations.join(" ") : "none");
+    root.style.setProperty("--chat-font-color", chatFontPrefs.color || "inherit");
+  }
+
+  // Lê os campos do diálogo (ainda não salvos) e atualiza só o
+  // "Exemplo" — o resto das conversas só muda de verdade ao confirmar
+  // (ver commitFontDialog).
+  function updateFontPreview() {
+    const example = document.getElementById("font-example");
+    if (!example) return;
+    const family = document.getElementById("font-family-list").value;
+    const styleKey = document.getElementById("font-style-list").value;
+    const size = document.getElementById("font-size-list").value;
+    const strike = document.getElementById("font-strike").checked;
+    const underline = document.getElementById("font-underline").checked;
+    const color = document.getElementById("font-color").value;
+    const style = FONT_STYLE_MAP[styleKey] || FONT_STYLE_MAP.regular;
+    example.style.fontFamily = family;
+    example.style.fontSize = size + "px";
+    example.style.fontWeight = String(style.fontWeight);
+    example.style.fontStyle = style.fontStyle;
+    const decorations = [];
+    if (underline) decorations.push("underline");
+    if (strike) decorations.push("line-through");
+    example.style.textDecoration = decorations.length ? decorations.join(" ") : "none";
+    example.style.color = color;
+  }
+
+  function selectListValue(id, value) {
+    const list = document.getElementById(id);
+    if (list) list.value = value;
+  }
+
+  function openFontDialog() {
+    selectListValue("font-family-list", chatFontPrefs.family);
+    selectListValue("font-style-list", chatFontPrefs.styleKey);
+    selectListValue("font-size-list", String(chatFontPrefs.size));
+    document.getElementById("font-strike").checked = chatFontPrefs.strike;
+    document.getElementById("font-underline").checked = chatFontPrefs.underline;
+    document.getElementById("font-color").value = chatFontPrefs.color || "#000000";
+    updateFontPreview();
+    document.getElementById("font-dialog").hidden = false;
+  }
+  function closeFontDialog() {
+    document.getElementById("font-dialog").hidden = true;
+  }
+  function commitFontDialog() {
+    chatFontPrefs = {
+      family: document.getElementById("font-family-list").value,
+      styleKey: document.getElementById("font-style-list").value,
+      size: parseInt(document.getElementById("font-size-list").value, 10) || 14,
+      strike: document.getElementById("font-strike").checked,
+      underline: document.getElementById("font-underline").checked,
+      color: document.getElementById("font-color").value,
+    };
+    saveChatFontPrefs();
+    applyChatFontPrefs();
+    closeFontDialog();
+  }
+
   // Aplica visibilidade — o tamanho/estilo do avatar é decidido por
   // item em renderContacts()/fillList() (cada seção usa favSize ou
   // otherSize), não precisa de classe no container.
@@ -2219,6 +2324,7 @@ const Dashboard = (() => {
       li.appendChild(img);
     } else {
       const text = document.createElement("span");
+      text.className = "chat-message__text";
       text.textContent = applyEmoticons(content);
       li.appendChild(text);
     }
@@ -2710,6 +2816,7 @@ const Dashboard = (() => {
     applyLayoutVisuals();
     loadMessagePrefs();
     loadSoundPrefs();
+    loadChatFontPrefs();
     bindSceneBannerPullToRefresh();
 
     // Se a pessoa conceder uma permissão fora do app (ex.: configurações
@@ -2999,6 +3106,29 @@ const Dashboard = (() => {
       hideOnlineToast();
       openOptionsDialog("sounds");
     });
+
+    // "Alterar Fonte": botão "A" na caixa de mensagem e botão em
+    // Opções > Mensagens abrem o mesmo diálogo (vale pra conta
+    // inteira — ver comentário grande em loadChatFontPrefs).
+    const chatFormatBtn = document.getElementById("chat-format-btn");
+    if (chatFormatBtn) chatFormatBtn.addEventListener("click", openFontDialog);
+    const optChangeFontBtn = document.getElementById("opt-change-font-btn");
+    if (optChangeFontBtn) optChangeFontBtn.addEventListener("click", openFontDialog);
+    const fontDialogX = document.getElementById("font-dialog-x");
+    if (fontDialogX) fontDialogX.addEventListener("click", closeFontDialog);
+    const fontDialogCancel = document.getElementById("font-dialog-cancel");
+    if (fontDialogCancel) fontDialogCancel.addEventListener("click", closeFontDialog);
+    const fontDialogOk = document.getElementById("font-dialog-ok");
+    if (fontDialogOk) fontDialogOk.addEventListener("click", commitFontDialog);
+    ["font-family-list", "font-style-list", "font-size-list"].forEach((id) => {
+      const el = document.getElementById(id);
+      if (el) el.addEventListener("change", updateFontPreview);
+    });
+    ["font-strike", "font-underline", "font-color"].forEach((id) => {
+      const el = document.getElementById(id);
+      if (el) el.addEventListener("input", updateFontPreview);
+    });
+
     // Bloquear pessoa pelo e-mail (aba Privacidade)
     const optBlockBtn = document.getElementById("opt-block-btn");
     if (optBlockBtn) optBlockBtn.addEventListener("click", blockPersonByEmail);
