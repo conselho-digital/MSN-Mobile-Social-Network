@@ -1393,6 +1393,10 @@ body[data-login-theme="cenario1"] #screen-connecting::before {
    .contact-status-icon-img, mesma técnica). */
 .view-mode-option__box--classic {
   width: 18px; height: 18px;
+  /* Sem quadrado de fundo aqui — só o bonequinho, diferente das outras
+     opções (que mostram uma miniatura dentro de uma caixinha). */
+  background: transparent;
+  box-shadow: none;
 }
 .view-mode-option__box--classic::before {
   content: "";
