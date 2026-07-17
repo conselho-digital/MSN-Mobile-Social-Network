@@ -1871,8 +1871,11 @@ const Dashboard = (() => {
   }
 
   function scrollChatToBottom() {
-    const thread = document.getElementById("chat-thread");
-    if (thread) thread.scrollTop = thread.scrollHeight;
+    // Quem rola é a lista de mensagens (#chat-messages), não mais
+    // #chat-thread — ele virou só a linha que também contém a
+    // barrinha de esconder fotos, sempre visível (ver CSS).
+    const messages = document.getElementById("chat-messages");
+    if (messages) messages.scrollTop = messages.scrollHeight;
   }
 
   function subscribeChatRealtime() {
@@ -2676,15 +2679,20 @@ const Dashboard = (() => {
       if (currentChatContact) closeChat();
     });
 
-    // Coluna lateral das fotos: esconder/mostrar
+    // Coluna lateral das fotos: esconder/mostrar. A barrinha fica azul
+    // num flash rápido ao clicar e volta pra branca sozinha (CSS
+    // "transition" cuida do fade — só liga/desliga a classe aqui).
     const chatSidebar = document.getElementById("chat-sidebar");
     const chatSidebarToggle = document.getElementById("chat-sidebar-toggle");
     if (chatSidebar && chatSidebarToggle) {
       chatSidebarToggle.addEventListener("click", () => {
         const collapsed = chatSidebar.classList.toggle("is-collapsed");
-        chatSidebarToggle.classList.toggle("is-collapsed", collapsed);
         chatSidebarToggle.setAttribute("aria-expanded", String(!collapsed));
         chatSidebarToggle.setAttribute("aria-label", collapsed ? "Mostrar fotos" : "Esconder fotos");
+        chatSidebarToggle.classList.add("is-pressed");
+        requestAnimationFrame(() => {
+          requestAnimationFrame(() => chatSidebarToggle.classList.remove("is-pressed"));
+        });
       });
     }
     const chatSend = document.getElementById("chat-send-btn");

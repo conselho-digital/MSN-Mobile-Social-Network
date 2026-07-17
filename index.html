@@ -518,7 +518,6 @@
         <span class="status-frame chat-sidebar__avatar" id="chat-contact-avatar"></span>
         <span class="status-frame chat-sidebar__avatar" id="chat-my-avatar"></span>
       </aside>
-      <button type="button" id="chat-sidebar-toggle" class="chat-sidebar-toggle" aria-label="Esconder fotos" aria-expanded="true"><span class="chat-sidebar-toggle__arrow">‹</span></button>
 
       <div class="chat-main">
         <div class="chat-offline-banner" id="chat-offline-banner" hidden>
@@ -530,7 +529,14 @@
           <button type="button" class="chat-offline-banner__close" id="chat-offline-banner-close" aria-label="Fechar aviso">&times;</button>
         </div>
 
+        <!-- Barrinha de esconder/mostrar a coluna das fotos, dentro da
+             própria caixa de mensagens (não mais na borda entre a
+             lateral e a área principal) — mesma setinha usada nas
+             categorias do Dashboard (.group-caret). -->
         <div class="chat-thread" id="chat-thread">
+          <button type="button" id="chat-sidebar-toggle" class="chat-sidebar-toggle" aria-label="Esconder fotos" aria-expanded="true">
+            <span class="group-caret"></span>
+          </button>
           <ul class="chat-messages" id="chat-messages"></ul>
         </div>
 

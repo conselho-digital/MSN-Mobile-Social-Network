@@ -2669,34 +2669,35 @@ body[data-login-theme="cenario1"] #screen-connecting::before {
   opacity: 0;
   overflow: hidden;
 }
-/* Flutua sobre a divisa entre a lateral e a área principal (fora do
-   fluxo do flex, pra nunca ocupar espaço próprio) — uma "aba"
-   arredondada com a setinha, que desliza de posição (via "left")
-   conforme a lateral abre/fecha. */
+/* Barrinha de esconder/mostrar a coluna das fotos, agora DENTRO da
+   caixa de mensagens (primeiro item do "row" .chat-thread — ver
+   abaixo), não mais flutuando sobre a borda da lateral. Altura = a do
+   próprio .chat-thread (item de flex, estica sozinho via
+   align-items:stretch); largura = 1.5% da largura da caixa (mesma
+   base, ver .chat-thread). Branca; fica azul num flash rápido ao
+   clicar e volta pra branca sozinha (ver .is-pressed, ligada/desligada
+   em bindEvents). Seta = mesmo desenho das categorias do Dashboard
+   (.group-caret), só trocando de lado conforme aria-expanded. */
 .chat-sidebar-toggle {
-  position: absolute;
-  top: 50%;
-  left: 124px;
-  z-index: 4;
-  width: 18px;
-  height: 46px;
+  flex: 0 0 1.5%;
+  min-width: 4px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
   margin: 0;
   padding: 0;
-  border: 1px solid #c3ccd2;
-  border-radius: 9px;
-  background: #f7f9fa;
-  color: #5a6b78;
-  font-size: 0.75rem;
-  line-height: 1;
+  border: none;
+  border-right: 1px solid #d7dee4;
+  background: #ffffff;
   cursor: pointer;
-  box-shadow: 0 1px 4px rgba(0, 0, 0, 0.2);
-  transform: translate(-50%, -50%);
-  transition: left 0.2s ease, background 0.15s ease, box-shadow 0.15s ease;
+  transition: background-color 0.35s ease;
 }
-.chat-sidebar-toggle:hover { background: #e9edf0; box-shadow: 0 2px 6px rgba(0, 0, 0, 0.3); }
-.chat-sidebar.is-collapsed ~ .chat-sidebar-toggle { left: 0; }
-.chat-sidebar-toggle__arrow { display: inline-block; transition: transform 0.2s ease; }
-.chat-sidebar-toggle.is-collapsed .chat-sidebar-toggle__arrow { transform: rotate(180deg); }
+.chat-sidebar-toggle.is-pressed { background: #1f7fd0; transition: none; }
+/* Fechada (fotos escondidas) aponta pra direita (mostrar mais);
+   aberta (padrão) aponta pra esquerda (esconder) — desenho idêntico
+   ao .group-caret, só espelhado. */
+.chat-sidebar-toggle .group-caret { transform: scaleX(-1); }
+.chat-sidebar-toggle[aria-expanded="false"] .group-caret { transform: scaleX(1); }
 
 .chat-main {
   flex: 1 1 auto;
@@ -2848,14 +2849,23 @@ body[data-login-theme="cenario1"] #screen-connecting::before {
 }
 .chat-offline-banner__close:hover { background: rgba(0, 0, 0, 0.08); color: #5a5230; }
 
+/* Agora é uma linha (row): a barrinha de esconder fotos
+   (.chat-sidebar-toggle) + a lista de mensagens lado a lado — só a
+   lista rola (overflow-y nela, não mais aqui), a barrinha fica sempre
+   à mostra com a altura inteira da caixa (ver comentário grande em
+   .chat-sidebar-toggle). */
 .chat-thread {
   flex: 1 1 auto;
-  overflow-y: auto;
-  -webkit-overflow-scrolling: touch;
+  display: flex;
+  min-height: 0;
   /* O "background" completo (imagem + posição/tamanho/repetição) é
      definido via JS em applyChatBackground() — ver dashboard.js. */
 }
 .chat-messages {
+  flex: 1 1 auto;
+  min-width: 0;
+  overflow-y: auto;
+  -webkit-overflow-scrolling: touch;
   list-style: none;
   margin: 0;
   padding: 12px;
