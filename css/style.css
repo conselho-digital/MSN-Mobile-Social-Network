@@ -520,15 +520,16 @@ body[data-login-theme="cenario1"] #screen-connecting::before {
   border-color: var(--field-border-focus);
   box-shadow: 0 0 0 2px rgba(75, 160, 230, 0.25);
 }
-.field--combo input { padding-right: 38px; }
+.field--combo input { padding-right: 26px; }
+/* Só a setinha, sem caixa/divisória em volta (igual ao combobox
+   clássico do MSN — a seta fica "dentro" do próprio campo, não parece
+   um botão separado colado do lado). */
 .combo-arrow {
   position: absolute;
-  right: 1px; top: 1px;
-  width: 34px; height: 38px;
+  right: 2px; top: 1px;
+  width: 24px; height: 38px;
   border: none;
-  border-left: 1px solid var(--field-border);
-  background: linear-gradient(#fbfbfb, #eaeef1);
-  border-radius: 0 3px 3px 0;
+  background: transparent;
   cursor: pointer;
 }
 .combo-arrow::after {
@@ -538,7 +539,7 @@ body[data-login-theme="cenario1"] #screen-connecting::before {
   margin: -2px 0 0 -4px;
   border-left: 4px solid transparent;
   border-right: 4px solid transparent;
-  border-top: 5px solid #6b7b88;
+  border-top: 5px solid #4a5a66;
 }
 
 /* ---------- Dropdown de contas salvas ---------- */
@@ -640,23 +641,31 @@ body[data-login-theme="cenario1"] #screen-connecting::before {
 }
 .options-chevron {
   margin-left: auto;
-  width: 20px; height: 20px;
-  border: 1px solid #cfd8df;
+  width: 22px; height: 22px;
+  border: 1px solid #7f95a3;
   border-radius: 50%;
-  background: linear-gradient(#ffffff, #eef2f5);
+  background: linear-gradient(#ffffff, #cfdbe3);
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.25), inset 0 1px 0 rgba(255, 255, 255, 0.7);
   cursor: pointer;
   display: inline-flex;
   align-items: center;
   justify-content: center;
 }
-/* Com uma conta/cenário reconhecido, usa a cor do tema em vez do
-   cinza/branco padrão (ver applyLoginTheme em app.js) — tons bem mais
-   claros (--lg1/--lg3, misturados com branco) do que a cor pura do
-   tema, que ficava intensa demais num botão tão pequeno. */
-[data-login-theme] .options-chevron {
-  background: linear-gradient(var(--lg3, #eef2f5), var(--lg1, #cfd8df));
-  border-color: var(--lg1, #cfd8df);
+.options-chevron:hover { background: linear-gradient(#ffffff, #b9cad5); border-color: #62798a; }
+.options-chevron:active {
+  background: linear-gradient(#cfdbe3, #ffffff);
+  box-shadow: inset 0 1px 3px rgba(0, 0, 0, 0.3);
 }
+/* Com uma conta/cenário reconhecido, usa a cor do tema em vez do
+   cinza/azul padrão (ver applyLoginTheme em app.js) — a borda usa a
+   cor "crua" do tema (--login-accent) pra ficar bem visível (parecer
+   um botão de verdade), o miolo continua um degradê claro pra não
+   competir com o cenário. */
+[data-login-theme] .options-chevron {
+  background: linear-gradient(#ffffff, var(--lg1, #cfdbe3));
+  border-color: var(--login-accent, #7f95a3);
+}
+[data-login-theme] .options-chevron:hover { background: linear-gradient(#ffffff, var(--lg2, #b9cad5)); }
 .chevron {
   width: 7px; height: 7px;
   border-right: 1.6px solid #6b7b88;
