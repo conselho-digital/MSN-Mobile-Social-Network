@@ -2127,6 +2127,30 @@ body[data-login-theme="cenario1"] #screen-connecting::before {
   text-align: center;
 }
 
+/* "Plano de fundo padrão" (diálogo de Plano de Fundo da conversa) —
+   pré-visualização de verdade (a cor do tema do contato agora, ver
+   openScenePicker em dashboard.js), não um ícone de exemplo fixo. */
+.bg-dialog__default {
+  margin-top: 14px;
+  padding-top: 10px;
+  border-top: 1px solid #d7dee4;
+  text-align: center;
+}
+.bg-dialog__default-label {
+  margin: 0 0 6px;
+  font-size: 0.72rem;
+  color: #5a6b78;
+}
+.bg-dialog__default-preview {
+  width: 100%;
+  aspect-ratio: 1;
+  border: 2px solid #1f7fd0;
+  border-radius: 4px;
+  background: #eef1f4;
+  box-shadow: inset 0 0 0 1px rgba(0, 0, 0, 0.15);
+}
+.bg-dialog__default .scene-dialog__browse { margin-top: 8px; }
+
 /* No computador (tela larga o bastante pra não ser um celular), o
    diálogo "Imagem para Exibição" ganha mais espaço: 4 colunas de
    exemplos em vez de 3, prévia maior e mais respiro entre ela e os

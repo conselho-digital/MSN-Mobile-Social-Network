@@ -1337,6 +1337,17 @@ const Dashboard = (() => {
     }
 
     updateCurrentColorSwatch();
+
+    // "Plano de fundo padrão": pré-visualização de verdade (a cor do
+    // tema do contato agora), não um ícone de exemplo fixo — é pra
+    // onde "Padrão"/"Nenhum" resolve nesta conversa específica.
+    if (isChatBg) {
+      const preview = document.getElementById("bg-default-preview");
+      if (preview && currentChatContact) {
+        preview.style.background = MSNScenes.effectiveTheme(currentChatContact.scene, currentChatContact.color_scheme);
+      }
+    }
+
     overlay.hidden = false;
   }
 
@@ -1349,6 +1360,24 @@ const Dashboard = (() => {
       '<button type="button" class="scene-swatch scene-swatch--none' + (selected ? " is-selected" : "") +
       '" data-scene="" aria-label="Padrão (cor do tema do contato)" title="Padrão (cor do tema do contato)"></button>'
     );
+  }
+
+  // Marca "Nenhum"/"Padrão" como selecionado no grid do diálogo de
+  // Plano de Fundo, sem salvar ainda (só "OK"/"Aplicar" salvam de
+  // verdade — ver commitScene) — usado tanto por "Remover" quanto por
+  // "Definir padrão" (ver bindEvents), que dão no mesmo resultado
+  // nesta conversa: "padrão" é a cor do tema do contato.
+  function stageNoneInBgDialog() {
+    stagedScene = "";
+    stagedColorScheme = null;
+    stagedCustomImageUrl = null;
+    const grid = document.getElementById("bg-grid");
+    if (!grid) return;
+    grid.querySelectorAll(".scene-swatch").forEach((x) => x.classList.remove("is-selected"));
+    const none = grid.querySelector(".scene-swatch--none");
+    if (none) none.classList.add("is-selected");
+    const custom = grid.querySelector('.scene-swatch[data-scene="custom"]');
+    if (custom) custom.remove();
   }
 
   function customTileHtml(url, selected) {
@@ -2353,19 +2382,12 @@ const Dashboard = (() => {
     const bgBrowse = document.getElementById("bg-browse");
     if (bgBrowse && sceneImageInput) bgBrowse.addEventListener("click", () => sceneImageInput.click());
     const bgRemove = document.getElementById("bg-remove");
-    if (bgRemove) bgRemove.addEventListener("click", () => {
-      stagedScene = "";
-      stagedColorScheme = null;
-      stagedCustomImageUrl = null;
-      const grid = document.getElementById("bg-grid");
-      if (grid) {
-        grid.querySelectorAll(".scene-swatch").forEach((x) => x.classList.remove("is-selected"));
-        const none = grid.querySelector(".scene-swatch--none");
-        if (none) none.classList.add("is-selected");
-        const custom = grid.querySelector('.scene-swatch[data-scene="custom"]');
-        if (custom) custom.remove();
-      }
-    });
+    if (bgRemove) bgRemove.addEventListener("click", stageNoneInBgDialog);
+    // "Definir padrão": mesmo resultado que "Remover"/selecionar
+    // "Nenhum" no grid — nesta conversa, "padrão" É a cor do tema do
+    // contato (ver bg-default-preview em openScenePicker).
+    const bgSetDefault = document.getElementById("bg-set-default");
+    if (bgSetDefault) bgSetDefault.addEventListener("click", stageNoneInBgDialog);
 
     // "Mais cores..." (seletor de cor nativo)
     const colorMoreBtn = document.getElementById("color-scheme-more-btn");
