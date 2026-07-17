@@ -1061,6 +1061,9 @@ const Dashboard = (() => {
 
     const avatarBox = li.querySelector(".contact-item__avatar");
     if (avatarBox) {
+      // Risco vermelho na diagonal por cima do avatar, igual ao
+      // cliente clássico — ver .contact-item__avatar.is-blocked no CSS.
+      avatarBox.classList.toggle("is-blocked", blockedContactIds.has(String(c.id)));
       avatarBox.dataset.mode = mode;
       // Trocar de modo (Opções > Layout / "Modo de exibição") exige
       // remontar o miolo — cada um tem uma estrutura diferente por

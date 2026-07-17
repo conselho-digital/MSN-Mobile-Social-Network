@@ -1545,6 +1545,22 @@ body[data-login-theme="cenario1"] #screen-connecting::before {
   width: 38px; height: 38px;
   flex: 0 0 auto;
 }
+/* Contato bloqueado: risco vermelho na diagonal por cima do avatar,
+   igual ao cliente clássico — em porcentagem, então funciona em
+   qualquer tamanho/modo de exibição (foto, ícone clássico, tiny). */
+.contact-item__avatar.is-blocked::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  background: linear-gradient(
+    to bottom right,
+    transparent calc(50% - 1.5px),
+    #e0322d calc(50% - 1.5px),
+    #e0322d calc(50% + 1.5px),
+    transparent calc(50% + 1.5px)
+  );
+}
 .contact-item__body { min-width: 0; flex: 1 1 auto; }
 
 /* Ícone "bonequinho" clássico — uma das opções de tamanho/estilo em
