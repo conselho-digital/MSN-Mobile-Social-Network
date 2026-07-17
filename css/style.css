@@ -2699,9 +2699,12 @@ body[data-login-theme="cenario1"] #screen-connecting::before {
 }
 /* Status na frente do nome, na mesma linha (igual ao cliente clássico)
    — a frase pessoal (sub_nick) vai numa segunda linha, embaixo. */
-.chat-header__name-row { display: flex; align-items: baseline; gap: 6px; min-width: 0; }
+/* Sem "flex-grow" no nome (ver .chat-header__name abaixo) — senão a
+   caixa dele cresce pra preencher o espaço todo (mesmo com o texto
+   curto), e o status acaba "empurrado" bem mais pra direita do que o
+   texto do nome, parecendo um espaço vazio entre os dois. */
+.chat-header__name-row { display: flex; align-items: baseline; gap: 4px; min-width: 0; }
 .chat-header__name {
-  flex: 1 1 auto;
   min-width: 0;
   font-size: 1.1rem;
   color: #ffffff;
