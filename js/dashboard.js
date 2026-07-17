@@ -1577,6 +1577,11 @@ const Dashboard = (() => {
     const tintHex = MSNScenes.colorSchemeHex(c.color_scheme);
     header.style.setProperty("--chat-scene", resolveSceneBg(sceneId, c.scene_image_url, tintHex));
     updateHeaderTextContrast(header, sceneId, c.scene_image_url);
+    // Mesma cor de tema do banner também embaixo (borda da caixa de
+    // composição) — pra dar a sensação de "moldura" colorida na janela
+    // inteira, não só no topo (ver .chat-compose no CSS).
+    const body = document.querySelector(".chat-body");
+    if (body) body.style.setProperty("--chat-theme", MSNScenes.effectiveTheme(sceneId, c.color_scheme));
   }
 
   // Resolve e aplica o "Plano de Fundo" (atrás do texto das
@@ -2479,6 +2484,10 @@ const Dashboard = (() => {
       // dispara o popstate abaixo (mesmo caminho do botão físico
       // "voltar" do aparelho), mantendo os dois em sincronia.
       if (currentChatContact) history.back();
+    });
+    const chatOfflineBannerClose = document.getElementById("chat-offline-banner-close");
+    if (chatOfflineBannerClose) chatOfflineBannerClose.addEventListener("click", () => {
+      document.getElementById("chat-offline-banner").hidden = true;
     });
     // Botão/gesto "voltar" do aparelho: se a janela de conversa estava
     // aberta, volta pro Dashboard em vez de sair do app ou ir pra uma

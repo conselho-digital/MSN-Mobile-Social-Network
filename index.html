@@ -494,6 +494,19 @@
       <button type="button" id="chat-close" class="chat-titlebar__close" aria-label="Voltar">&times;</button>
     </header>
 
+    <!-- Banner do cenário/tema do CONTATO — ocupa toda a largura da
+         janela (igual ao cliente clássico), por cima da coluna lateral
+         das fotos, não só da área principal. -->
+    <div class="chat-header">
+      <div class="chat-header__info">
+        <div class="chat-header__name-row">
+          <span class="chat-header__name" id="chat-contact-name"></span>
+          <span class="chat-header__status" id="chat-contact-status"></span>
+        </div>
+        <span class="chat-header__subnick" id="chat-contact-subnick"></span>
+      </div>
+    </div>
+
     <div class="chat-body">
       <!-- Coluna lateral com as duas fotos (do contato em cima, a
            minha embaixo) — igual ao cliente clássico. O botão ao lado
@@ -505,19 +518,10 @@
       <button type="button" id="chat-sidebar-toggle" class="chat-sidebar-toggle" aria-label="Esconder fotos" aria-expanded="true"><span class="chat-sidebar-toggle__arrow">‹</span></button>
 
       <div class="chat-main">
-        <div class="chat-header">
-          <div class="chat-header__info">
-            <div class="chat-header__name-row">
-              <span class="chat-header__status" id="chat-contact-status"></span>
-              <span class="chat-header__name" id="chat-contact-name"></span>
-            </div>
-            <span class="chat-header__subnick" id="chat-contact-subnick"></span>
-          </div>
-        </div>
-
         <div class="chat-offline-banner" id="chat-offline-banner" hidden>
           <span class="chat-offline-banner__icon" aria-hidden="true">ℹ</span>
           <span class="chat-offline-banner__text" id="chat-offline-banner-text"></span>
+          <button type="button" class="chat-offline-banner__close" id="chat-offline-banner-close" aria-label="Fechar aviso">&times;</button>
         </div>
 
         <div class="chat-thread" id="chat-thread">
