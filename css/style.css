@@ -700,9 +700,12 @@ body[data-login-theme="cenario1"] #screen-connecting::before {
 .status-dot--away      { background: radial-gradient(circle at 35% 30%, #ffe08a, #e0a409); }
 .status-dot--invisible { background: radial-gradient(circle at 35% 30%, #e8edf1, #9aa7b1); }
 
-/* Tela de login: ícones de status (imagens) com sombra, em vez de bolinha */
+/* Ícones de status (imagens) com sombra, em vez de bolinha — tela de
+   login (.signin-as/.status-menu) e menu do nick no Dashboard
+   (.my-menu__status), mesmos ícones nos dois lugares. */
 .signin-as .status-dot,
-.status-menu .status-dot {
+.status-menu .status-dot,
+.my-menu__status .status-dot {
   width: 8.5px;
   height: 8.5px;
   border-radius: 2px;
@@ -714,13 +717,17 @@ body[data-login-theme="cenario1"] #screen-connecting::before {
   box-shadow: 0 1px 2px rgba(0, 0, 0, 0.5);
 }
 .signin-as .status-dot--online,
-.status-menu .status-dot--online { background-image: url("../assets/icons/available.webp"); }
+.status-menu .status-dot--online,
+.my-menu__status .status-dot--online { background-image: url("../assets/icons/available.webp"); }
 .signin-as .status-dot--busy,
-.status-menu .status-dot--busy { background-image: url("../assets/icons/ocupado.webp"); }
+.status-menu .status-dot--busy,
+.my-menu__status .status-dot--busy { background-image: url("../assets/icons/ocupado.webp"); }
 .signin-as .status-dot--away,
-.status-menu .status-dot--away { background-image: url("../assets/icons/ausente.webp"); }
+.status-menu .status-dot--away,
+.my-menu__status .status-dot--away { background-image: url("../assets/icons/ausente.webp"); }
 .signin-as .status-dot--invisible,
-.status-menu .status-dot--invisible { background-image: url("../assets/icons/invisivel.webp"); }
+.status-menu .status-dot--invisible,
+.my-menu__status .status-dot--invisible { background-image: url("../assets/icons/invisivel.webp"); }
 
 /* Menu de status */
 .status-menu {
@@ -1081,10 +1088,16 @@ body[data-login-theme="cenario1"] #screen-connecting::before {
   border-radius: 5px;
   transition: background-color 0.1s ease, box-shadow 0.1s ease;
 }
-.my-name-row:hover,
+/* Ao passar o mouse, sombra "levantada" (parece um botão de verdade
+   flutuando sobre o cenário); com o menu aberto, sombra pra dentro
+   (parece pressionado) — igual ao cliente clássico. */
+.my-name-row:hover {
+  background: rgba(255, 255, 255, 0.55);
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.3), inset 0 1px 0 rgba(255, 255, 255, 0.6);
+}
 .my-name-row.is-open {
-  background: rgba(255, 255, 255, 0.16);
-  box-shadow: 0 0 0 1px rgba(255, 255, 255, 0.4);
+  background: rgba(255, 255, 255, 0.75);
+  box-shadow: inset 0 1px 4px rgba(0, 0, 0, 0.35);
 }
 .my-name {
   padding: 0;
@@ -1181,11 +1194,8 @@ body[data-login-theme="cenario1"] #screen-connecting::before {
 }
 .dash-header.is-light-scene .status-select--sm { color: #3d4f5a; }
 .dash-header.is-light-scene .status-select--sm .caret-down { border-top-color: #3d4f5a; }
-.dash-header.is-light-scene .my-name-row:hover,
-.dash-header.is-light-scene .my-name-row.is-open {
-  background: rgba(0, 0, 0, 0.1);
-  box-shadow: 0 0 0 1px rgba(0, 0, 0, 0.25);
-}
+/* O cartão branco com sombra de .my-name-row:hover/.is-open (ver acima)
+   já funciona em cima de cenário claro ou escuro — sem override aqui. */
 .dash-header.is-light-scene .my-subnick { color: #34454f; }
 .dash-header.is-light-scene .my-subnick__input {
   text-shadow: 0 1px 1px rgba(255, 255, 255, 0.75);
