@@ -385,6 +385,22 @@ const MSNSupabase = (() => {
     });
   }
 
+  // Exclui um contato da MINHA lista (não bloqueia, não apaga o
+  // histórico de mensagens — só a linha de "amizade" em si, igual ao
+  // "Excluir contato" do cliente clássico).
+  async function removeContact(contactId) {
+    if (!isConfigured()) return { ok: true, demo: true };
+    const { data: { user } } = await client.auth.getUser();
+    if (!user) throw new Error("Sessão expirada. Entre novamente.");
+    const { error } = await client
+      .from("contacts")
+      .delete()
+      .eq("owner_id", user.id)
+      .eq("contact_id", contactId);
+    if (error) throw error;
+    return { ok: true };
+  }
+
   // Marca/desmarca um contato como favorito (ver supabase/favorites.sql).
   async function setFavorite(contactId, isFavorite) {
     if (!isConfigured()) return { ok: true, demo: true };
@@ -659,7 +675,7 @@ const MSNSupabase = (() => {
   return {
     init, isConfigured, signIn, signUp, getSession, signOut,
     getMyProfile, updateMyProfile, updateEmail, updatePassword, deleteMyAccount,
-    getContacts, addContactByEmail, setFavorite,
+    getContacts, addContactByEmail, setFavorite, removeContact,
     setContactMuted, setAppearOffline, getForcedOfflineContacts,
     getChatBackgrounds, setChatBackground,
     subscribeContacts, unsubscribeContacts,

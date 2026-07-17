@@ -1166,6 +1166,49 @@ const Dashboard = (() => {
     try { await MSNSupabase.setAppearOffline(c.id, c.appear_offline); } catch (_) {}
   }
 
+  // Enviar e-mail: mesmo link "mailto:" usado no aviso amarelo de
+  // contato offline (ver renderChatHeader).
+  function emailContact(id) {
+    const c = contacts.find((x) => String(x.id) === String(id));
+    if (!c || !c.email) return;
+    window.location.href = "mailto:" + c.email;
+  }
+
+  // Bloquear/desbloquear a partir do menu de contexto — mesma chamada
+  // usada em Opções > Privacidade (ver renderBlockedList), só que
+  // disparada aqui pra não precisar abrir o diálogo de Opções.
+  async function toggleBlocked(id) {
+    const c = contacts.find((x) => String(x.id) === String(id));
+    if (!c) return;
+    const isBlocked = blockedContactIds.has(String(id));
+    if (!isBlocked && !confirm((c.display_name || c.email || "Este contato") + " não vai mais poder falar com você nem ver seu perfil. Bloquear mesmo assim?")) return;
+    try {
+      if (isBlocked) await MSNSupabase.unblockUser(id);
+      else await MSNSupabase.blockUserByEmail(c.email);
+      await refreshBlockedIds();
+      renderContacts(currentFilter);
+      renderContactCtxMenu();
+    } catch (err) {
+      alert((err && err.message) || "Não foi possível concluir a ação.");
+    }
+  }
+
+  // Excluir contato: só tira a linha de "amizade" (ver removeContact em
+  // supabase-client.js) — não apaga o histórico de conversa nem bloqueia.
+  async function removeContactFlow(id) {
+    const c = contacts.find((x) => String(x.id) === String(id));
+    if (!c) return;
+    if (!confirm("Excluir " + (c.display_name || c.email || "este contato") + " da sua lista de contatos?")) return;
+    closeContactCtxMenu();
+    try {
+      await MSNSupabase.removeContact(id);
+      contacts = contacts.filter((x) => String(x.id) !== String(id));
+      renderContacts(currentFilter);
+    } catch (err) {
+      alert((err && err.message) || "Não foi possível excluir o contato.");
+    }
+  }
+
   /* ---------- Menu de contexto: segurar um contato apertado ----------
      Abre um dropdown no ponto exato onde o dedo/mouse ficou parado,
      com opções pessoais sobre aquele contato (favoritar, silenciar
@@ -1192,7 +1235,9 @@ const Dashboard = (() => {
   function renderContactCtxMenu() {
     const c = contacts.find((x) => String(x.id) === String(ctxMenuContactId));
     if (!c) return;
+    const isBlocked = blockedContactIds.has(String(c.id));
     const items = [
+      ["block", isBlocked, isBlocked ? "Desbloquear contato" : "Bloquear contato"],
       ["favorite", c.is_favorite, c.is_favorite ? "Remover dos favoritos" : "Adicionar aos favoritos"],
       ["mute", c.is_muted, c.is_muted ? "Reativar notificações" : "Silenciar notificações"],
       ["appear-offline", c.appear_offline, c.appear_offline ? "Parar de aparecer offline" : "Aparecer offline para este contato"],
@@ -1200,7 +1245,10 @@ const Dashboard = (() => {
     items.forEach(([action, checked, label]) => {
       const item = document.querySelector('.ctx-menu__item[data-action="' + action + '"]');
       if (!item) return;
-      item.classList.toggle("is-checked", !!checked);
+      // "block" não usa a bolinha de check (não é uma escolha
+      // liga/desliga discreta como as outras, é uma ação com dois
+      // rótulos possíveis) — só troca o texto.
+      if (action !== "block") item.classList.toggle("is-checked", !!checked);
       const labelEl = document.getElementById("ctx-label-" + action);
       if (labelEl) labelEl.textContent = label;
     });
@@ -1263,10 +1311,16 @@ const Dashboard = (() => {
     ["pointerup", "pointercancel", "pointerleave"].forEach((evt) => {
       container.addEventListener(evt, cancelCtxHold);
     });
-    // Impede o menu do navegador (copiar/compartilhar imagem) de
-    // competir com o nosso próprio menu de segurar apertado.
+    // Botão direito no computador abre o mesmo menu (em vez do menu
+    // nativo do navegador, que só atrapalharia aqui) — igual a segurar
+    // apertado no toque, só que instantâneo em vez de esperar o tempo
+    // de "hold".
     container.addEventListener("contextmenu", (e) => {
-      if (e.target.closest(".contact-item[data-id]")) e.preventDefault();
+      const item = e.target.closest(".contact-item[data-id]");
+      if (!item) return;
+      e.preventDefault();
+      cancelCtxHold();
+      openContactCtxMenu(item.dataset.id, e.clientX, e.clientY);
     });
 
     document.getElementById("contact-ctx-menu").addEventListener("click", (e) => {
@@ -1274,10 +1328,17 @@ const Dashboard = (() => {
       if (!item || !ctxMenuContactId) return;
       const id = ctxMenuContactId;
       const action = item.dataset.action;
-      if (action === "favorite") { toggleFavorite(id); }
-      else if (action === "mute") { toggleMuted(id); }
-      else if (action === "appear-offline") { toggleAppearOffline(id); }
-      renderContactCtxMenu();
+      if (action === "favorite") { toggleFavorite(id); renderContactCtxMenu(); }
+      else if (action === "mute") { toggleMuted(id); renderContactCtxMenu(); }
+      else if (action === "appear-offline") { toggleAppearOffline(id); renderContactCtxMenu(); }
+      else if (action === "block") { toggleBlocked(id); }
+      else if (action === "email") { emailContact(id); closeContactCtxMenu(); }
+      else if (action === "remove") { removeContactFlow(id); }
+      else if (action === "message") {
+        closeContactCtxMenu();
+        const contact = contacts.find((x) => String(x.id) === String(id));
+        if (contact) { SoundManager.play("message"); openChat(contact); }
+      }
     });
     document.addEventListener("click", (e) => {
       const menu = document.getElementById("contact-ctx-menu");

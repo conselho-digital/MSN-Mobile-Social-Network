@@ -471,12 +471,22 @@
     </div>
     </div>
 
-    <!-- Menu de contexto (segurar um contato apertado): favoritar,
-         silenciar notificações e aparecer offline só pra ele — sem
-         opção de bloquear aqui (bloqueio fica em Opções > Privacidade).
+    <!-- Menu de contexto (segurar um contato apertado, ou botão direito
+         no computador): igual ao cliente clássico, com as opções de
+         favoritar/silenciar/aparecer offline que já tínhamos.
          Posicionado via "position: fixed" calculado em JS, no ponto
          onde o toque/clique aconteceu (ver positionContactCtxMenu). -->
     <div id="contact-ctx-menu" class="my-menu ctx-menu" role="menu" hidden>
+      <button type="button" class="my-menu__item ctx-menu__item" data-action="message">Enviar uma mensagem instantânea</button>
+      <button type="button" class="my-menu__item ctx-menu__item" data-action="email">Enviar e-mail</button>
+
+      <div class="my-menu__sep"></div>
+      <button type="button" class="my-menu__item ctx-menu__item" data-action="block">
+        <span id="ctx-label-block">Bloquear contato</span>
+      </button>
+      <button type="button" class="my-menu__item ctx-menu__item" data-action="remove">Excluir contato</button>
+
+      <div class="my-menu__sep"></div>
       <button type="button" class="my-menu__item ctx-menu__item" role="menuitemcheckbox" data-action="favorite">
         <span class="ctx-menu__check" id="ctx-check-favorite" aria-hidden="true"></span>
         <span id="ctx-label-favorite">Adicionar aos favoritos</span>
