@@ -2796,6 +2796,13 @@ body[data-login-theme="cenario1"] #screen-connecting::before {
   display: flex;
   flex-direction: column;
   gap: 2px;
+  transition: margin-left 0.2s ease;
+}
+/* Coluna das fotos escondida (ver .chat-sidebar-toggle) — o texto some
+   junto do respiro que reservava espaço pra elas, encostando na borda
+   esquerda igual as mensagens. */
+#screen-chat:has(.chat-sidebar.is-collapsed) .chat-header__info {
+  margin-left: 0;
 }
 /* Status na frente do nome, na mesma linha (igual ao cliente clássico)
    — a frase pessoal (sub_nick) vai numa segunda linha, embaixo. */
