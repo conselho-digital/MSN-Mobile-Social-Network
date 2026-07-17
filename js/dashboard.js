@@ -12,6 +12,15 @@ const Dashboard = (() => {
     invisible: "Invisível",
     offline: "Offline",
   };
+  // Pra quem está vendo — nunca pro dono da conta (profile.status
+  // continua mostrando "Invisível" de verdade só pra ele mesmo, ver
+  // renderProfile) — um contato invisível deve aparecer exatamente
+  // como offline: mesmo rótulo, mesma cor de moldura, mesma posição
+  // na lista (grupo "Offline"). Ponto único de normalização pra não
+  // vazar o status real em algum lugar novo no futuro.
+  function contactVisibleStatus(status) {
+    return status === "invisible" ? "offline" : status;
+  }
   // Gradiente/animação da moldura da foto por status — compartilhado
   // com a tela de login em js/scenes.js (MSNScenes.frameGradient /
   // MSNScenes.updateStatusFrame).
@@ -885,7 +894,7 @@ const Dashboard = (() => {
       if (!showBlockedContacts && blockedContactIds.has(String(c.id))) return false;
       return !q || (c.display_name || "").toLowerCase().includes(q);
     };
-    const isOnline = (c) => ["online", "busy", "away"].includes(c.status);
+    const isOnline = (c) => ["online", "busy", "away"].includes(contactVisibleStatus(c.status));
 
     // Só "puxa" contatos pra fora de Disponível/Offline quando a
     // respectiva seção está de fato visível (Opções > Layout) — senão
@@ -997,8 +1006,12 @@ const Dashboard = (() => {
   }
 
   function updateContactItem(li, c, mode) {
-    const isOnline = ["online", "busy", "away"].includes(c.status);
-    li.className = "contact-item " + (isOnline ? "contact-item--" + c.status : "contact-item--offline");
+    // Um contato invisível aparece como offline pra qualquer outra
+    // pessoa — ver contactVisibleStatus. Tudo abaixo usa "status"
+    // (normalizado), nunca c.status direto.
+    const status = contactVisibleStatus(c.status);
+    const isOnline = ["online", "busy", "away"].includes(status);
+    li.className = "contact-item " + (isOnline ? "contact-item--" + status : "contact-item--offline");
 
     const avatarBox = li.querySelector(".contact-item__avatar");
     if (avatarBox) {
@@ -1010,18 +1023,18 @@ const Dashboard = (() => {
       const current = avatarBox.dataset.renderedMode;
       if (current !== mode) {
         avatarBox.dataset.renderedMode = mode;
-        if (mode === "classic") avatarBox.innerHTML = classicIconMarkup(c.status);
-        else if (mode === "tiny") avatarBox.innerHTML = statusIconMarkup(c.status);
-        else avatarBox.innerHTML = statusFrameMarkup(c.avatar_url, c.status);
+        if (mode === "classic") avatarBox.innerHTML = classicIconMarkup(status);
+        else if (mode === "tiny") avatarBox.innerHTML = statusIconMarkup(status);
+        else avatarBox.innerHTML = statusFrameMarkup(c.avatar_url, status);
       } else if (mode === "classic") {
         const icon = avatarBox.querySelector(".contact-classic-icon");
-        if (icon) icon.dataset.status = c.status;
+        if (icon) icon.dataset.status = status;
       } else if (mode === "tiny") {
         const img = avatarBox.querySelector(".contact-status-icon-img");
-        if (img) img.dataset.status = c.status;
+        if (img) img.dataset.status = status;
       } else {
         const ring = avatarBox.querySelector(".status-frame__ring");
-        if (ring) updateStatusFrame(ring, c.status);
+        if (ring) updateStatusFrame(ring, status);
         const photoWrap = avatarBox.querySelector(".status-frame__photo");
         if (photoWrap && photoWrap.dataset.avatarUrl !== (c.avatar_url || "")) {
           photoWrap.innerHTML = avatarMarkup(c.avatar_url);
@@ -1033,7 +1046,7 @@ const Dashboard = (() => {
     const nameEl = li.querySelector(".contact-item__name");
     if (nameEl) {
       let label = (labelBy === "email" && c.email) ? c.email : c.display_name;
-      if (showStatusLabel) label += " (" + (STATUS_LABEL[c.status] || "") + ")";
+      if (showStatusLabel) label += " (" + (STATUS_LABEL[status] || "") + ")";
       nameEl.textContent = label;
     }
 
@@ -1470,15 +1483,18 @@ const Dashboard = (() => {
   function renderChatHeader() {
     const c = currentChatContact;
     if (!c) return;
+    // Mesma regra da lista de contatos: contato invisível aparece como
+    // offline aqui também (ver contactVisibleStatus).
+    const status = contactVisibleStatus(c.status);
     document.getElementById("chat-titlebar-text").textContent = c.email || c.display_name || "";
     document.getElementById("chat-contact-name").textContent = c.display_name || c.email || "";
-    document.getElementById("chat-contact-status").textContent = "(" + (STATUS_LABEL[c.status] || "Offline") + ")";
-    document.getElementById("chat-contact-avatar").innerHTML = chatStatusFrameMarkup(c.avatar_url, c.status || "offline");
+    document.getElementById("chat-contact-status").textContent = "(" + (STATUS_LABEL[status] || "Offline") + ")";
+    document.getElementById("chat-contact-avatar").innerHTML = chatStatusFrameMarkup(c.avatar_url, status || "offline");
 
     const myAvatar = document.getElementById("chat-my-avatar");
     myAvatar.innerHTML = chatStatusFrameMarkup(profile && profile.avatar_url, (profile && profile.status) || "online");
 
-    const isOffline = !["online", "busy", "away"].includes(c.status);
+    const isOffline = !["online", "busy", "away"].includes(status);
     const banner = document.getElementById("chat-offline-banner");
     banner.hidden = !isOffline;
     if (isOffline) {
