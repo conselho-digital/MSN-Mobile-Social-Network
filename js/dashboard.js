@@ -125,13 +125,22 @@ const Dashboard = (() => {
   // reaproveitado pelos dois, cada um com seu próprio token acima.
   function updateHeaderTextContrast(header, sceneId, customUrl) {
     if (!header) return;
-    const url = sceneId === "custom" && customUrl ? customUrl : MSNScenes.image(sceneId);
+    // Conta nova (ainda sem cenário escolhido, profile.scene vem
+    // null/undefined do banco) precisa cair no MESMO cenário padrão
+    // que o fundo já usa (ver sceneBg/resolveSceneBg, que caem pra
+    // SCENES[0] sozinhos) — sem isso, MSNScenes.isLightScene/image
+    // devolviam null pra um id desconhecido, a função desistia cedo
+    // (linha do "if (!url)" abaixo) e o texto ficava sempre branco,
+    // sem contraste nenhum, em cima do Céu Azul (que é um cenário
+    // CLARO, isLight:true).
+    const effectiveSceneId = sceneId || MSNScenes.list[0].id;
+    const url = effectiveSceneId === "custom" && customUrl ? customUrl : MSNScenes.image(effectiveSceneId);
 
     // Pré-calculado (ver isLight em scenes.js), aplica na hora — sem
     // isso o texto ficava branco (ilegível em cenários claros) por um
     // instante toda vez que o cabeçalho carregava, até a amostragem
     // abaixo (que depende de baixar a foto) terminar.
-    const known = MSNScenes.isLightScene(sceneId);
+    const known = MSNScenes.isLightScene(effectiveSceneId);
     if (known !== null) header.classList.toggle("is-light-scene", known);
 
     const token = (brightnessTokens.get(header) || 0) + 1;

@@ -3171,10 +3171,17 @@ body[data-login-theme="cenario1"] #screen-connecting::before {
      "recortados" (transparentes) no próprio arquivo — background-size
      100% 100% estica pra cobrir a caixa toda sem deixar sobra
      (esticar um degradê liso não gera distorção visível, ao contrário
-     de uma imagem com textura/desenho). O border-radius aqui é só pra
-     a sombra (.box-shadow) acompanhar o arredondado da imagem. */
-  background: url("assets/icons/notification.webp") center/100% 100% no-repeat;
+     de uma imagem com textura/desenho). background-color por baixo +
+     overflow:hidden garantem que essas partes transparentes da imagem
+     (os 4 cantinhos) mostrem uma cor sólida, não a tela por trás —
+     sem isso a janela parecia "vazada" nos cantos. */
+  background-color: #d9ecfa;
+  background-image: url("assets/icons/notification.webp");
+  background-position: center;
+  background-size: 100% 100%;
+  background-repeat: no-repeat;
   border-radius: 8px;
+  overflow: hidden;
   box-shadow: 0 8px 24px rgba(0, 0, 0, 0.4);
   transform: translateX(130%);
   transition: transform 0.35s ease;
@@ -3212,14 +3219,14 @@ body[data-login-theme="cenario1"] #screen-connecting::before {
 .online-toast__body {
   display: flex;
   align-items: center;
-  gap: 10px;
-  padding: 10px;
+  gap: 14px;
+  padding: 12px 14px 14px;
 }
 .online-toast__avatar { position: relative; width: 52px; height: 52px; flex: 0 0 auto; }
 .online-toast__text {
   display: flex;
   flex-direction: column;
-  gap: 1px;
+  gap: 5px;
   min-width: 0;
 }
 .online-toast__name {
@@ -3233,7 +3240,7 @@ body[data-login-theme="cenario1"] #screen-connecting::before {
 .online-toast__msg { font-size: 0.82rem; color: #2b3f4d; }
 .online-toast__options {
   align-self: flex-end;
-  margin-top: 2px;
+  margin-top: 4px;
   font-size: 0.78rem;
   color: #1a6fbb;
   text-decoration: none;
