@@ -1385,9 +1385,9 @@ body[data-login-theme="cenario1"] #screen-connecting::before {
   box-shadow: inset 0 0 0 1px rgba(0, 0, 0, 0.15);
 }
 .view-mode-option__box svg { display: block; width: 100%; height: 100%; }
-/* Proporção parecida com o tamanho de verdade na lista (78/76/23/9px). */
+/* Proporção parecida com o tamanho de verdade na lista (78/57/23/9px). */
 .view-mode-option__box--huge { width: 44px; height: 44px; }
-.view-mode-option__box--large { width: 42px; height: 42px; }
+.view-mode-option__box--large { width: 32px; height: 32px; }
 /* Mostram o ícone de verdade em miniatura — aqui a diferença não é só
    tamanho, é o que substitui a foto (ver .contact-classic-icon e
    .contact-status-icon-img, mesma técnica). */
@@ -1652,15 +1652,15 @@ body[data-login-theme="cenario1"] #screen-connecting::before {
    .contact-item__avatar (calculado por seção em renderContacts/
    fillList) — não depende de nenhuma classe no container/ancestral,
    então funciona igual em qualquer lista (favoritos, grupo, disponível
-   ou offline). Tamanhos: "grande" é o dobro do padrão antigo (38px
-   → 76px), "clássico" é 60% (23px) e "pequeno" é 50% (9px) — pedido
-   explicitamente, mesmo o "grande" ficando bem perto do "bem grande"
-   (78px). */
+   ou offline). Tamanhos: "grande" partiu do dobro do padrão antigo
+   (38px → 76px) e depois foi reduzido em 25% (76px → 57px), "clássico"
+   é 60% do padrão antigo (23px) e "pequeno" é 50% (9px) — valores
+   pedidos explicitamente, um ajuste de cada vez. */
 .contact-item:has(.contact-item__avatar[data-mode="huge"]) { padding-top: 14px; padding-bottom: 14px; }
 .contact-item__avatar[data-mode="huge"] { width: 78px; height: 78px; }
 
-.contact-item:has(.contact-item__avatar[data-mode="large"]) { padding-top: 14px; padding-bottom: 14px; }
-.contact-item__avatar[data-mode="large"] { width: 76px; height: 76px; }
+.contact-item:has(.contact-item__avatar[data-mode="large"]) { padding-top: 10px; padding-bottom: 10px; }
+.contact-item__avatar[data-mode="large"] { width: 57px; height: 57px; }
 
 .contact-item__avatar[data-mode="classic"] { width: 23px; height: 23px; }
 
@@ -2449,7 +2449,7 @@ body[data-login-theme="cenario1"] #screen-connecting::before {
    bem menores, cada um ocupando a mesma "caixa" de 32px (a margem
    compensa o que falta) pra ficarem alinhados na mesma linha. */
 .options-size-option__avatar--huge { width: 32px; height: 32px; margin: 0; }
-.options-size-option__avatar--large { width: 30px; height: 30px; margin: 1px; }
+.options-size-option__avatar--large { width: 23px; height: 23px; margin: 5px; }
 /* As duas últimas mostram o ícone de verdade em miniatura (em vez de
    um retângulo genérico), já que aqui a diferença não é só tamanho —
    é o que aparece no lugar da foto (ver .contact-classic-icon e
