@@ -664,14 +664,11 @@ body[data-login-theme="cenario1"] #screen-connecting::before {
   background: linear-gradient(#cfdbe3, #ffffff);
   box-shadow: inset 0 1px 3px rgba(0, 0, 0, 0.3);
 }
-/* Com uma conta/cenário reconhecido, usa a cor do tema em vez do
-   cinza/azul padrão (ver applyLoginTheme em app.js) — a borda usa a
-   cor "crua" do tema (--login-accent) pra ficar bem visível (parecer
-   um botão de verdade), o miolo continua um degradê claro pra não
-   competir com o cenário. */
+/* Com uma conta/cenário reconhecido, usa a cor do tema no miolo em vez
+   do cinza/azul padrão (ver applyLoginTheme em app.js) — a borda
+   continua neutra (sem cor do tema), só o degradê interno muda. */
 [data-login-theme] .options-chevron {
   background: linear-gradient(#ffffff, var(--lg1, #cfdbe3));
-  border-color: var(--login-accent, #7f95a3);
 }
 [data-login-theme] .options-chevron:hover { background: linear-gradient(#ffffff, var(--lg2, #b9cad5)); }
 .chevron {
