@@ -151,10 +151,11 @@ const App = (function () {
       deferredInstallPrompt = e;
     });
 
-    // Só esconde quando rodando como o app instalado (standalone).
-    // No navegador comum, o botão permanece visível mesmo que o app
-    // já esteja instalado no aparelho (útil pra reinstalar depois).
-    setInstallButtonsHidden(isRunningStandalone());
+    // Esconde quando rodando como o app instalado (standalone) OU num
+    // aparelho Apple — o Safari/iOS não dispara "beforeinstallprompt"
+    // (não existe instalação com um clique), então o botão não tinha
+    // uma ação de verdade por trás nesses aparelhos.
+    setInstallButtonsHidden(isRunningStandalone() || isAppleDevice());
     // Mas no exato momento em que a instalação acontece NESTA aba, some
     // na hora — sem isso, o botão continuava visível na mesma aba logo
     // depois de instalar com sucesso, o que parecia que não tinha
@@ -185,19 +186,24 @@ const App = (function () {
     );
   }
 
-  // Fallback para navegadores sem beforeinstallprompt (ex.: iOS/Safari).
-  // Usa um modal global (funciona em qualquer tela: login, cadastro ou
-  // entrando), já que nem toda tela tem uma área de mensagem própria.
-  function showInstallInstructions() {
+  // iPhone/iPod são fáceis de reconhecer pelo user agent. iPad a partir
+  // do iPadOS 13 se disfarça de Mac (mesmo user agent do Safari desktop),
+  // então o jeito de diferenciar é checar suporte a toque — um Mac de
+  // verdade não tem multi-touch.
+  function isAppleDevice() {
     const ua = navigator.userAgent || "";
-    let msg;
-    if (/iPhone|iPad|iPod/i.test(ua)) {
-      msg = "Para instalar no iPhone/iPad: toque em Compartilhar (⬆️) e depois em “Adicionar à Tela de Início”.";
-    } else if (isRunningStandalone()) {
-      msg = "O app já está instalado neste dispositivo. 🎉";
-    } else {
-      msg = "Para instalar: abra o menu do navegador (⋮) e escolha “Instalar app” ou “Adicionar à tela inicial”.";
-    }
+    if (/iPhone|iPad|iPod/i.test(ua)) return true;
+    return /Macintosh/i.test(ua) && navigator.maxTouchPoints > 1;
+  }
+
+  // Fallback para navegadores sem beforeinstallprompt (ex.: Chrome
+  // desktop mais antigo, ou algum outro sem suporte). Usa um modal
+  // global (funciona em qualquer tela: login, cadastro ou entrando), já
+  // que nem toda tela tem uma área de mensagem própria.
+  function showInstallInstructions() {
+    const msg = isRunningStandalone()
+      ? "O app já está instalado neste dispositivo. 🎉"
+      : "Para instalar: abra o menu do navegador (⋮) e escolha “Instalar app” ou “Adicionar à tela inicial”.";
     showGlobalInfo("Adicionar App", msg);
   }
 
