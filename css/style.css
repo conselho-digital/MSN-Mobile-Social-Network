@@ -2691,7 +2691,12 @@ body[data-login-theme="cenario1"] #screen-connecting::before {
   background: var(--chat-scene, #ffffff);
   background-size: cover;
   background-position: center;
-  border-bottom: 1px solid #e3e8ec;
+  /* Linha branca + sombra na base do banner, igual ao cliente clássico
+     (mesmo efeito do banner do Dashboard, .dash-header) — aqui sempre
+     aparece, não importa o cenário (diferente do Dashboard, que some
+     só no cenário padrão). */
+  border-bottom: 1px solid rgba(255, 255, 255, 0.85);
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.3);
   color: #ffffff;
 }
 .chat-header__info {
@@ -2770,8 +2775,36 @@ body[data-login-theme="cenario1"] #screen-connecting::before {
   align-items: center;
   justify-content: center;
 }
-.chat-offline-banner__text { flex: 1 1 auto; }
+/* No máximo 3 linhas visíveis (3 × 1.4 de line-height) — o resto rola
+   dentro da própria caixa, tanto pelos botões ▲/▼ (ver
+   .chat-offline-banner__scroll) quanto arrastando o texto direto
+   (overflow-y: auto já aceita os dois, sem precisar de nada a mais). */
+.chat-offline-banner__text {
+  flex: 1 1 auto;
+  min-width: 0;
+  max-height: 4.2em;
+  overflow-y: auto;
+  -webkit-overflow-scrolling: touch;
+}
 .chat-offline-banner__text a { color: #1a6fbb; text-decoration: underline; }
+.chat-offline-banner__actions {
+  flex: 0 0 auto;
+  display: flex;
+  align-items: center;
+  gap: 2px;
+}
+.chat-offline-banner__scroll {
+  width: 16px; height: 18px;
+  padding: 0;
+  border: none;
+  background: transparent;
+  color: #8a8156;
+  font-size: 0.55rem;
+  line-height: 1;
+  cursor: pointer;
+  border-radius: 3px;
+}
+.chat-offline-banner__scroll:hover { background: rgba(0, 0, 0, 0.08); color: #5a5230; }
 .chat-offline-banner__close {
   flex: 0 0 auto;
   width: 18px; height: 18px;
