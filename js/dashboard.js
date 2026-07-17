@@ -1794,6 +1794,17 @@ const Dashboard = (() => {
     win.classList.remove("nudge-shake");
     void win.offsetWidth;
     win.classList.add("nudge-shake");
+    // Sem isso a classe ficava pra sempre no elemento — a animação (só
+    // 0.6s, sem "infinite") não repetia sozinha enquanto a janela
+    // continuava aberta, mas o CSS de tela usa display:none pra
+    // esconder/mostrar (ver .screen/.screen--active): toda vez que a
+    // conversa fechava e abria de novo, o navegador tratava como um
+    // elemento "novo" aparecendo com a classe já aplicada e tocava a
+    // animação de novo sozinha, sem clicar em nada — daí o tremor
+    // "persistente" ao reabrir a conversa. Remove a classe assim que a
+    // animação termina, então só treme quando alguém realmente manda
+    // ou recebe um "Chamar a atenção".
+    win.addEventListener("animationend", () => win.classList.remove("nudge-shake"), { once: true });
   }
 
   async function sendChatMessage() {

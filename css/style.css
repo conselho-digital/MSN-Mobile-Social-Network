@@ -2681,11 +2681,11 @@ body[data-login-theme="cenario1"] #screen-connecting::before {
   flex: 0 0 auto;
   display: flex;
   align-items: center;
-  /* Baixo o suficiente pra caber justo o texto (nome/status/frase
-     pessoal) — a altura fica pertinho da foto do contato que sobrepõe
-     por cima dela (ver margin-top negativo em .chat-sidebar__avatar,
-     que continua igual — só a altura do banner encolheu). */
   padding: 6px 14px;
+  /* 3× a altura anterior (que era só o texto + padding, ~50px). A foto
+     do contato continua com o mesmo tamanho/posição de sempre (ver
+     .chat-sidebar__avatar) — só o banner ficou mais alto ao redor dela. */
+  min-height: 150px;
   --chat-scene: none;
   background: var(--chat-scene, #ffffff);
   background-size: cover;
