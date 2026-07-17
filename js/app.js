@@ -682,17 +682,30 @@ const App = (function () {
     if (!arrow || !menu) return;
 
     const close = () => { menu.hidden = true; arrow.setAttribute("aria-expanded", "false"); };
+    const open = () => {
+      renderAccountMenu();
+      if (getAccounts().length) { menu.hidden = false; arrow.setAttribute("aria-expanded", "true"); }
+    };
 
     arrow.addEventListener("click", (e) => {
       e.preventDefault();
       e.stopPropagation();
-      if (menu.hidden) {
-        renderAccountMenu();
-        if (getAccounts().length) { menu.hidden = false; arrow.setAttribute("aria-expanded", "true"); }
-      } else {
-        close();
-      }
+      if (menu.hidden) open(); else close();
     });
+
+    // Digitando um e-mail que não é nenhuma das contas lembradas neste
+    // aparelho, abre o dropdown sozinho — mostra as contas salvas (caso
+    // a pessoa tenha se confundido) e a opção "Entrar com um e-mail
+    // diferente", sem precisar clicar na seta pra ver isso.
+    const emailEl = document.getElementById("login-email");
+    if (emailEl) {
+      emailEl.addEventListener("input", () => {
+        const val = emailEl.value.trim().toLowerCase();
+        if (!val) return;
+        const known = getAccounts().some((a) => a.email.toLowerCase() === val);
+        if (!known) open();
+      });
+    }
 
     document.addEventListener("click", (e) => {
       if (!e.target.closest(".field--combo")) close();
