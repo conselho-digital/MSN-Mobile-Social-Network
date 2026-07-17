@@ -1009,6 +1009,15 @@ const Dashboard = (() => {
   // = plano de fundo pessoal das janelas de conversa (só eu vejo, ver
   // getPersonalChatBackground/setPersonalChatBackground mais abaixo).
   let scenePickerMode = "profile";
+  // Estado de antes de abrir o diálogo, pra "Fechar"/X conseguirem
+  // desfazer mesmo depois de um "Aplicar" (que já salva de verdade —
+  // ver commitScene/revertScene). Guarda tanto o modo "profile" quanto
+  // o "chatBackground", já que o usuário pode reabrir o diálogo em
+  // qualquer um dos dois modos.
+  let originalScene = null;
+  let originalColorScheme = null;
+  let originalCustomImageUrl = null;
+  let originalChatBackground = null;
 
   function openScenePicker(mode) {
     scenePickerMode = mode || "profile";
@@ -1018,14 +1027,18 @@ const Dashboard = (() => {
     const titleText = document.getElementById("scene-dialog-title-text");
     if (scenePickerMode === "chatBackground") {
       const bg = getPersonalChatBackground();
+      originalChatBackground = bg ? { scene: bg.scene, colorScheme: bg.colorScheme || null } : null;
       stagedScene = (bg && bg.scene) || SCENES[0].id;
       stagedColorScheme = (bg && bg.colorScheme) || null;
       stagedCustomImageUrl = null;
       if (titleText) titleText.textContent = "Plano de Fundo";
     } else {
-      stagedScene = (profile && profile.scene) || SCENES[0].id;
-      stagedColorScheme = (profile && profile.color_scheme) || null;
-      stagedCustomImageUrl = (profile && profile.scene_image_url) || null;
+      originalScene = (profile && profile.scene) || SCENES[0].id;
+      originalColorScheme = (profile && profile.color_scheme) || null;
+      originalCustomImageUrl = (profile && profile.scene_image_url) || null;
+      stagedScene = originalScene;
+      stagedColorScheme = originalColorScheme;
+      stagedCustomImageUrl = originalCustomImageUrl;
       if (titleText) titleText.textContent = "Cenário";
     }
 
@@ -1069,6 +1082,15 @@ const Dashboard = (() => {
         stagedScene = sw.dataset.scene;
         grid.querySelectorAll(".scene-swatch").forEach((x) => x.classList.remove("is-selected"));
         sw.classList.add("is-selected");
+        // Trocar de cenário volta a cor do tema pra automática (a cor
+        // predominante já pareada com esse cenário em scenes.js — ver
+        // MSNScenes.effectiveTheme) — o usuário não precisa escolher
+        // uma cor toda vez, mas ainda pode clicar numa se quiser.
+        stagedColorScheme = null;
+        const colorGrid = document.getElementById("color-scheme-grid");
+        if (colorGrid) {
+          colorGrid.querySelectorAll(".color-swatch").forEach((x) => x.classList.remove("is-selected"));
+        }
         updateCurrentColorSwatch();
       });
     });
@@ -1158,9 +1180,45 @@ const Dashboard = (() => {
     try { await MSNSupabase.updateMyProfile(patch); } catch (_) {}
   }
 
-  // Fecha o diálogo sem aplicar nem salvar nada (clicar num cenário/
-  // cor só fica staged em memória, nunca chega a mudar o Dashboard).
-  function closeScenePicker() {
+  // "Fechar"/X descartam qualquer coisa aplicada nesta passagem pelo
+  // diálogo — mesmo que "Aplicar" já tenha salvo de verdade (ver
+  // commitScene) — e voltam ao cenário/cor que estavam ativos antes de
+  // abrir o diálogo (ver originalScene/originalColorScheme/
+  // originalCustomImageUrl/originalChatBackground, guardados em
+  // openScenePicker).
+  async function revertScene() {
+    if (scenePickerMode === "chatBackground") {
+      const cur = getPersonalChatBackground();
+      const curScene = cur && cur.scene;
+      const curColor = (cur && cur.colorScheme) || null;
+      const origScene = originalChatBackground && originalChatBackground.scene;
+      const origColor = (originalChatBackground && originalChatBackground.colorScheme) || null;
+      if (curScene !== origScene || curColor !== origColor) {
+        if (originalChatBackground) {
+          setPersonalChatBackground(originalChatBackground.scene, originalChatBackground.colorScheme);
+        } else {
+          try { localStorage.removeItem("msn:chatBackground"); } catch (_) {}
+        }
+        applyChatBackground();
+      }
+      return;
+    }
+    if (!profile) return;
+    const patch = {};
+    if (profile.scene !== originalScene) patch.scene = originalScene;
+    if (profile.color_scheme !== originalColorScheme) patch.color_scheme = originalColorScheme;
+    if (profile.scene_image_url !== originalCustomImageUrl) patch.scene_image_url = originalCustomImageUrl;
+    if (!Object.keys(patch).length) return;
+
+    Object.assign(profile, patch);
+    renderProfile();
+    try { await MSNSupabase.updateMyProfile(patch); } catch (_) {}
+  }
+
+  // Fecha o diálogo, desfazendo qualquer "Aplicar" feito nesta
+  // passagem (ver revertScene).
+  async function closeScenePicker() {
+    await revertScene();
     document.getElementById("scene-picker").hidden = true;
   }
 
