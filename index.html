@@ -532,7 +532,17 @@
               <button type="button" class="chat-toolbar__btn" title="Formatar texto" disabled>A</button>
               <button type="button" id="chat-image-btn" class="chat-toolbar__btn" title="Enviar uma imagem" disabled>🖼</button>
               <button type="button" id="chat-nudge-btn" class="chat-toolbar__btn" title="Chamar a atenção">🔔</button>
-              <button type="button" id="chat-bg-btn" class="chat-toolbar__btn" title="Alterar plano de fundo">🖌</button>
+              <div class="chat-bg-wrap">
+                <button type="button" id="chat-bg-btn" class="chat-toolbar__btn" title="Alterar plano de fundo">🖌</button>
+                <div class="chat-bg-picker" id="chat-bg-picker" hidden>
+                  <div class="chat-bg-picker__header">
+                    <span>Seus Planos de Fundo</span>
+                    <a href="#" id="chat-bg-show-all" class="chat-bg-picker__link">Mostrar tudo…</a>
+                  </div>
+                  <p class="chat-bg-picker__subheading">Planos de fundo recentemente usados</p>
+                  <div class="chat-bg-picker__grid" id="chat-bg-recent-grid"></div>
+                </div>
+              </div>
               <button type="button" id="chat-send-btn" class="chat-toolbar__btn chat-toolbar__btn--send">Enviar</button>
             </div>
           </div>

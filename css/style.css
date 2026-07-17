@@ -2604,24 +2604,45 @@ body[data-login-theme="cenario1"] #screen-connecting::before {
   flex-direction: column;
 }
 
+/* Banner com o cenário/foto do CONTATO (nunca o meu — ver
+   applyChatHeaderScene em dashboard.js). Mesma técnica de camadas do
+   .dash-header (--chat-scene já vem pronta do resolveSceneBg): tinge
+   o texto pra escuro em cenários claros via .is-light-scene. */
 .chat-header {
   flex: 0 0 auto;
   display: flex;
   align-items: center;
   gap: 12px;
-  padding: 10px 14px;
-  background: #ffffff;
+  padding: 14px;
+  --chat-scene: none;
+  background: var(--chat-scene, #ffffff);
+  background-size: cover;
+  background-position: center;
   border-bottom: 1px solid #e3e8ec;
+  color: #ffffff;
 }
 .chat-header__info { min-width: 0; display: flex; flex-direction: column; gap: 2px; }
 .chat-header__name {
   font-size: 1.15rem;
-  color: #23313b;
+  color: #ffffff;
+  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.45);
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
 }
-.chat-header__status { font-size: 0.85rem; color: #7a8a97; }
+.chat-header__status {
+  font-size: 0.85rem;
+  color: rgba(255, 255, 255, 0.88);
+  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.45);
+}
+.chat-header.is-light-scene .chat-header__name {
+  color: #23313b;
+  text-shadow: none;
+}
+.chat-header.is-light-scene .chat-header__status {
+  color: #4a5b68;
+  text-shadow: none;
+}
 
 .chat-offline-banner {
   flex: 0 0 auto;
@@ -2785,3 +2806,88 @@ body[data-login-theme="cenario1"] #screen-connecting::before {
   cursor: pointer;
 }
 .chat-emoji-picker button:hover { background: #eef1f4; }
+
+/* Menu "Seus Planos de Fundo" (botão 🖌) — mesma ideia do picker de
+   emoji (popover ancorado, some ao clicar fora ou de novo no botão),
+   mas ancorado pela direita: o botão fica perto do fim da barra de
+   ferramentas, então abrir pra esquerda evita vazar da tela. */
+.chat-bg-wrap { position: relative; flex: 0 0 auto; }
+.chat-bg-picker {
+  position: absolute;
+  bottom: 34px;
+  right: -8px;
+  z-index: 5;
+  width: 268px;
+  padding: 10px 10px 8px;
+  background: #ffffff;
+  border: 1px solid #adb6bd;
+  border-radius: 4px;
+  box-shadow: 0 6px 16px rgba(0, 0, 0, 0.3);
+}
+.chat-bg-picker__header {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 8px;
+  margin-bottom: 6px;
+  font-size: 0.8rem;
+  font-weight: 600;
+  color: #23313b;
+  white-space: nowrap;
+}
+.chat-bg-picker__link {
+  flex: 0 0 auto;
+  font-size: 0.76rem;
+  font-weight: 400;
+  color: #1a6fbb;
+  text-decoration: none;
+}
+.chat-bg-picker__link:hover { text-decoration: underline; }
+.chat-bg-picker__subheading {
+  margin: 0 0 6px;
+  font-size: 0.74rem;
+  color: #7a8a97;
+}
+.chat-bg-picker__grid {
+  display: grid;
+  grid-template-columns: repeat(5, 1fr);
+  gap: 6px;
+}
+.chat-bg-picker__swatch {
+  position: relative;
+  width: 100%;
+  aspect-ratio: 1;
+  padding: 0;
+  border: 1px solid #c7d0d6;
+  border-radius: 3px;
+  background-color: #eef1f4;
+  background-size: cover;
+  background-position: center;
+  cursor: pointer;
+  overflow: hidden;
+}
+.chat-bg-picker__swatch:hover { border-color: #4ba0e6; }
+.chat-bg-picker__swatch--none {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #b0454a;
+  font-size: 1.2rem;
+}
+.chat-bg-picker__swatch--none::before { content: "🚫"; }
+.chat-bg-picker__swatch.is-selected {
+  border-color: #1f7fd0;
+  box-shadow: 0 0 0 2px rgba(31, 127, 208, 0.35);
+}
+.chat-bg-picker__swatch .chat-bg-picker__check {
+  position: absolute;
+  right: 2px;
+  bottom: 2px;
+  width: 14px; height: 14px;
+  border-radius: 50%;
+  background: #1f7fd0;
+  color: #fff;
+  font-size: 0.6rem;
+  line-height: 14px;
+  text-align: center;
+}

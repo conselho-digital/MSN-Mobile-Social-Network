@@ -56,7 +56,11 @@ const Dashboard = (() => {
   // por cenário, mede o brilho médio da imagem (canvas) e alterna a
   // classe "is-light-scene" no cabeçalho — funciona também para
   // cenários customizados enviados pela pessoa.
-  let brightnessToken = 0;
+  // Um token por cabeçalho (não um só global) — o do Dashboard e o da
+  // janela de conversa amostram fotos diferentes ao mesmo tempo às
+  // vezes (ex.: abrir uma conversa logo após o Dashboard carregar), e
+  // um token compartilhado faria um cancelar o resultado do outro.
+  const brightnessTokens = new WeakMap();
   function sampleBrightness(url, cb) {
     const img = new Image();
     img.crossOrigin = "anonymous";
@@ -82,19 +86,21 @@ const Dashboard = (() => {
     img.onerror = () => cb(null);
     img.src = url;
   }
-  function updateHeaderTextContrast(sceneId, customUrl) {
-    const header = document.querySelector(".dash-header");
+  // "header" é o elemento de verdade (.dash-header ou .chat-header) —
+  // reaproveitado pelos dois, cada um com seu próprio token acima.
+  function updateHeaderTextContrast(header, sceneId, customUrl) {
     if (!header) return;
     const url = sceneId === "custom" && customUrl ? customUrl : MSNScenes.image(sceneId);
 
     // Pré-calculado (ver isLight em scenes.js), aplica na hora — sem
     // isso o texto ficava branco (ilegível em cenários claros) por um
-    // instante toda vez que o Dashboard carregava, até a amostragem
+    // instante toda vez que o cabeçalho carregava, até a amostragem
     // abaixo (que depende de baixar a foto) terminar.
     const known = MSNScenes.isLightScene(sceneId);
     if (known !== null) header.classList.toggle("is-light-scene", known);
 
-    const token = ++brightnessToken;
+    const token = (brightnessTokens.get(header) || 0) + 1;
+    brightnessTokens.set(header, token);
     if (!url) {
       header.classList.remove("is-light-scene");
       return;
@@ -104,7 +110,7 @@ const Dashboard = (() => {
     // enviada pela pessoa, sem isLight fixo), e serve de conferência
     // pros demais.
     sampleBrightness(url, (avg) => {
-      if (token !== brightnessToken || avg === null) return;
+      if (brightnessTokens.get(header) !== token || avg === null) return;
       header.classList.toggle("is-light-scene", avg > 150);
     });
   }
@@ -379,7 +385,7 @@ const Dashboard = (() => {
       // cima do próprio degradê, então some só nesse caso.
       header.classList.toggle("is-default-scene", !profile.scene || profile.scene === SCENES[0].id);
     }
-    updateHeaderTextContrast(profile.scene, profile.scene_image_url);
+    updateHeaderTextContrast(header, profile.scene, profile.scene_image_url);
 
     const screen = document.getElementById("screen-dashboard");
     if (screen) {
@@ -1240,7 +1246,7 @@ const Dashboard = (() => {
     const colorGrid = document.getElementById("color-scheme-grid");
     const titleText = document.getElementById("scene-dialog-title-text");
     if (scenePickerMode === "chatBackground") {
-      const bg = getPersonalChatBackground();
+      const bg = currentChatContact ? getPersonalChatBackground(currentChatContact.id) : null;
       originalChatBackground = bg ? { scene: bg.scene, colorScheme: bg.colorScheme || null } : null;
       stagedScene = (bg && bg.scene) || SCENES[0].id;
       stagedColorScheme = (bg && bg.colorScheme) || null;
@@ -1376,7 +1382,9 @@ const Dashboard = (() => {
   // mais vê).
   async function commitScene() {
     if (scenePickerMode === "chatBackground") {
-      setPersonalChatBackground(stagedScene, stagedColorScheme);
+      if (!currentChatContact) return;
+      setPersonalChatBackground(currentChatContact.id, stagedScene, stagedColorScheme);
+      addRecentChatScene(stagedScene);
       applyChatBackground();
       return;
     }
@@ -1402,17 +1410,14 @@ const Dashboard = (() => {
   // openScenePicker).
   async function revertScene() {
     if (scenePickerMode === "chatBackground") {
-      const cur = getPersonalChatBackground();
+      if (!currentChatContact) return;
+      const cur = getPersonalChatBackground(currentChatContact.id);
       const curScene = cur && cur.scene;
       const curColor = (cur && cur.colorScheme) || null;
       const origScene = originalChatBackground && originalChatBackground.scene;
       const origColor = (originalChatBackground && originalChatBackground.colorScheme) || null;
       if (curScene !== origScene || curColor !== origColor) {
-        if (originalChatBackground) {
-          setPersonalChatBackground(originalChatBackground.scene, originalChatBackground.colorScheme);
-        } else {
-          try { localStorage.removeItem("msn:chatBackground"); } catch (_) {}
-        }
+        setPersonalChatBackground(currentChatContact.id, origScene, origColor);
         applyChatBackground();
       }
       return;
@@ -1439,22 +1444,58 @@ const Dashboard = (() => {
   /* ============================================================
      JANELA DE CONVERSA
      ------------------------------------------------------------
-     O fundo da área de mensagens usa o cenário/tema do CONTATO por
-     padrão (com fallback pro cenário padrão se ele não tiver nenhum) —
-     simétrico: quando essa pessoa fala comigo, ela vê o MEU cenário.
-     Mas se eu tiver escolhido um "plano de fundo" pessoal (só meu,
-     nunca sincronizado, ninguém mais vê), ele prevalece em QUALQUER
-     conversa que eu abrir, independente de quem for o contato.
+     Dois visuais independentes:
+     - Banner do topo (.chat-header): sempre o cenário/foto do
+       CONTATO — simétrico, quando essa pessoa fala comigo ela vê o
+       MEU cenário no topo dela (ver applyChatHeaderScene). Não dá
+       pra escolher, é sempre de quem eu tô conversando.
+     - "Plano de Fundo" (atrás do texto das mensagens, .chat-thread):
+       se eu nunca escolhi um pra ESSA conta específica (ou limpei a
+       escolha), mostra só a COR de tema dela (sólida, sem foto). Se
+       eu escolhi um, mostra esse — só EU vejo, e só nessa conversa
+       (guardado por contato, não vale pras outras).
      ============================================================ */
-  function getPersonalChatBackground() {
+  // Um plano de fundo pessoal por contato: { "<contactId>": { scene,
+  // colorScheme } }. Sem entrada pra um contato = usa a cor do tema
+  // dele (ver applyChatBackground).
+  function getChatBackgrounds() {
     try {
-      const raw = localStorage.getItem("msn:chatBackground");
-      return raw ? JSON.parse(raw) : null;
-    } catch (_) { return null; }
+      const raw = localStorage.getItem("msn:chatBackgrounds");
+      return raw ? JSON.parse(raw) : {};
+    } catch (_) { return {}; }
   }
-  function setPersonalChatBackground(scene, colorScheme) {
+  function getPersonalChatBackground(contactId) {
+    if (!contactId) return null;
+    return getChatBackgrounds()[contactId] || null;
+  }
+  // scene=null limpa a escolha pra esse contato (volta a usar a cor
+  // do tema dele).
+  function setPersonalChatBackground(contactId, scene, colorScheme) {
+    if (!contactId) return;
     try {
-      localStorage.setItem("msn:chatBackground", JSON.stringify({ scene, colorScheme: colorScheme || null }));
+      const all = getChatBackgrounds();
+      if (scene) all[contactId] = { scene, colorScheme: colorScheme || null };
+      else delete all[contactId];
+      localStorage.setItem("msn:chatBackgrounds", JSON.stringify(all));
+    } catch (_) {}
+  }
+
+  // "Recentemente usados" no menu do plano de fundo (botão 🖌) — uma
+  // lista só, compartilhada entre conversas (igual ao cliente
+  // clássico), mais recente primeiro.
+  const RECENT_CHAT_SCENES_MAX = 6;
+  function getRecentChatScenes() {
+    try {
+      const raw = localStorage.getItem("msn:recentChatScenes");
+      return raw ? JSON.parse(raw) : [];
+    } catch (_) { return []; }
+  }
+  function addRecentChatScene(sceneId) {
+    if (!sceneId || sceneId === "custom") return;
+    try {
+      const list = getRecentChatScenes().filter((id) => id !== sceneId);
+      list.unshift(sceneId);
+      localStorage.setItem("msn:recentChatScenes", JSON.stringify(list.slice(0, RECENT_CHAT_SCENES_MAX)));
     } catch (_) {}
   }
 
@@ -1462,20 +1503,35 @@ const Dashboard = (() => {
   let chatMessagesSubscribed = false;
   let chatNudgeSubscribed = false;
 
-  // Resolve e aplica o fundo da conversa atualmente aberta.
+  // Cenário do CONTATO no banner do topo da conversa — sempre o
+  // dele, sem opção de trocar (ver comentário acima).
+  function applyChatHeaderScene() {
+    const header = document.querySelector(".chat-header");
+    if (!header || !currentChatContact) return;
+    const c = currentChatContact;
+    const sceneId = c.scene || SCENES[0].id;
+    const tintHex = MSNScenes.colorSchemeHex(c.color_scheme);
+    header.style.setProperty("--chat-scene", resolveSceneBg(sceneId, c.scene_image_url, tintHex));
+    updateHeaderTextContrast(header, sceneId, c.scene_image_url);
+  }
+
+  // Resolve e aplica o "Plano de Fundo" (atrás do texto das
+  // mensagens) da conversa atualmente aberta.
   function applyChatBackground() {
     const thread = document.getElementById("chat-thread");
     if (!thread || !currentChatContact) return;
-    const myBg = getPersonalChatBackground();
-    const sceneId = myBg ? myBg.scene : (currentChatContact.scene || SCENES[0].id);
-    const colorScheme = myBg ? myBg.colorScheme : currentChatContact.color_scheme;
-    const customUrl = myBg ? null : currentChatContact.scene_image_url;
-    const tintHex = MSNScenes.colorSchemeHex(colorScheme);
-    // MSNScenes.bg()/resolveSceneBg() devolvem um valor pra propriedade
-    // "background" (shorthand, com position/size/repeat embutidos) —
-    // não pra "background-image" sozinha (ver .dash-header, que usa a
-    // mesma técnica).
-    thread.style.background = resolveSceneBg(sceneId, customUrl, tintHex);
+    const myBg = getPersonalChatBackground(currentChatContact.id);
+    if (myBg && myBg.scene) {
+      const tintHex = MSNScenes.colorSchemeHex(myBg.colorScheme);
+      // MSNScenes.bg()/resolveSceneBg() devolvem um valor pra
+      // propriedade "background" (shorthand) — não pra
+      // "background-image" sozinha (ver .dash-header, mesma técnica).
+      thread.style.background = resolveSceneBg(myBg.scene, null, tintHex);
+    } else {
+      // Sem escolha pessoal pra esse contato: só a cor do tema dele,
+      // sólida (a foto/cenário fica reservada pro banner do topo).
+      thread.style.background = MSNScenes.effectiveTheme(currentChatContact.scene, currentChatContact.color_scheme);
+    }
   }
 
   function chatStatusFrameMarkup(avatarUrl, status) {
@@ -1663,12 +1719,66 @@ const Dashboard = (() => {
     picker.hidden = !open;
   }
 
+  // Menu rápido "Seus Planos de Fundo" (botão 🖌) — mostra os últimos
+  // cenários usados como plano de fundo em QUALQUER conversa (lista
+  // compartilhada, igual ao cliente clássico) e a opção "nenhum"
+  // (volta a usar a cor do tema do contato). Pra mais opções (cor
+  // separada, cenário fora da lista de recentes), "Mostrar tudo..."
+  // abre o diálogo completo de sempre.
+  function toggleChatBgPicker() {
+    const picker = document.getElementById("chat-bg-picker");
+    const open = picker.hidden;
+    if (open) renderChatBgPicker();
+    picker.hidden = !open;
+  }
+
+  function renderChatBgPicker() {
+    const grid = document.getElementById("chat-bg-recent-grid");
+    if (!grid || !currentChatContact) return;
+    const mine = getPersonalChatBackground(currentChatContact.id);
+    const currentScene = mine ? mine.scene : null;
+
+    const recentSwatches = getRecentChatScenes().map((id) => {
+      const s = MSNScenes.find(id);
+      if (!s) return "";
+      const selected = currentScene === id;
+      const img = MSNScenes.example(id) || MSNScenes.image(id);
+      return (
+        '<button type="button" class="chat-bg-picker__swatch' + (selected ? " is-selected" : "") +
+        '" data-scene="' + id + '" style="background-image:url(\'' + img + '\')" title="' + esc(s.name) + '">' +
+        (selected ? '<span class="chat-bg-picker__check">✓</span>' : "") +
+        "</button>"
+      );
+    }).join("");
+
+    const noneSelected = !currentScene;
+    const noneSwatch =
+      '<button type="button" class="chat-bg-picker__swatch chat-bg-picker__swatch--none' +
+      (noneSelected ? " is-selected" : "") + '" data-scene="" title="Usar a cor do tema do contato">' +
+      (noneSelected ? '<span class="chat-bg-picker__check">✓</span>' : "") +
+      "</button>";
+
+    grid.innerHTML = recentSwatches + noneSwatch;
+    grid.querySelectorAll(".chat-bg-picker__swatch").forEach((btn) => {
+      btn.addEventListener("click", () => {
+        if (!currentChatContact) return;
+        const sceneId = btn.dataset.scene || null;
+        setPersonalChatBackground(currentChatContact.id, sceneId, null);
+        if (sceneId) addRecentChatScene(sceneId);
+        applyChatBackground();
+        document.getElementById("chat-bg-picker").hidden = true;
+      });
+    });
+  }
+
   function openChat(contact) {
     currentChatContact = contact;
     UIManager.showScreen("screen-chat");
     renderChatHeader();
+    applyChatHeaderScene();
     applyChatBackground();
     document.getElementById("chat-emoji-picker").hidden = true;
+    document.getElementById("chat-bg-picker").hidden = true;
     document.getElementById("chat-input").value = "";
     loadChatMessages();
     subscribeChatRealtime();
@@ -2288,9 +2398,20 @@ const Dashboard = (() => {
     document.addEventListener("click", (e) => {
       const picker = document.getElementById("chat-emoji-picker");
       if (picker && !picker.hidden && !e.target.closest(".chat-emoji-wrap")) picker.hidden = true;
+      const bgPicker = document.getElementById("chat-bg-picker");
+      if (bgPicker && !bgPicker.hidden && !e.target.closest(".chat-bg-wrap")) bgPicker.hidden = true;
     });
     const chatBgBtn = document.getElementById("chat-bg-btn");
-    if (chatBgBtn) chatBgBtn.addEventListener("click", () => openScenePicker("chatBackground"));
+    if (chatBgBtn) chatBgBtn.addEventListener("click", (e) => {
+      e.stopPropagation();
+      toggleChatBgPicker();
+    });
+    const chatBgShowAll = document.getElementById("chat-bg-show-all");
+    if (chatBgShowAll) chatBgShowAll.addEventListener("click", (e) => {
+      e.preventDefault();
+      document.getElementById("chat-bg-picker").hidden = true;
+      openScenePicker("chatBackground");
+    });
 
     // Sair (rodapé — opcional; sign-out principal fica no menu do nick)
     const signoutBtn = document.getElementById("btn-signout");
