@@ -2576,33 +2576,44 @@ body[data-login-theme="cenario1"] #screen-connecting::before {
   display: flex;
   min-height: 0;
 }
-/* Largura = mesma da célula de nome no banner (.chat-header__info,
-   108px) — as duas ficam alinhadas, a foto do contato "gruda" embaixo
-   do texto (ver margin-top negativo em .chat-sidebar__avatar:first-
-   child). Foto do contato em cima, a minha embaixo (ordem no HTML);
-   a de cima fica presa no topo (com a sobreposição no banner), a de
-   baixo é empurrada pro fim da coluna via margin-top:auto. */
+/* Largura = mesma do respiro do banner (.chat-header__info, 124px) —
+   as duas ficam alinhadas, a foto do contato "gruda" embaixo do texto
+   (ver margin-top negativo em .chat-sidebar__avatar:first-child).
+   Foto do contato em cima, a minha embaixo (ordem no HTML); a de cima
+   fica presa no topo (com a sobreposição no banner), a de baixo é
+   empurrada pro fim da coluna via margin-top:auto. */
 .chat-sidebar {
+  position: relative;
+  /* O banner é só um plano de fundo (.chat-header, z-index:1, ver
+     abaixo) — a foto do contato precisa ficar por cima dele na parte
+     em que sobrepõe (ver margin-top negativo mais abaixo), por isso
+     um z-index maior aqui. */
+  z-index: 2;
   flex: 0 0 auto;
-  width: 108px;
+  width: 124px;
   display: flex;
   flex-direction: column;
   align-items: center;
   padding: 0 8px 12px;
   background: transparent;
-  /* Só esconde o que sobra na horizontal durante a animação de
-     recolher (ver .is-collapsed abaixo) — overflow-y precisa ficar
-     visível, senão corta a metade da foto do contato que sobe por
-     cima do banner (ver margin-top negativo logo abaixo). */
-  overflow-x: hidden;
-  overflow-y: visible;
+  /* "overflow-x: hidden" sozinho (sem mexer no eixo Y) NÃO existe pro
+     navegador: se um eixo é "hidden" e o outro fica "visible", o
+     "visible" vira "auto" sozinho (regra do próprio CSS) — e "auto"
+     ainda corta o que passa da caixa, cortando bem a metade da foto
+     do contato que sobe por cima do banner (ver margin-top negativo
+     logo abaixo). Por isso aqui é "visible" nos dois eixos: o que
+     sobra na horizontal durante a animação de recolher (ver
+     .is-collapsed) só fica visível por uma fração de segundo, some
+     junto com a opacidade (transição nos dois ao mesmo tempo).
+     https://www.w3.org/TR/css-overflow-3/#overflow-properties */
+  overflow: visible;
   transition: width 0.2s ease, padding 0.2s ease, opacity 0.2s ease;
 }
 /* Retangular (mais alta que larga, igual ao cliente clássico — não é
    mais uma foto quadrada pequena) — o mask-image da moldura (ver
    .status-frame__tint) estica proporcionalmente, "mask-size: 100%
    100%" já cobre isso. */
-.chat-sidebar__avatar { position: relative; width: 92px; height: 132px; flex: 0 0 auto; }
+.chat-sidebar__avatar { position: relative; width: 108px; height: 132px; flex: 0 0 auto; }
 /* A foto do contato "sobe" pra cobrir mais ou menos metade da altura
    do banner (não da própria foto — ela é bem mais alta que o banner)
    — só ela, não a minha lá embaixo (ver comentário grande acima de
@@ -2626,7 +2637,7 @@ body[data-login-theme="cenario1"] #screen-connecting::before {
 .chat-sidebar-toggle {
   position: absolute;
   top: 50%;
-  left: 108px;
+  left: 124px;
   z-index: 4;
   width: 18px;
   height: 46px;
@@ -2664,6 +2675,10 @@ body[data-login-theme="cenario1"] #screen-connecting::before {
    em cima das fotos. Por ficar em cima da própria foto, o contraste
    muda dinamicamente em cenários claros — ver is-light-scene. */
 .chat-header {
+  position: relative;
+  /* Só um plano de fundo — a foto do contato (.chat-sidebar,
+     z-index:2) sobrepõe ele por cima, não o contrário. */
+  z-index: 1;
   flex: 0 0 auto;
   display: flex;
   align-items: center;
@@ -2676,7 +2691,7 @@ body[data-login-theme="cenario1"] #screen-connecting::before {
   color: #ffffff;
 }
 .chat-header__info {
-  margin-left: 108px;
+  margin-left: 124px;
   min-width: 0;
   display: flex;
   flex-direction: column;
