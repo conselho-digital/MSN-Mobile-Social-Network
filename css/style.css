@@ -2548,54 +2548,73 @@ body[data-login-theme="cenario1"] #screen-connecting::before {
 }
 .chat-titlebar__close:hover { background: #e2e8ec; }
 
-/* Corpo da janela: coluna lateral (fotos) + botão de recolher + área
-   principal (cabeçalho/mensagens/composição) lado a lado. */
+/* Corpo da janela: coluna lateral (fotos, sem fundo próprio — flutuam
+   sobre a área de mensagens) + botão de recolher (flutuante, fora do
+   fluxo, pra não deixar uma faixa "fantasma" quando a lateral estiver
+   escondida) + área principal (cabeçalho/mensagens/composição). */
 .chat-body {
+  position: relative;
   flex: 1 1 auto;
   display: flex;
   min-height: 0;
 }
+/* Largura = mesmo tamanho da foto de perfil do Dashboard (.my-avatar,
+   78px) + o padding lateral (9px de cada lado). Contato em cima, eu
+   embaixo (ordem no HTML) — "space-between" empurra as duas fotos pras
+   pontas: uma alinhada com o topo do cabeçalho, a outra com a caixa de
+   texto lá embaixo. */
 .chat-sidebar {
   flex: 0 0 auto;
-  width: 78px;
+  width: 96px;
   display: flex;
   flex-direction: column;
   align-items: center;
-  gap: 16px;
-  padding: 16px 9px;
-  background: #eef1f4;
-  border-right: 1px solid #d7dee4;
-  overflow-y: auto;
-  transition: width 0.2s ease, padding 0.2s ease, opacity 0.2s ease, border-color 0.2s ease;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 14px 9px 10px;
+  background: transparent;
+  overflow: hidden;
+  transition: width 0.2s ease, padding 0.2s ease, opacity 0.2s ease;
 }
-.chat-sidebar__avatar { position: relative; width: 60px; height: 60px; flex: 0 0 auto; }
+.chat-sidebar__avatar { position: relative; width: 78px; height: 78px; flex: 0 0 auto; }
 /* Recolhida: encolhe pra 0 (não só "hidden") pra animar a largura em
-   vez de sumir de uma vez. */
+   vez de sumir de uma vez — sem o botão de recolher no meio do fluxo
+   (ver .chat-sidebar-toggle abaixo), a área principal agora usa todo o
+   espaço liberado, ficando alinhada com a borda esquerda da janela. */
 .chat-sidebar.is-collapsed {
   width: 0;
-  padding-left: 0;
-  padding-right: 0;
+  padding: 0;
   opacity: 0;
   overflow: hidden;
-  border-right-color: transparent;
 }
+/* Flutua sobre a divisa entre a lateral e a área principal (fora do
+   fluxo do flex, pra nunca ocupar espaço próprio) — uma "aba"
+   arredondada com a setinha, que desliza de posição (via "left")
+   conforme a lateral abre/fecha. */
 .chat-sidebar-toggle {
-  flex: 0 0 auto;
-  align-self: center;
-  width: 16px;
-  height: 44px;
+  position: absolute;
+  top: 50%;
+  left: 96px;
+  z-index: 4;
+  width: 18px;
+  height: 46px;
   margin: 0;
   padding: 0;
-  border: 1px solid #d7dee4;
-  border-left: none;
-  border-radius: 0 5px 5px 0;
-  background: #f4f6f8;
+  border: 1px solid #c3ccd2;
+  border-radius: 9px;
+  background: #f7f9fa;
   color: #5a6b78;
-  font-size: 0.7rem;
+  font-size: 0.75rem;
   line-height: 1;
   cursor: pointer;
+  box-shadow: 0 1px 4px rgba(0, 0, 0, 0.2);
+  transform: translate(-50%, -50%);
+  transition: left 0.2s ease, background 0.15s ease, box-shadow 0.15s ease;
 }
-.chat-sidebar-toggle:hover { background: #e2e8ec; }
+.chat-sidebar-toggle:hover { background: #e9edf0; box-shadow: 0 2px 6px rgba(0, 0, 0, 0.3); }
+.chat-sidebar.is-collapsed ~ .chat-sidebar-toggle { left: 0; }
+.chat-sidebar-toggle__arrow { display: inline-block; transition: transform 0.2s ease; }
+.chat-sidebar-toggle.is-collapsed .chat-sidebar-toggle__arrow { transform: rotate(180deg); }
 
 .chat-main {
   flex: 1 1 auto;
@@ -2622,7 +2641,11 @@ body[data-login-theme="cenario1"] #screen-connecting::before {
   color: #ffffff;
 }
 .chat-header__info { min-width: 0; display: flex; flex-direction: column; gap: 2px; }
+/* Status na frente do nome, na mesma linha (igual ao cliente clássico)
+   — a frase pessoal (sub_nick) vai numa segunda linha, embaixo. */
+.chat-header__name-row { display: flex; align-items: baseline; gap: 6px; min-width: 0; }
 .chat-header__name {
+  min-width: 0;
   font-size: 1.15rem;
   color: #ffffff;
   text-shadow: 0 1px 2px rgba(0, 0, 0, 0.45);
@@ -2631,9 +2654,20 @@ body[data-login-theme="cenario1"] #screen-connecting::before {
   white-space: nowrap;
 }
 .chat-header__status {
-  font-size: 0.85rem;
+  flex: 0 0 auto;
+  font-size: 0.8rem;
   color: rgba(255, 255, 255, 0.88);
   text-shadow: 0 1px 2px rgba(0, 0, 0, 0.45);
+  white-space: nowrap;
+}
+.chat-header__subnick {
+  font-size: 0.78rem;
+  font-style: italic;
+  color: rgba(255, 255, 255, 0.85);
+  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.4);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 .chat-header.is-light-scene .chat-header__name {
   color: #23313b;
@@ -2641,6 +2675,10 @@ body[data-login-theme="cenario1"] #screen-connecting::before {
 }
 .chat-header.is-light-scene .chat-header__status {
   color: #4a5b68;
+  text-shadow: none;
+}
+.chat-header.is-light-scene .chat-header__subnick {
+  color: #5b6b74;
   text-shadow: none;
 }
 

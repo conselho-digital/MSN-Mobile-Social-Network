@@ -1547,6 +1547,11 @@ const Dashboard = (() => {
     document.getElementById("chat-titlebar-text").textContent = c.email || c.display_name || "";
     document.getElementById("chat-contact-name").textContent = c.display_name || c.email || "";
     document.getElementById("chat-contact-status").textContent = "(" + (STATUS_LABEL[status] || "Offline") + ")";
+    const subnickEl = document.getElementById("chat-contact-subnick");
+    if (subnickEl) {
+      subnickEl.textContent = c.sub_nick || "";
+      subnickEl.hidden = !c.sub_nick;
+    }
     document.getElementById("chat-contact-avatar").innerHTML = chatStatusFrameMarkup(c.avatar_url, status || "offline");
 
     const myAvatar = document.getElementById("chat-my-avatar");
@@ -2374,7 +2379,7 @@ const Dashboard = (() => {
     if (chatSidebar && chatSidebarToggle) {
       chatSidebarToggle.addEventListener("click", () => {
         const collapsed = chatSidebar.classList.toggle("is-collapsed");
-        chatSidebarToggle.textContent = collapsed ? "›" : "‹";
+        chatSidebarToggle.classList.toggle("is-collapsed", collapsed);
         chatSidebarToggle.setAttribute("aria-expanded", String(!collapsed));
         chatSidebarToggle.setAttribute("aria-label", collapsed ? "Mostrar fotos" : "Esconder fotos");
       });

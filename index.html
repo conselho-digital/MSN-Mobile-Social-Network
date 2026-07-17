@@ -502,13 +502,16 @@
         <span class="status-frame chat-sidebar__avatar" id="chat-contact-avatar"></span>
         <span class="status-frame chat-sidebar__avatar" id="chat-my-avatar"></span>
       </aside>
-      <button type="button" id="chat-sidebar-toggle" class="chat-sidebar-toggle" aria-label="Esconder fotos" aria-expanded="true">‹</button>
+      <button type="button" id="chat-sidebar-toggle" class="chat-sidebar-toggle" aria-label="Esconder fotos" aria-expanded="true"><span class="chat-sidebar-toggle__arrow">‹</span></button>
 
       <div class="chat-main">
         <div class="chat-header">
           <div class="chat-header__info">
-            <span class="chat-header__name" id="chat-contact-name"></span>
-            <span class="chat-header__status" id="chat-contact-status"></span>
+            <div class="chat-header__name-row">
+              <span class="chat-header__status" id="chat-contact-status"></span>
+              <span class="chat-header__name" id="chat-contact-name"></span>
+            </div>
+            <span class="chat-header__subnick" id="chat-contact-subnick"></span>
           </div>
         </div>
 
