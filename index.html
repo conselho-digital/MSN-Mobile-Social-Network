@@ -494,10 +494,12 @@
       <button type="button" id="chat-close" class="chat-titlebar__close" aria-label="Voltar">&times;</button>
     </header>
 
-    <!-- Duas células lado a lado: nome/status (mesma largura da coluna
-         lateral das fotos, fundo liso) + banner do cenário/tema do
-         CONTATO (preenche o resto da largura da janela, sem sobrar
-         nenhuma borda/respiro — ver .chat-header__banner). -->
+    <!-- Banner do cenário/tema do CONTATO — uma peça só, ocupando toda
+         a largura da janela (desde a coluna das fotos até a borda
+         direita). O texto (nome/status/frase pessoal) fica alinhado à
+         direita, começando onde a área de mensagens começa (mesma
+         largura da coluna lateral das fotos) — não fica em cima das
+         fotos, só em cima de onde ficam as mensagens. -->
     <div class="chat-header">
       <div class="chat-header__info">
         <div class="chat-header__name-row">
@@ -506,7 +508,6 @@
         </div>
         <span class="chat-header__subnick" id="chat-contact-subnick"></span>
       </div>
-      <div class="chat-header__banner"></div>
     </div>
 
     <div class="chat-body">

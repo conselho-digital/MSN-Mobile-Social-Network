@@ -2655,32 +2655,32 @@ body[data-login-theme="cenario1"] #screen-connecting::before {
   flex-direction: column;
 }
 
-/* Banner: duas células lado a lado, sem espaço nenhum entre elas nem
-   nas bordas (a foto/cenário do CONTATO — nunca o meu, ver
-   applyChatHeaderScene em dashboard.js — preenche a célula da direita
-   até a borda). Textos ficam só na célula da esquerda, sobre fundo
-   liso — não precisam mais de contraste dinâmico (is-light-scene) já
-   que não ficam mais em cima da foto. */
+/* Banner: uma peça só, ocupando toda a largura da janela — da coluna
+   das fotos até a borda direita, sem nenhum respiro (ver
+   resolveSceneBg em dashboard.js pras 3 camadas que compõem
+   --chat-scene). O texto fica por cima dele, mas empurrado pra
+   direita (mesma largura da coluna lateral das fotos, ver margin-left
+   de .chat-header__info) — só em cima de onde ficam as mensagens, não
+   em cima das fotos. Por ficar em cima da própria foto, o contraste
+   muda dinamicamente em cenários claros — ver is-light-scene. */
 .chat-header {
   flex: 0 0 auto;
   display: flex;
-  align-items: stretch;
+  align-items: center;
+  padding: 10px 14px;
+  --chat-scene: none;
+  background: var(--chat-scene, #ffffff);
+  background-size: cover;
+  background-position: center;
   border-bottom: 1px solid #e3e8ec;
+  color: #ffffff;
 }
-/* Mesma largura da coluna lateral das fotos (.chat-sidebar, 108px) —
-   a foto do contato fica alinhada embaixo desta célula (ver
-   .chat-sidebar__avatar:first-child). */
 .chat-header__info {
-  flex: 0 0 108px;
-  width: 108px;
+  margin-left: 108px;
   min-width: 0;
   display: flex;
   flex-direction: column;
-  justify-content: center;
   gap: 2px;
-  padding: 8px 10px;
-  background: #eef1f4;
-  color: #23313b;
 }
 /* Status na frente do nome, na mesma linha (igual ao cliente clássico)
    — a frase pessoal (sub_nick) vai numa segunda linha, embaixo. */
@@ -2688,41 +2688,40 @@ body[data-login-theme="cenario1"] #screen-connecting::before {
 .chat-header__name {
   flex: 1 1 auto;
   min-width: 0;
-  font-size: 1rem;
-  color: #23313b;
+  font-size: 1.1rem;
+  color: #ffffff;
+  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.45);
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
 }
-/* Encolhe/trunca também (não fica com largura livre) — numa coluna de
-   108px o nome tem prioridade, o status cede espaço primeiro. */
 .chat-header__status {
-  flex: 0 1 auto;
-  max-width: 42%;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  font-size: 0.7rem;
-  color: #5a6b78;
+  flex: 0 0 auto;
+  font-size: 0.8rem;
+  color: rgba(255, 255, 255, 0.88);
+  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.45);
   white-space: nowrap;
 }
 .chat-header__subnick {
-  font-size: 0.74rem;
+  font-size: 0.78rem;
   font-style: italic;
-  color: #7a8a97;
+  color: rgba(255, 255, 255, 0.85);
+  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.4);
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
 }
-/* Célula da direita: só o cenário/tema, sem respiro nenhum (preenche
-   a célula inteira — ver resolveSceneBg em dashboard.js pras 3 camadas
-   que compõem --chat-scene). */
-.chat-header__banner {
-  flex: 1 1 auto;
-  min-width: 0;
-  --chat-scene: none;
-  background: var(--chat-scene, #ffffff);
-  background-size: cover;
-  background-position: center;
+.chat-header.is-light-scene .chat-header__name {
+  color: #23313b;
+  text-shadow: none;
+}
+.chat-header.is-light-scene .chat-header__status {
+  color: #4a5b68;
+  text-shadow: none;
+}
+.chat-header.is-light-scene .chat-header__subnick {
+  color: #5b6b74;
+  text-shadow: none;
 }
 
 .chat-offline-banner {
