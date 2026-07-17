@@ -347,6 +347,10 @@ const App = (function () {
         document.getElementById("login-email").value = email;
         form.reset();
       } catch (err) {
+        // Log cru no console pra dar pra investigar no painel do Supabase
+        // (Authentication > Logs) quando a mensagem amigável não é
+        // suficiente pra saber a causa real.
+        console.error("Erro ao criar conta:", err);
         showSignupMessage(friendlyError(err));
       } finally {
         btn.disabled = false;
@@ -404,6 +408,7 @@ const App = (function () {
       onSignedIn(result);
     } catch (err) {
       if (cancelRequested) return;
+      console.error("Erro ao entrar:", err);
       UIManager.showScreen("screen-login");
       UIManager.showMessage(friendlyError(err));
     } finally {
