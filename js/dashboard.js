@@ -2222,53 +2222,41 @@ const Dashboard = (() => {
     updateHeaderTextContrast(header, sceneId, c.scene_image_url);
   }
 
-  // Resolve e aplica o fundo da conversa atualmente aberta. Três
+  // Resolve e aplica o fundo da conversa atualmente aberta. Duas
   // situações:
-  // - Plano de fundo PESSOAL "Relógio" (fundo6, ver CHAT_BACKGROUNDS
-  //   em scenes.js): a imagem (mostrador sem ponteiros) + os ponteiros
-  //   de verdade, ao vivo (#chat-clock-bg, ver startChatClock) — não é
-  //   um "background" comum, então #chat-messages fica transparente
-  //   pra deixá-lo aparecer atrás.
-  // - Plano de fundo PESSOAL comum escolhido (só eu vejo, por
-  //   contato): sólido, direto em #chat-messages — cobre exatamente a
-  //   caixa da lista, não o resto da tela (ver #chat-body abaixo,
-  //   volta a ficar transparente nesse caso).
+  // - Plano de fundo PESSOAL escolhido (só eu vejo, por contato):
+  //   sólido, direto em #chat-messages — cobre exatamente a caixa da
+  //   lista, não o resto da tela (ver #chat-body/#chat-compose abaixo,
+  //   voltam a ficar opacos/brancos nesse caso — essa escolha pessoal
+  //   é só da caixa de mensagens mesmo, não da janela toda).
   // - Sem escolha pessoal: cor de TEMA do contato, em degradê (mesma
   //   técnica do Dashboard — ver --tint-vivid/.dash-body), aplicada em
   //   #chat-body — ou seja, atrás de TUDO (coluna das fotos, barrinha
-  //   de esconder, aviso amarelo e mensagens, não só a caixa de
-  //   mensagens), igual ao cliente clássico (a cor do tema cobre a
-  //   janela inteira abaixo do banner do cenário). #chat-messages e a
-  //   coluna das fotos ficam transparentes pra deixar esse degradê
-  //   único aparecer por trás de tudo, sem costura entre as partes
-  //   (uma única camada de cor, não várias tentando bater exatas).
+  //   de esconder, aviso amarelo, mensagens E a caixa de texto, não só
+  //   a caixa de mensagens), igual ao cliente clássico (a cor do tema
+  //   cobre a janela inteira abaixo do banner do cenário). #chat-messages,
+  //   #chat-compose e a coluna das fotos ficam transparentes pra
+  //   deixar esse degradê único aparecer por trás de tudo, sem costura
+  //   entre as partes (uma única camada de cor, não várias tentando
+  //   bater exatas).
   function applyChatBackground() {
     const body = document.getElementById("chat-body");
     const messages = document.getElementById("chat-messages");
-    const clockBg = document.getElementById("chat-clock-bg");
+    const compose = document.getElementById("chat-compose");
     if (!messages || !currentChatContact) return;
     const myBg = getPersonalChatBackground(currentChatContact.id);
-
-    if (myBg && myBg.scene === "fundo6") {
-      messages.style.background = "transparent";
-      if (body) body.style.background = "transparent";
-      if (clockBg) clockBg.hidden = false;
-      startChatClock();
-      return;
-    }
-    stopChatClock();
-    if (clockBg) clockBg.hidden = true;
 
     if (myBg && myBg.scene) {
       // "custom" (foto enviada pela pessoa) continua vindo do mesmo
       // catálogo dos 23 cenários (resolveSceneBg, com camada de
-      // tingimento) — os demais agora vêm da galeria própria de
-      // planos de fundo de conversa (resolveChatBg/CHAT_BACKGROUNDS),
-      // sem tingimento (não têm cor de tema pareada).
+      // tingimento) — os demais vêm da galeria própria de planos de
+      // fundo de conversa (resolveChatBg/CHAT_BACKGROUNDS), sem
+      // tingimento (não têm cor de tema pareada).
       messages.style.background = myBg.scene === "custom"
         ? resolveSceneBg(myBg.scene, myBg.sceneImageUrl, MSNScenes.colorSchemeHex(myBg.colorScheme))
         : resolveChatBg(myBg.scene, myBg.sceneImageUrl);
       if (body) body.style.background = "transparent";
+      if (compose) compose.style.background = "#ffffff";
     } else {
       const hex = MSNScenes.effectiveTheme(currentChatContact.scene, currentChatContact.color_scheme);
       // Mesmas 4 paradas/proporção do degradê do Dashboard
@@ -2282,44 +2270,7 @@ const Dashboard = (() => {
           "linear-gradient(180deg, " + vivid + " 0%, #ffffff 22%, #ffffff 78%, " + vivid + " 100%)";
       }
       messages.style.background = "transparent";
-    }
-  }
-
-  // ---------- Relógio ao vivo (plano de fundo "fundo6") ----------
-  // Ponteiros de hora/minuto/segundo, posicionados via % sobre o
-  // mostrador (ver clockCenter em CHAT_BACKGROUNDS/scenes.js — medido
-  // a partir da imagem real, assets/backgrounds/fundo6.webp) e girados
-  // via transform:rotate, recalculado a cada segundo com a hora de
-  // verdade do aparelho (new Date()) — não é uma imagem de relógio
-  // "parado", os ponteiros se mexem sozinhos igual um relógio de
-  // verdade.
-  let chatClockInterval = null;
-  function updateChatClockHands() {
-    const wrap = document.getElementById("chat-clock-bg");
-    if (!wrap || wrap.hidden) return;
-    const now = new Date();
-    const h = now.getHours() % 12;
-    const m = now.getMinutes();
-    const s = now.getSeconds();
-    const hourDeg = (h + m / 60) * 30; // 360°/12h
-    const minuteDeg = (m + s / 60) * 6; // 360°/60min
-    const secondDeg = s * 6; // 360°/60s
-    const hourEl = wrap.querySelector(".chat-clock-bg__hand--hour");
-    const minEl = wrap.querySelector(".chat-clock-bg__hand--minute");
-    const secEl = wrap.querySelector(".chat-clock-bg__hand--second");
-    if (hourEl) hourEl.style.transform = "rotate(" + hourDeg + "deg)";
-    if (minEl) minEl.style.transform = "rotate(" + minuteDeg + "deg)";
-    if (secEl) secEl.style.transform = "rotate(" + secondDeg + "deg)";
-  }
-  function startChatClock() {
-    stopChatClock();
-    updateChatClockHands();
-    chatClockInterval = setInterval(updateChatClockHands, 1000);
-  }
-  function stopChatClock() {
-    if (chatClockInterval) {
-      clearInterval(chatClockInterval);
-      chatClockInterval = null;
+      if (compose) compose.style.background = "transparent";
     }
   }
 
@@ -2765,7 +2716,6 @@ const Dashboard = (() => {
   // chat-close em bindEvents, que usa history.back() em vez disso).
   function closeChat() {
     currentChatContact = null;
-    stopChatClock();
     UIManager.showScreen("screen-dashboard");
   }
 
@@ -3125,6 +3075,11 @@ const Dashboard = (() => {
     const avatarBtn = document.getElementById("my-avatar-btn");
     if (avatarBtn) avatarBtn.addEventListener("click", changePicture);
 
+    // Mesma coisa, pra minha foto na coluna lateral da janela de
+    // conversa (não a do contato, essa continua só decorativa).
+    const chatMyAvatar = document.getElementById("chat-my-avatar");
+    if (chatMyAvatar) chatMyAvatar.addEventListener("click", changePicture);
+
     const avatarBrowse = document.getElementById("avatar-browse");
     if (avatarBrowse && avatarInput) avatarBrowse.addEventListener("click", () => avatarInput.click());
 
@@ -3462,9 +3417,20 @@ const Dashboard = (() => {
     }
     const chatSend = document.getElementById("chat-send-btn");
     if (chatSend) chatSend.addEventListener("click", sendChatMessage);
-    // Enter quebra linha (comportamento padrão de <textarea>, sem
-    // nenhum listener pra Enter aqui) — só o botão "Enviar" manda a
-    // mensagem de verdade.
+    // Enter só envia em dispositivo com teclado/mouse de verdade
+    // (pointer:fine — computador; ver mesma checagem no CSS não
+    // precisa aqui, é só JS). Em toque (celular/tablet) Enter continua
+    // quebrando linha (comportamento padrão de <textarea>) — sem isso,
+    // a tecla de "concluído"/"enviar" do teclado virtual mandaria a
+    // mensagem sem querer no meio da digitação. Shift+Enter sempre
+    // quebra linha, nos dois casos.
+    const chatInput = document.getElementById("chat-input");
+    if (chatInput) chatInput.addEventListener("keydown", (e) => {
+      if (e.key !== "Enter" || e.shiftKey) return;
+      if (!window.matchMedia("(pointer: fine)").matches) return;
+      e.preventDefault();
+      sendChatMessage();
+    });
     const chatNudgeBtn = document.getElementById("chat-nudge-btn");
     if (chatNudgeBtn) chatNudgeBtn.addEventListener("click", sendChatNudge);
     const chatEmojiBtn = document.getElementById("chat-emoji-btn");

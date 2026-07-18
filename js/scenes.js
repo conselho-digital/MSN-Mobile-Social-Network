@@ -243,30 +243,14 @@ const MSNScenes = (() => {
   // são a identidade da CONTA (cabeçalho do Dashboard, banner do topo
   // da conversa, tela de login), esses aqui são só a escolha pessoal
   // de fundo por conversa (botão 🖌, ver applyChatBackground em
-  // dashboard.js), fotos cheias sem cor de tema pareada. "fundo6" é
-  // especial — um relógio de bolso com o mostrador em branco (sem
-  // ponteiros na própria imagem); os ponteiros são desenhados por
-  // cima, ao vivo, com a hora de verdade do aparelho (ver
-  // startChatClock em dashboard.js), não fazem parte do arquivo.
+  // dashboard.js), fotos cheias sem cor de tema pareada.
   const CHAT_BACKGROUNDS = [
     { id: "fundo1", name: "Lavanda", image: "assets/backgrounds/fundo1.webp" },
     { id: "fundo2", name: "Alienígenas", image: "assets/backgrounds/fundo2.webp" },
     { id: "fundo3", name: "Corrida", image: "assets/backgrounds/fundo3.webp" },
     { id: "fundo4", name: "Corações", image: "assets/backgrounds/fundo4.webp" },
     { id: "fundo5", name: "Aquário", image: "assets/backgrounds/fundo5.webp" },
-    {
-      id: "fundo6", name: "Relógio", image: "assets/backgrounds/fundo6.webp", isClock: true,
-      // Imagem original enviada (957×731) tinha o mostrador bem
-      // pequeno, num cantinho, com bastante espaço em branco — cortada
-      // pra um recorte mais fechado (165×141, só o relógio de bolso +
-      // um pouco dos relógios "fantasma" atrás) pra ocupar mais espaço
-      // de verdade quando usado como plano de fundo. Centro do
-      // mostrador, em % da imagem (já cortada) — só documentação aqui
-      // (não lido em tempo de execução); os mesmos números estão
-      // hardcoded em .chat-clock-bg__frame/__hand (CSS) — mude os dois
-      // juntos se a imagem trocar.
-      clockCenter: { xPct: 39.4, yPct: 68.8 },
-    },
+    { id: "fundo6", name: "Relógio", image: "assets/backgrounds/fundo6.webp" },
   ];
   function findChatBackground(id) {
     return CHAT_BACKGROUNDS.find((b) => b.id === id);

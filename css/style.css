@@ -2740,6 +2740,19 @@ body[data-login-theme="cenario1"] #screen-connecting::before {
    esticavam a moldura de forma desproporcional (mask-size:100% 100%
    força o encaixe, então um retângulo distorcia o desenho do anel). */
 .chat-sidebar__avatar { position: relative; width: 108px; height: 108px; flex: 0 0 auto; }
+/* A minha (não a do contato, que continua um <span> comum — não dá
+   pra "trocar a foto" de quem eu tô conversando) é um <button> de
+   verdade agora — clicar abre a mesma janela de escolher foto do
+   Dashboard (ver changePicture/openAvatarPicker em dashboard.js). Só
+   zera a aparência padrão de <button> (borda/fundo/fonte); o
+   tamanho/posição continuam de .chat-sidebar__avatar acima. */
+.chat-sidebar__avatar--mine {
+  border: none;
+  padding: 0;
+  background: transparent;
+  cursor: pointer;
+  font: inherit;
+}
 /* A foto do contato "sobe" pra cobrir o banner com metade da ALTURA
    DELA MESMA (não do banner) — só ela, não a minha lá embaixo (ver
    comentário grande acima de .chat-sidebar). Metade de 108px. */
@@ -3015,85 +3028,12 @@ body[data-login-theme="cenario1"] #screen-connecting::before {
    da cor do tema do contato (sem plano de fundo pessoal escolhido)
    fica em #chat-body, atrás de tudo (coluna das fotos, barrinha,
    aviso amarelo e mensagens de uma vez, igual ao cliente clássico —
-   ver applyChatBackground em dashboard.js), não mais só aqui.
-   position/z-index: contexto de empilhamento próprio pro relógio ao
-   vivo (#chat-clock-bg, z-index:-1) ficar atrás de #chat-messages sem
-   vazar pra trás de outros elementos fora daqui (mesmo truque da
-   barrinha de esconder fotos, ver .chat-sidebar-toggle). */
+   ver applyChatBackground em dashboard.js), não mais só aqui. */
 .chat-thread {
-  position: relative;
-  z-index: 0;
   flex: 1 1 auto;
   display: flex;
   min-height: 0;
   background: transparent;
-}
-/* Plano de fundo "Relógio" (fundo6) — mostrador (imagem, sem
-   ponteiros) + ponteiros de verdade por cima, ver .chat-clock-bg__hand
-   abaixo e startChatClock em dashboard.js. Preenche #chat-thread
-   inteiro; .chat-clock-bg__frame por dentro é que trava a proporção
-   exata da imagem (já cortada bem perto do relógio, 165×141,
-   centralizada — sem isso, os ponteiros (posicionados em % da imagem)
-   sairiam do lugar sempre que a caixa de mensagens não tivesse essa
-   proporção exata (quase nunca teria). */
-.chat-clock-bg {
-  position: absolute;
-  z-index: -1;
-  inset: 0;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  background: #ffffff;
-  overflow: hidden;
-}
-.chat-clock-bg__frame {
-  position: relative;
-  width: 100%;
-  max-height: 100%;
-  aspect-ratio: 165 / 141;
-}
-.chat-clock-bg__img {
-  display: block;
-  width: 100%;
-  height: 100%;
-  object-fit: contain;
-}
-/* Ponteiros: um retângulo fino, pivotado na base (transform-origin
-   50% 100%) — "left/top" colocam essa base exatamente no centro do
-   mostrador (medido a partir da imagem real, ver clockCenter em
-   CHAT_BACKGROUNDS/scenes.js), a margem negativa (metade da própria
-   largura/altura) centraliza a base nesse ponto. Girado via
-   transform:rotate(...) definido no JS (startChatClock/
-   updateChatClockHands em dashboard.js), recalculado a cada segundo
-   com a hora de verdade do aparelho. */
-.chat-clock-bg__hand {
-  position: absolute;
-  left: 39.4%;
-  top: 68.8%;
-  transform-origin: 50% 100%;
-  background: #1b2733;
-  border-radius: 2px;
-  transition: transform 0.2s cubic-bezier(0.4, 2, 0.6, 1);
-}
-.chat-clock-bg__hand--hour {
-  width: 6%;
-  height: 19%;
-  margin: -19% 0 0 -3%;
-}
-.chat-clock-bg__hand--minute {
-  width: 4.5%;
-  height: 27%;
-  margin: -27% 0 0 -2.25%;
-}
-.chat-clock-bg__hand--second {
-  width: 1.8%;
-  height: 29%;
-  margin: -29% 0 0 -0.9%;
-  background: #a4373a;
-  /* Sem transição — o ponteiro de segundos "pula" de posição em
-     posição (igual a um relógio de verdade ticando), a transição
-     suave é só pros de hora/minuto. */
-  transition: none;
 }
 .chat-messages {
   flex: 1 1 auto;
