@@ -887,10 +887,10 @@ const Dashboard = (() => {
   }
 
   /* ---------- Preferências de Mensagens (Opções > Mensagens) ----------
-     Ainda não existe janela de conversa no app — essas preferências só
-     ficam guardadas (localStorage) prontas pra quando o chat for
-     construído; "Manter um histórico" já liga/desliga "Mostrar minha
-     última conversa" de verdade, igual ao cliente clássico. */
+     A maioria só fica guardada (localStorage), sem ligação real ainda
+     — "Manter um histórico" já liga/desliga "Mostrar minha última
+     conversa" de verdade, e "groupAllMessages" controla o agrupamento
+     das mensagens na janela de conversa (ver chatMessageGroups). */
   const MESSAGE_PREF_KEYS = {
     showEmoticons: "opt-show-emoticons",
     showTimestamps: "opt-show-timestamps",
@@ -899,6 +899,7 @@ const Dashboard = (() => {
     autoPlayVoice: "opt-auto-play-voice",
     keepHistory: "opt-keep-history",
     showLastConversation: "opt-show-last-conversation",
+    groupAllMessages: "opt-group-all-messages",
   };
   let messagePrefs = {
     showEmoticons: true,
@@ -908,6 +909,11 @@ const Dashboard = (() => {
     autoPlayVoice: true,
     keepHistory: false,
     showLastConversation: false,
+    // Padrão desligado: agrupa por MINUTO (igual ao cliente clássico —
+    // cada minuto novo do mesmo remetente vira um grupo/cabeçalho
+    // novo). Ligado, agrupa TODAS as mensagens seguidas do mesmo
+    // remetente numa única lista, não importa o intervalo entre elas.
+    groupAllMessages: false,
   };
 
   function loadMessagePrefs() {
@@ -2331,43 +2337,104 @@ const Dashboard = (() => {
     return EMOTICON_RULES.reduce((out, rule) => out.replace(rule.re, rule.emoji), text);
   }
 
-  function chatMessageBubble(msg) {
-    const li = document.createElement("li");
-    const mine = String(msg.sender_id) === String(profile && profile.id);
-    li.className = "chat-message " + (mine ? "chat-message--mine" : "chat-message--theirs");
-    const content = msg.content || "";
-    const mediaUrl = CHAT_MEDIA_URL_RE.test(content.trim()) ? content.trim() : null;
-    if (mediaUrl) {
-      const img = document.createElement("img");
-      img.className = "chat-message__media";
-      img.src = mediaUrl;
-      img.alt = "";
-      img.loading = "lazy";
-      li.appendChild(img);
-    } else {
-      const text = document.createElement("span");
-      text.className = "chat-message__text";
-      text.textContent = applyEmoticons(content);
-      li.appendChild(text);
-    }
-    const time = document.createElement("span");
-    time.className = "chat-message__time";
+  // Mensagens da conversa atualmente aberta, em ordem cronológica —
+  // guardadas à parte (não só no DOM) pra poder reconstruir os grupos
+  // do zero sempre que uma mensagem nova chega/é enviada, ou quando a
+  // preferência de agrupamento muda (ver renderChatMessages abaixo).
+  let currentChatMessagesList = [];
+
+  function chatMinuteKey(msg) {
     try {
-      time.textContent = new Date(msg.created_at).toLocaleTimeString("pt-BR", { hour: "2-digit", minute: "2-digit" });
-    } catch (_) {}
-    li.appendChild(time);
+      return new Date(msg.created_at).toLocaleTimeString("pt-BR", { hour: "2-digit", minute: "2-digit" });
+    } catch (_) {
+      return "";
+    }
+  }
+
+  // Quebra "msgs" (cronológico) em grupos consecutivos do MESMO
+  // remetente — um grupo novo também começa a cada minuto diferente,
+  // a menos que messagePrefs.groupAllMessages esteja ligado (aí só a
+  // troca de remetente inicia um grupo novo, sem limite de tempo — ver
+  // checkbox "Agrupar todas as mensagens..." em Opções > Mensagens).
+  function chatMessageGroups(msgs) {
+    const groups = [];
+    msgs.forEach((msg) => {
+      const mine = String(msg.sender_id) === String(profile && profile.id);
+      const minuteKey = chatMinuteKey(msg);
+      const last = groups[groups.length - 1];
+      const sameSender = last && last.mine === mine;
+      const sameMinute = last && last.minuteKey === minuteKey;
+      if (last && sameSender && (messagePrefs.groupAllMessages || sameMinute)) {
+        last.items.push(msg);
+      } else {
+        groups.push({ mine, minuteKey, items: [msg] });
+      }
+    });
+    return groups;
+  }
+
+  // Um grupo = "Nome disse (HH:MM):" (hora da 1ª mensagem do grupo) +
+  // uma lista com marcadores, uma linha por mensagem — igual ao
+  // cliente clássico, sem bolha/fundo colorido.
+  function chatMessageGroupNode(group) {
+    const li = document.createElement("li");
+    li.className = "chat-message-group " + (group.mine ? "chat-message-group--mine" : "chat-message-group--theirs");
+
+    const header = document.createElement("div");
+    header.className = "chat-message-group__header";
+    const name = group.mine
+      ? "Eu"
+      : ((currentChatContact && (currentChatContact.display_name || currentChatContact.email)) || "Contato");
+    header.textContent = name + " disse (" + group.minuteKey + "):";
+    li.appendChild(header);
+
+    const list = document.createElement("ul");
+    list.className = "chat-message-group__list";
+    group.items.forEach((msg) => {
+      const item = document.createElement("li");
+      item.className = "chat-message-group__item";
+      const content = msg.content || "";
+      const mediaUrl = CHAT_MEDIA_URL_RE.test(content.trim()) ? content.trim() : null;
+      if (mediaUrl) {
+        const img = document.createElement("img");
+        img.className = "chat-message__media";
+        img.src = mediaUrl;
+        img.alt = "";
+        img.loading = "lazy";
+        item.appendChild(img);
+      } else {
+        const text = document.createElement("span");
+        text.className = "chat-message__text";
+        text.textContent = applyEmoticons(content);
+        item.appendChild(text);
+      }
+      list.appendChild(item);
+    });
+    li.appendChild(list);
     return li;
   }
 
-  async function loadChatMessages() {
+  // Reconstrói a lista inteira a partir de currentChatMessagesList —
+  // mais simples e sem risco de desalinhar grupos do que tentar
+  // "encaixar" uma mensagem nova no último grupo já desenhado na tela.
+  function renderChatMessages() {
     const list = document.getElementById("chat-messages");
+    if (!list) return;
     list.innerHTML = "";
-    if (!currentChatContact) return;
+    chatMessageGroups(currentChatMessagesList).forEach((g) => list.appendChild(chatMessageGroupNode(g)));
+    scrollChatToBottom();
+  }
+
+  async function loadChatMessages() {
+    currentChatMessagesList = [];
+    if (!currentChatContact) {
+      renderChatMessages();
+      return;
+    }
     try {
-      const msgs = await MSNSupabase.getMessages(currentChatContact.id);
-      msgs.forEach((m) => list.appendChild(chatMessageBubble(m)));
-      scrollChatToBottom();
+      currentChatMessagesList = await MSNSupabase.getMessages(currentChatContact.id);
     } catch (_) {}
+    renderChatMessages();
   }
 
   function scrollChatToBottom() {
@@ -2397,10 +2464,11 @@ const Dashboard = (() => {
       const senderId = String(msg.sender_id);
       const chatOpenWithSender = currentChatContact && String(currentChatContact.id) === senderId;
       if (chatOpenWithSender) {
-        // Já estou vendo essa conversa — mostra a bolha na hora, mas
-        // sem som (a pessoa já está olhando pra tela).
-        document.getElementById("chat-messages").appendChild(chatMessageBubble(msg));
-        scrollChatToBottom();
+        // Já estou vendo essa conversa — mostra a mensagem na hora
+        // (reagrupando do zero, ver renderChatMessages), mas sem som
+        // (a pessoa já está olhando pra tela).
+        currentChatMessagesList.push(msg);
+        renderChatMessages();
         return;
       }
       // Conversa com quem mandou NÃO está aberta (outra conversa
@@ -2462,12 +2530,12 @@ const Dashboard = (() => {
       // Já mostra na hora (o realtime só ecoa mensagens de outras
       // pessoas de qualquer forma, já que o filtro do Supabase não
       // exclui o próprio remetente — evita duplicar aqui).
-      document.getElementById("chat-messages").appendChild(chatMessageBubble({
+      currentChatMessagesList.push({
         sender_id: (profile && profile.id) || "demo",
         content: text,
         created_at: (msg && msg.created_at) || new Date().toISOString(),
-      }));
-      scrollChatToBottom();
+      });
+      renderChatMessages();
     } catch (_) {}
   }
 
@@ -2666,6 +2734,10 @@ const Dashboard = (() => {
 
     commitLayoutPrefs();
     commitMessagePrefs();
+    // "Agrupar todas as mensagens..." muda como as mensagens JÁ
+    // carregadas aparecem — reagrupa na hora se tiver uma conversa
+    // aberta, sem precisar fechar/abrir de novo.
+    if (currentChatContact) renderChatMessages();
 
     if (!profile) return;
     const nameVal = document.getElementById("opt-display-name").value.trim();

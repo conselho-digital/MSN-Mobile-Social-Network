@@ -3041,21 +3041,38 @@ body[data-login-theme="cenario1"] #screen-connecting::before {
      abrindo uma frestinha de 1px vazando a cor de baixo dela. */
   min-height: 0;
 }
-.chat-message {
-  max-width: 78%;
-  padding: 7px 10px;
-  border-radius: 8px;
+/* Mensagens agrupadas — igual ao cliente clássico: um cabeçalho
+   ("Nome disse (HH:MM):") por grupo, seguido de uma lista com
+   marcadores (uma linha por mensagem), sem bolha/fundo colorido. Um
+   grupo novo começa a cada troca de remetente, e também a cada minuto
+   diferente do mesmo remetente — a menos que "Agrupar todas as
+   mensagens... de uma vez" (Opções > Mensagens) esteja ligado, aí só a
+   troca de remetente conta (ver chatMessageGroups em dashboard.js). */
+.chat-message-group {
+  max-width: 100%;
   font-size: 0.88rem;
   line-height: 1.4;
   word-wrap: break-word;
-  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.25);
 }
-/* Texto da mensagem (não a bolha inteira — carimbo de hora e imagem
-   ficam de fora de propósito, ver .chat-message__time/__media) — lê
-   as variáveis de "Alterar Fonte" (Opções > Mensagens ou botão "A",
-   ver applyChatFontPrefs em dashboard.js). --chat-font-color começa
-   "inherit" (sem override, mantém o azul/cinza de cada bolha) até a
-   pessoa escolher uma cor de propósito no diálogo. */
+.chat-message-group__header {
+  font-weight: 600;
+  margin-bottom: 2px;
+}
+/* Mesmas cores do cliente clássico: contato em azul, eu em
+   vermelho/vinho — só o cabeçalho, o texto das mensagens em si
+   continua neutro (ver .chat-message__text). */
+.chat-message-group--theirs .chat-message-group__header { color: #1a4fbf; }
+.chat-message-group--mine .chat-message-group__header { color: #a4373a; }
+.chat-message-group__list {
+  list-style: disc;
+  margin: 0;
+  padding-left: 20px;
+}
+/* Texto de cada mensagem (não o cabeçalho do grupo) — lê as variáveis
+   de "Alterar Fonte" (Opções > Mensagens ou botão "A", ver
+   applyChatFontPrefs em dashboard.js). --chat-font-color começa
+   "inherit" (sem override) até a pessoa escolher uma cor de propósito
+   no diálogo. */
 .chat-message__text {
   font-family: var(--chat-font-family);
   font-size: var(--chat-font-size);
@@ -3064,38 +3081,13 @@ body[data-login-theme="cenario1"] #screen-connecting::before {
   text-decoration: var(--chat-font-decoration);
   color: var(--chat-font-color);
 }
-.chat-message--theirs {
-  align-self: flex-start;
-  background: rgba(255, 255, 255, 0.92);
-  color: #23313b;
-  border-top-left-radius: 2px;
-}
-.chat-message--mine {
-  align-self: flex-end;
-  background: rgba(210, 233, 255, 0.92);
-  color: #1a3550;
-  border-top-right-radius: 2px;
-}
-.chat-message__time {
-  display: block;
-  margin-top: 2px;
-  font-size: 0.68rem;
-  color: #7a8a97;
-}
 .chat-message__media {
   display: block;
   max-width: 100%;
   max-height: 220px;
   border-radius: 4px;
   vertical-align: top;
-}
-/* Mensagem de GIF/imagem (link reconhecido — ver chatMessageBubble em
-   dashboard.js) não usa o balão colorido, só a foto/gif em si. */
-.chat-message--mine:has(.chat-message__media),
-.chat-message--theirs:has(.chat-message__media) {
-  background: transparent;
-  box-shadow: none;
-  padding: 0;
+  margin-top: 2px;
 }
 
 .chat-compose {
