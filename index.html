@@ -594,7 +594,16 @@
             <div class="chat-toolbar">
               <div class="chat-emoji-wrap">
                 <button type="button" id="chat-emoji-btn" class="chat-toolbar__btn" title="Emoticons">🙂<span class="caret-down"></span></button>
-                <div class="chat-emoji-picker" id="chat-emoji-picker" hidden></div>
+                <div class="chat-emoji-picker" id="chat-emoji-picker" hidden>
+                  <div class="chat-emoji-picker__header">
+                    <span>Seus emoticons</span>
+                    <a href="#" id="chat-emoji-show-all" class="chat-emoji-picker__link">Mostrar tudo…</a>
+                  </div>
+                  <p class="chat-emoji-picker__subheading">Emoticons recentemente usados</p>
+                  <div class="chat-emoji-picker__grid" id="chat-emoji-recent-grid"></div>
+                  <p class="chat-emoji-picker__subheading">Emoticons incluídos</p>
+                  <div class="chat-emoji-picker__grid" id="chat-emoji-all-grid"></div>
+                </div>
               </div>
               <button type="button" id="chat-format-btn" class="chat-toolbar__btn" title="Alterar fonte">A</button>
               <button type="button" id="chat-nudge-btn" class="chat-toolbar__btn" title="Chamar a atenção">🔔</button>
@@ -1292,6 +1301,40 @@
       <footer class="scene-dialog__footer">
         <button type="button" id="font-dialog-ok" class="btn-signin btn-signin--sm">OK</button>
         <button type="button" id="font-dialog-cancel" class="btn-signin btn-signin--sm">Cancelar</button>
+      </footer>
+    </div>
+  </div>
+
+  <!-- Janela cheia de emoticons ("Mostrar tudo…" no picker rápido, ver
+       chat-emoji-picker) — igual ao cliente clássico. -->
+  <div id="emoticon-dialog" class="modal-overlay scene-dialog-overlay" hidden>
+    <div class="scene-dialog emoticon-dialog" role="dialog" aria-modal="true" aria-label="Emoticons">
+      <header class="scene-dialog__titlebar">
+        <span class="scene-dialog__titlebar-app">
+          <img src="assets/icons/favicon.png" alt="" />
+          Emoticons
+        </span>
+        <button type="button" id="emoticon-dialog-x" class="scene-dialog__x" aria-label="Fechar">&times;</button>
+      </header>
+      <div class="scene-dialog__banner emoticon-dialog__banner">
+        <div>
+          <h2 class="scene-dialog__banner-title">Selecionar um emoticon</h2>
+          <p class="emoticon-dialog__banner-text">Para adicionar um emoticon à sua conversa, selecione-o e clique em "OK".</p>
+        </div>
+      </div>
+      <div class="emoticon-dialog__body">
+        <div class="emoticon-dialog__main">
+          <p class="emoticon-dialog__count" id="emoticon-dialog-count">Emoticons incluídos</p>
+          <div class="emoticon-dialog__grid" id="emoticon-dialog-grid"></div>
+        </div>
+        <div class="emoticon-dialog__actions">
+          <button type="button" id="emoticon-dialog-create" class="btn-signin btn-signin--sm">Criar...</button>
+          <button type="button" id="emoticon-dialog-delete" class="btn-signin btn-signin--sm">Excluir</button>
+        </div>
+      </div>
+      <footer class="scene-dialog__footer">
+        <button type="button" id="emoticon-dialog-ok" class="btn-signin btn-signin--sm">OK</button>
+        <button type="button" id="emoticon-dialog-close" class="btn-signin btn-signin--sm">Fechar</button>
       </footer>
     </div>
   </div>

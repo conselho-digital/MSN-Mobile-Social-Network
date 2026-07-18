@@ -2588,21 +2588,139 @@ const Dashboard = (() => {
     try { await MSNSupabase.sendNudge(currentChatContact.id); } catch (_) {}
   }
 
-  const CHAT_EMOJIS = ["😀","😂","😉","😍","😎","😭","😡","👍","👎","❤️","💔","🎉","🔥","⭐","☕","🎵","😴","🤔","😅","🙈","👋","✌️","🙏","💬"];
+  // Lista fixa embutida (não dá pra criar/excluir de verdade — ver
+  // openEmoticonDialog, os botões "Criar.../Excluir" só avisam que
+  // ainda não dá) — 40, pra bater com o "(40/40)" do cliente clássico.
+  const CHAT_EMOJIS = [
+    "😊","😀","😁","😂","😉","😍","😎","😡",
+    "😭","😢","😕","😮","😜","😘","☺️","😳",
+    "😱","😴","🤔","👼",
+    "👍","👎","❤️","💔",
+    "👫","🐱","🐶","☕",
+    "🎂","🌙","⭐","☀️",
+    "🌈","🎁","💋","🌹",
+    "📷","🎵","🔥","✌️",
+  ];
+
+  // "Recentemente usados" do picker rápido — uma lista só (não por
+  // contato), mais recente primeiro, sempre 10 vagas (as que sobram
+  // ficam vazias/desabilitadas — ver renderEmojiPicker).
+  const RECENT_EMOJIS_MAX = 10;
+  function getRecentEmojis() {
+    try {
+      const raw = localStorage.getItem("msn:recentEmojis");
+      return raw ? JSON.parse(raw) : [];
+    } catch (_) { return []; }
+  }
+  function addRecentEmoji(emoji) {
+    try {
+      const list = getRecentEmojis().filter((e) => e !== emoji);
+      list.unshift(emoji);
+      localStorage.setItem("msn:recentEmojis", JSON.stringify(list.slice(0, RECENT_EMOJIS_MAX)));
+    } catch (_) {}
+  }
+
+  // Insere na caixa de texto + registra como "recentemente usado" —
+  // chamado tanto pelo picker rápido quanto pelo botão OK da janela
+  // cheia (ver commitEmoticonDialog).
+  function insertChatEmoji(emoji) {
+    const input = document.getElementById("chat-input");
+    input.value += emoji;
+    input.focus();
+    addRecentEmoji(emoji);
+  }
+
+  // Botão vazio (sem emoji, "disabled") pras vagas de "recentemente
+  // usados" que ainda não foram preenchidas — ver .chat-emoji-picker__btn:disabled
+  // no CSS (só o contorno pontilhado, sem clique).
+  function emojiGridButtons(list) {
+    return list.map((e) =>
+      '<button type="button" class="chat-emoji-picker__btn"' + (e ? "" : " disabled") + ">" + e + "</button>"
+    ).join("");
+  }
+
+  function renderEmojiPicker() {
+    const recentGrid = document.getElementById("chat-emoji-recent-grid");
+    const allGrid = document.getElementById("chat-emoji-all-grid");
+    if (!recentGrid || !allGrid) return;
+    const recent = getRecentEmojis();
+    const slots = Array.from({ length: RECENT_EMOJIS_MAX }, (_, i) => recent[i] || "");
+    recentGrid.innerHTML = emojiGridButtons(slots);
+    allGrid.innerHTML = emojiGridButtons(CHAT_EMOJIS);
+    [recentGrid, allGrid].forEach((grid) => {
+      grid.querySelectorAll("button:not(:disabled)").forEach((btn) => {
+        btn.addEventListener("click", () => {
+          insertChatEmoji(btn.textContent);
+          renderEmojiPicker();
+        });
+      });
+    });
+  }
+
+  // Mesma técnica de .chat-bg-picker (fixed + posição calculada em JS,
+  // ver positionChatBgPicker) — mais confiável que um valor fixo no
+  // CSS em telas pequenas/teclado aberto.
+  const CHAT_EMOJI_PICKER_WIDTH = 264;
+  function positionChatEmojiPicker() {
+    const btn = document.getElementById("chat-emoji-btn");
+    const picker = document.getElementById("chat-emoji-picker");
+    if (!btn || !picker) return;
+    const rect = btn.getBoundingClientRect();
+    const margin = 8;
+    let left = rect.left;
+    left = Math.max(margin, Math.min(left, window.innerWidth - CHAT_EMOJI_PICKER_WIDTH - margin));
+    picker.style.left = left + "px";
+    picker.style.bottom = (window.innerHeight - rect.top + 6) + "px";
+  }
+
   function toggleEmojiPicker() {
     const picker = document.getElementById("chat-emoji-picker");
     const open = picker.hidden;
-    if (open && !picker.childElementCount) {
-      picker.innerHTML = CHAT_EMOJIS.map((e) => '<button type="button">' + e + "</button>").join("");
-      picker.querySelectorAll("button").forEach((btn) => {
-        btn.addEventListener("click", () => {
-          const input = document.getElementById("chat-input");
-          input.value += btn.textContent;
-          input.focus();
-        });
-      });
+    if (open) {
+      renderEmojiPicker();
+      positionChatEmojiPicker();
     }
     picker.hidden = !open;
+  }
+
+  /* ---------- Janela cheia de emoticons ("Mostrar tudo…") ----------
+     Mesma lista embutida do picker rápido (CHAT_EMOJIS) — só
+     escolher e clicar OK insere na caixa de texto. "Criar.../Excluir"
+     existem só pra bater com o visual do cliente clássico; sem lista
+     personalizada de verdade pra gerenciar aqui, então só avisam que
+     ainda não dá (ver infoModal abaixo). */
+  let stagedEmoticon = null;
+  function renderEmoticonDialogGrid() {
+    const grid = document.getElementById("emoticon-dialog-grid");
+    const count = document.getElementById("emoticon-dialog-count");
+    if (!grid) return;
+    if (count) count.textContent = "Emoticons incluídos (" + CHAT_EMOJIS.length + "/" + CHAT_EMOJIS.length + ")";
+    grid.innerHTML = CHAT_EMOJIS.map((e) =>
+      '<button type="button" class="emoticon-dialog__swatch' + (e === stagedEmoticon ? " is-selected" : "") +
+      '" data-emoji="' + e + '">' + e + "</button>"
+    ).join("");
+    grid.querySelectorAll(".emoticon-dialog__swatch").forEach((btn) => {
+      btn.addEventListener("click", () => {
+        stagedEmoticon = btn.dataset.emoji;
+        grid.querySelectorAll(".emoticon-dialog__swatch").forEach((x) => x.classList.remove("is-selected"));
+        btn.classList.add("is-selected");
+      });
+    });
+  }
+  function openEmoticonDialog() {
+    stagedEmoticon = null;
+    renderEmoticonDialogGrid();
+    document.getElementById("emoticon-dialog").hidden = false;
+  }
+  function closeEmoticonDialog() {
+    document.getElementById("emoticon-dialog").hidden = true;
+  }
+  function commitEmoticonDialog() {
+    if (stagedEmoticon) {
+      insertChatEmoji(stagedEmoticon);
+      renderEmojiPicker();
+    }
+    closeEmoticonDialog();
   }
 
   // Menu rápido "Seus Planos de Fundo" (botão 🖌) — mostra os últimos
@@ -3454,6 +3572,31 @@ const Dashboard = (() => {
       e.preventDefault();
       document.getElementById("chat-bg-picker").hidden = true;
       openScenePicker("chatBackground");
+    });
+
+    // Janela cheia de emoticons ("Mostrar tudo…" no picker rápido).
+    const chatEmojiShowAll = document.getElementById("chat-emoji-show-all");
+    if (chatEmojiShowAll) chatEmojiShowAll.addEventListener("click", (e) => {
+      e.preventDefault();
+      document.getElementById("chat-emoji-picker").hidden = true;
+      openEmoticonDialog();
+    });
+    const emoticonDialogX = document.getElementById("emoticon-dialog-x");
+    if (emoticonDialogX) emoticonDialogX.addEventListener("click", closeEmoticonDialog);
+    const emoticonDialogClose = document.getElementById("emoticon-dialog-close");
+    if (emoticonDialogClose) emoticonDialogClose.addEventListener("click", closeEmoticonDialog);
+    const emoticonDialogOk = document.getElementById("emoticon-dialog-ok");
+    if (emoticonDialogOk) emoticonDialogOk.addEventListener("click", commitEmoticonDialog);
+    // "Criar.../Excluir": sem lista personalizada de verdade pra
+    // gerenciar aqui (ver comentário grande em openEmoticonDialog) —
+    // só avisam que ainda não dá, em vez de ficarem sem fazer nada.
+    const emoticonDialogCreate = document.getElementById("emoticon-dialog-create");
+    if (emoticonDialogCreate) emoticonDialogCreate.addEventListener("click", () => {
+      infoModal("Emoticons", "Ainda não é possível criar emoticons personalizados nesta versão.");
+    });
+    const emoticonDialogDelete = document.getElementById("emoticon-dialog-delete");
+    if (emoticonDialogDelete) emoticonDialogDelete.addEventListener("click", () => {
+      infoModal("Emoticons", "Ainda não é possível excluir emoticons personalizados nesta versão.");
     });
 
     // Sair (rodapé — opcional; sign-out principal fica no menu do nick)
