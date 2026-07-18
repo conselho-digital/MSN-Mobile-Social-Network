@@ -11,6 +11,18 @@
   <link rel="icon" type="image/png" href="assets/icons/favicon.png" />
   <link rel="apple-touch-icon" href="assets/icons/icon-192.png" />
   <link rel="manifest" href="manifest.json" />
+  <!-- Fontes do diálogo "Alterar Fonte" que têm versão de graça pra
+       carregar de verdade (ver #font-family-list) — o resto da lista
+       (Arial, Segoe UI, Times New Roman, Helvetica...) são fontes
+       comerciais dos sistemas operacionais, sem equivalente livre pra
+       embutir; continuam dependendo do aparelho já ter instalada
+       (fallback genérico do CSS cuida disso, ver style.css). -->
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link
+    rel="stylesheet"
+    href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;600;700&family=Open+Sans:wght@400;600;700&family=Lato:wght@400;700&family=Montserrat:wght@400;600;700&family=Inter:wght@400;600;700&family=Playfair+Display:wght@400;600;700&family=Merriweather:wght@400;700&family=PT+Serif:wght@400;700&family=Bebas+Neue&family=Lobster&family=Cinzel:wght@400;600;700&family=Pacifico&family=EB+Garamond:wght@400;600;700&family=Libre+Baskerville:wght@400;700&family=Bodoni+Moda:wght@400;600;700&family=Libre+Caslon+Text:wght@400;700&family=Comic+Neue:wght@400;700&display=swap"
+  />
   <link rel="stylesheet" href="css/style.css" />
 </head>
 <body>
@@ -1146,6 +1158,18 @@
       <div class="font-dialog__body">
         <div class="font-dialog__col">
           <label class="font-dialog__label" for="font-family-list">Fonte:</label>
+          <!-- A maioria dessas fontes é comercial (do Windows/Mac/Adobe)
+               e não tem como carregar de graça — só aparecem certas se
+               o aparelho da pessoa já tiver instalada, senão cai no
+               genérico do value (sans-serif/serif/...). As que TÊM
+               versão de graça pra carregar de verdade (ver o <link>
+               do Google Fonts no <head>) usam esse nome no "value",
+               mesmo com o texto exibido continuando o nome clássico
+               pedido — ex.: "Garamond" mostra 'EB Garamond' por baixo,
+               "Baskerville" mostra 'Libre Baskerville', "Bodoni" mostra
+               'Bodoni Moda', "Caslon" mostra 'Libre Caslon Text',
+               "Comic Sans MS" mostra 'Comic Neue' (a alternativa livre
+               feita de propósito pra substituir a Comic Sans). -->
           <select id="font-family-list" class="font-dialog__list" size="6">
             <optgroup label="Sans-Serif (Modernas e Limpas)">
               <option value="'Arial', sans-serif">Arial</option>
@@ -1172,9 +1196,9 @@
             <optgroup label="Serif (Clássicas e Tradicionais)">
               <option value="'Times New Roman', serif">Times New Roman</option>
               <option value="'Georgia', serif">Georgia</option>
-              <option value="'Garamond', serif">Garamond</option>
-              <option value="'Baskerville', serif">Baskerville</option>
-              <option value="'Bodoni MT', serif">Bodoni</option>
+              <option value="'EB Garamond', serif">Garamond</option>
+              <option value="'Libre Baskerville', serif">Baskerville</option>
+              <option value="'Bodoni Moda', serif">Bodoni</option>
               <option value="'Century Schoolbook', serif">Century Schoolbook</option>
               <option value="'Palatino Linotype', 'Palatino', serif">Palatino</option>
               <option value="'Courier New', monospace">Courier New</option>
@@ -1186,11 +1210,11 @@
               <option value="'PT Serif', serif">PT Serif</option>
               <option value="'Rockwell', serif">Rockwell</option>
               <option value="'Clarendon', serif">Clarendon</option>
-              <option value="'Caslon', serif">Caslon</option>
+              <option value="'Libre Caslon Text', serif">Caslon</option>
               <option value="'Minion Pro', serif">Minion Pro</option>
             </optgroup>
             <optgroup label="Display &amp; Decorativas (Títulos e Destaques)">
-              <option value="'Comic Sans MS', cursive">Comic Sans MS</option>
+              <option value="'Comic Neue', cursive">Comic Sans MS</option>
               <option value="'Papyrus', fantasy">Papyrus</option>
               <option value="'Copperplate Gothic', fantasy">Copperplate Gothic</option>
               <option value="'Broadway', fantasy">Broadway</option>
