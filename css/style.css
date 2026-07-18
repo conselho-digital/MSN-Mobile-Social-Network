@@ -2752,15 +2752,17 @@ body[data-login-theme="cenario1"] #screen-connecting::before {
   opacity: 0;
   overflow: hidden;
 }
-/* Barrinha de esconder/mostrar a coluna das fotos, agora DENTRO da
-   caixa de mensagens (primeiro item do "row" .chat-thread — ver
-   abaixo), não mais flutuando sobre a borda da lateral. Altura = a do
-   próprio .chat-thread (item de flex, estica sozinho via
-   align-items:stretch); largura = 3% da largura da caixa (mesma
-   base, ver .chat-thread). Branca; fica azul num flash rápido ao
-   clicar e volta pra branca sozinha (ver .is-pressed, ligada/desligada
-   em bindEvents). Seta = mesmo desenho das categorias do Dashboard
-   (.group-caret), só trocando de lado conforme aria-expanded. */
+/* Barrinha de esconder/mostrar a coluna das fotos — irmã de
+   .chat-sidebar e .chat-main dentro do "row" .chat-body (não mais só
+   dentro da caixa de mensagens), pra esticar (align-items:stretch) a
+   altura INTEIRA da tela de conversa: aviso amarelo de offline +
+   mensagens + caixa de texto, tudo de uma vez — igual ao cliente
+   clássico, e sem deixar um trecho (o aviso amarelo) sem essa
+   barrinha do lado. Largura = 3% da largura da tela de conversa.
+   Branca; fica azul num flash rápido ao clicar e volta pra branca
+   sozinha (ver .is-pressed, ligada/desligada em bindEvents). Seta =
+   mesmo desenho das categorias do Dashboard (.group-caret), só
+   trocando de lado conforme aria-expanded. */
 .chat-sidebar-toggle {
   flex: 0 0 3%;
   min-width: 4px;
@@ -2948,11 +2950,10 @@ body[data-login-theme="cenario1"] #screen-connecting::before {
 }
 .chat-offline-banner__close:hover { background: rgba(0, 0, 0, 0.08); color: #5a5230; }
 
-/* Agora é uma linha (row): a barrinha de esconder fotos
-   (.chat-sidebar-toggle) + a lista de mensagens lado a lado — só a
-   lista rola (overflow-y nela, não mais aqui), a barrinha fica sempre
-   à mostra com a altura inteira da caixa (ver comentário grande em
-   .chat-sidebar-toggle).
+/* Só "embrulha" a lista de mensagens (a barrinha de esconder fotos,
+   .chat-sidebar-toggle, não fica mais aqui dentro — ver comentário
+   grande nela, agora é irmã de .chat-sidebar/.chat-main pra cobrir a
+   altura inteira da tela de conversa, aviso amarelo incluído).
    O fundo tem duas camadas (ver applyChatBackground em dashboard.js):
    sem plano de fundo pessoal escolhido, o degradê da cor do tema do
    CONTATO fica aqui, no .chat-thread — atrás da caixa de mensagens,
