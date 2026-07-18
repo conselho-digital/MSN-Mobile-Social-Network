@@ -2588,9 +2588,10 @@ const Dashboard = (() => {
     try { await MSNSupabase.sendNudge(currentChatContact.id); } catch (_) {}
   }
 
-  // Lista fixa embutida (não dá pra criar/excluir de verdade — ver
-  // openEmoticonDialog, os botões "Criar.../Excluir" só avisam que
-  // ainda não dá) — 40, pra bater com o "(40/40)" do cliente clássico.
+  // Lista fixa embutida — 40, pra bater com o "(40/40)" do cliente
+  // clássico. Emoticons PERSONALIZADOS (ver "Criar..." mais abaixo)
+  // são uma lista à parte, somada a esta na hora de desenhar a grade
+  // (ver renderEmoticonDialogGrid).
   const CHAT_EMOJIS = [
     "😊","😀","😁","😂","😉","😍","😎","😡",
     "😭","😢","😕","😮","😜","😘","☺️","😳",
@@ -2620,14 +2621,16 @@ const Dashboard = (() => {
     } catch (_) {}
   }
 
-  // Insere na caixa de texto + registra como "recentemente usado" —
-  // chamado tanto pelo picker rápido quanto pelo botão OK da janela
-  // cheia (ver commitEmoticonDialog).
-  function insertChatEmoji(emoji) {
+  // Insere na caixa de texto — chamado tanto pelo picker rápido quanto
+  // pelo botão OK da janela cheia (ver commitEmoticonDialog). Só
+  // registra em "recentemente usados" os embutidos (unicode) — um
+  // personalizado é uma URL de imagem, mostrar a URL crua numa
+  // vaguinha de "recente" ficaria estranho (ver openEmoticonDialog).
+  function insertChatEmoji(value, isCustom) {
     const input = document.getElementById("chat-input");
-    input.value += emoji;
+    input.value += value;
     input.focus();
-    addRecentEmoji(emoji);
+    if (!isCustom) addRecentEmoji(value);
   }
 
   // Botão vazio (sem emoji, "disabled") pras vagas de "recentemente
@@ -2683,29 +2686,84 @@ const Dashboard = (() => {
     picker.hidden = !open;
   }
 
+  /* ---------- Emoticons PERSONALIZADOS ("Criar.../Excluir") ----------
+     Guardados neste aparelho (localStorage, mesmo padrão de
+     "recentemente usados" — não sincroniza pra outro aparelho/login),
+     mas a IMAGEM em si fica hospedada de verdade no Supabase Storage
+     (mesmo bucket do cenário personalizado, ver uploadSceneImage em
+     supabase-client.js) — assim o emoticon tem uma URL real e pode
+     ser enviado numa mensagem de verdade (a URL sozinha vira uma
+     mensagem de imagem pro outro contato ver, ver CHAT_MEDIA_URL_RE),
+     não fica só decorativo neste aparelho. "Excluir" só tira da lista
+     local (não apaga o arquivo do Storage — inofensivo ficar órfão
+     lá, evita precisar de mais uma chamada/permissão só pra isso). */
+  function getCustomEmoticons() {
+    try {
+      const raw = localStorage.getItem("msn:customEmoticons");
+      return raw ? JSON.parse(raw) : [];
+    } catch (_) { return []; }
+  }
+  function saveCustomEmoticon(url) {
+    const id = "c" + Date.now();
+    try {
+      const list = getCustomEmoticons();
+      list.unshift({ id, url });
+      localStorage.setItem("msn:customEmoticons", JSON.stringify(list));
+    } catch (_) {}
+    return id;
+  }
+  function deleteCustomEmoticon(id) {
+    try {
+      const list = getCustomEmoticons().filter((e) => e.id !== id);
+      localStorage.setItem("msn:customEmoticons", JSON.stringify(list));
+    } catch (_) {}
+  }
+
   /* ---------- Janela cheia de emoticons ("Mostrar tudo…") ----------
-     Mesma lista embutida do picker rápido (CHAT_EMOJIS) — só
-     escolher e clicar OK insere na caixa de texto. "Criar.../Excluir"
-     existem só pra bater com o visual do cliente clássico; sem lista
-     personalizada de verdade pra gerenciar aqui, então só avisam que
-     ainda não dá (ver infoModal abaixo). */
-  let stagedEmoticon = null;
+     Embutidos (CHAT_EMOJIS, unicode) + personalizados (imagem) juntos
+     na mesma grade — "Excluir" só funciona com um personalizado
+     selecionado (ver data-kind em cada botão), igual pedido: não dá
+     pra excluir os embutidos. */
+  let stagedEmoticon = null; // { kind: "builtin", emoji } | { kind: "custom", id, url }
+  function updateEmoticonDeleteBtn() {
+    const btn = document.getElementById("emoticon-dialog-delete");
+    if (btn) btn.disabled = !stagedEmoticon || stagedEmoticon.kind !== "custom";
+  }
   function renderEmoticonDialogGrid() {
     const grid = document.getElementById("emoticon-dialog-grid");
     const count = document.getElementById("emoticon-dialog-count");
     if (!grid) return;
-    if (count) count.textContent = "Emoticons incluídos (" + CHAT_EMOJIS.length + "/" + CHAT_EMOJIS.length + ")";
-    grid.innerHTML = CHAT_EMOJIS.map((e) =>
-      '<button type="button" class="emoticon-dialog__swatch' + (e === stagedEmoticon ? " is-selected" : "") +
-      '" data-emoji="' + e + '">' + e + "</button>"
+    const custom = getCustomEmoticons();
+    const total = CHAT_EMOJIS.length + custom.length;
+    if (count) count.textContent = "Emoticons incluídos (" + total + "/" + total + ")";
+
+    const customHtml = custom.map((c) =>
+      '<button type="button" class="emoticon-dialog__swatch emoticon-dialog__swatch--custom" data-kind="custom" data-id="' + c.id +
+      '" data-url="' + esc(c.url) + '"><img src="' + esc(c.url) + '" alt="" /></button>'
     ).join("");
+    const builtinHtml = CHAT_EMOJIS.map((e) =>
+      '<button type="button" class="emoticon-dialog__swatch" data-kind="builtin" data-emoji="' + e + '">' + e + "</button>"
+    ).join("");
+    // Personalizados primeiro — mais recentes, mais fáceis de achar
+    // (e de selecionar pra excluir) do que rolar a lista toda.
+    grid.innerHTML = customHtml + builtinHtml;
+
     grid.querySelectorAll(".emoticon-dialog__swatch").forEach((btn) => {
+      const isStagedMatch = stagedEmoticon && (
+        (stagedEmoticon.kind === "builtin" && btn.dataset.kind === "builtin" && btn.dataset.emoji === stagedEmoticon.emoji) ||
+        (stagedEmoticon.kind === "custom" && btn.dataset.kind === "custom" && btn.dataset.id === stagedEmoticon.id)
+      );
+      btn.classList.toggle("is-selected", !!isStagedMatch);
       btn.addEventListener("click", () => {
-        stagedEmoticon = btn.dataset.emoji;
+        stagedEmoticon = btn.dataset.kind === "custom"
+          ? { kind: "custom", id: btn.dataset.id, url: btn.dataset.url }
+          : { kind: "builtin", emoji: btn.dataset.emoji };
         grid.querySelectorAll(".emoticon-dialog__swatch").forEach((x) => x.classList.remove("is-selected"));
         btn.classList.add("is-selected");
+        updateEmoticonDeleteBtn();
       });
     });
+    updateEmoticonDeleteBtn();
   }
   function openEmoticonDialog() {
     stagedEmoticon = null;
@@ -2717,10 +2775,141 @@ const Dashboard = (() => {
   }
   function commitEmoticonDialog() {
     if (stagedEmoticon) {
-      insertChatEmoji(stagedEmoticon);
-      renderEmojiPicker();
+      if (stagedEmoticon.kind === "custom") {
+        insertChatEmoji(stagedEmoticon.url, true);
+      } else {
+        insertChatEmoji(stagedEmoticon.emoji, false);
+        renderEmojiPicker();
+      }
     }
     closeEmoticonDialog();
+  }
+  function deleteStagedCustomEmoticon() {
+    if (!stagedEmoticon || stagedEmoticon.kind !== "custom") return;
+    deleteCustomEmoticon(stagedEmoticon.id);
+    stagedEmoticon = null;
+    renderEmoticonDialogGrid();
+  }
+
+  /* ---------- Editor de emoticon (varinha mágica) ----------
+     Aberto depois de escolher uma foto em "Criar..." — tela cheia no
+     celular, 50% da tela no computador (ver #emoticon-editor no CSS).
+     Reduz a imagem pra um tamanho de emoticon de verdade antes de
+     desenhar (EMOTICON_MAX_DIM) — mais rápido pra varinha mágica
+     varrer (ela olha TODOS os pixels a cada clique) e resulta num
+     arquivo pequeno pra enviar depois. */
+  const EMOTICON_MAX_DIM = 128;
+  let emoticonEditorCtx = null;
+  let emoticonEditorOriginalImageData = null;
+
+  function loadImageFile(file) {
+    return new Promise((resolve, reject) => {
+      const img = new Image();
+      img.onload = () => resolve(img);
+      img.onerror = reject;
+      img.src = URL.createObjectURL(file);
+    });
+  }
+  async function onEmoticonImageSelected(e) {
+    const file = e.target.files && e.target.files[0];
+    e.target.value = "";
+    if (!file) return;
+    if (!file.type.startsWith("image/")) {
+      infoModal("Emoticons", "Selecione um arquivo de imagem.");
+      return;
+    }
+    try {
+      const img = await loadImageFile(file);
+      openEmoticonEditor(img);
+    } catch (_) {
+      infoModal("Emoticons", "Não foi possível abrir essa imagem.");
+    }
+  }
+  function openEmoticonEditor(img) {
+    const canvas = document.getElementById("emoticon-editor-canvas");
+    if (!canvas) return;
+    const ctx = canvas.getContext("2d", { willReadFrequently: true });
+    const scale = Math.min(1, EMOTICON_MAX_DIM / Math.max(img.naturalWidth, img.naturalHeight));
+    canvas.width = Math.max(1, Math.round(img.naturalWidth * scale));
+    canvas.height = Math.max(1, Math.round(img.naturalHeight * scale));
+    ctx.clearRect(0, 0, canvas.width, canvas.height);
+    ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
+    emoticonEditorCtx = ctx;
+    emoticonEditorOriginalImageData = ctx.getImageData(0, 0, canvas.width, canvas.height);
+    // Esconde a janela de baixo (não fecha — "Cancelar" só volta pra
+    // ela, sem perder a seleção/scroll de antes) enquanto o editor,
+    // que é OUTRO overlay por cima, estiver aberto.
+    document.getElementById("emoticon-dialog").hidden = true;
+    document.getElementById("emoticon-editor").hidden = false;
+  }
+  function closeEmoticonEditor() {
+    document.getElementById("emoticon-editor").hidden = true;
+    document.getElementById("emoticon-dialog").hidden = false;
+    emoticonEditorCtx = null;
+    emoticonEditorOriginalImageData = null;
+  }
+  function resetEmoticonEditor() {
+    if (!emoticonEditorCtx || !emoticonEditorOriginalImageData) return;
+    emoticonEditorCtx.putImageData(emoticonEditorOriginalImageData, 0, 0);
+  }
+  // Varinha mágica: clica numa cor, remove ela (deixa transparente) —
+  // em TODA a imagem, não só na região "conectada" que toca o clique,
+  // já que o objetivo é tirar um fundo de cor só que o assunto
+  // principal pode "cortar" em vários pedaços separados na foto.
+  // "Sensibilidade" (slider) = distância de cor (RGB) tolerada.
+  function applyMagicWand(x, y) {
+    const ctx = emoticonEditorCtx;
+    if (!ctx) return;
+    const canvas = ctx.canvas;
+    if (x < 0 || y < 0 || x >= canvas.width || y >= canvas.height) return;
+    const imageData = ctx.getImageData(0, 0, canvas.width, canvas.height);
+    const data = imageData.data;
+    const idx = (y * canvas.width + x) * 4;
+    if (data[idx + 3] === 0) return; // clicou onde já é transparente
+    const targetR = data[idx], targetG = data[idx + 1], targetB = data[idx + 2];
+    const toleranceEl = document.getElementById("emoticon-editor-tolerance");
+    const tolerance = toleranceEl ? Number(toleranceEl.value) : 40;
+    for (let i = 0; i < data.length; i += 4) {
+      if (data[i + 3] === 0) continue;
+      const dr = data[i] - targetR;
+      const dg = data[i + 1] - targetG;
+      const db = data[i + 2] - targetB;
+      if (Math.sqrt(dr * dr + dg * dg + db * db) <= tolerance) data[i + 3] = 0;
+    }
+    ctx.putImageData(imageData, 0, 0);
+  }
+  function canvasClickToPixel(canvas, clientX, clientY) {
+    const rect = canvas.getBoundingClientRect();
+    // O canvas costuma aparecer maior na tela (CSS) do que sua
+    // resolução de verdade (EMOTICON_MAX_DIM) — sem escalar de volta,
+    // o clique acertaria o pixel errado sempre que isso acontecesse.
+    const scaleX = canvas.width / rect.width;
+    const scaleY = canvas.height / rect.height;
+    return {
+      x: Math.floor((clientX - rect.left) * scaleX),
+      y: Math.floor((clientY - rect.top) * scaleY),
+    };
+  }
+  async function saveEmoticonEditor() {
+    const ctx = emoticonEditorCtx;
+    if (!ctx) return;
+    const saveBtn = document.getElementById("emoticon-editor-save");
+    if (saveBtn) saveBtn.disabled = true;
+    try {
+      const canvas = ctx.canvas;
+      const blob = await new Promise((resolve) => canvas.toBlob(resolve, "image/png"));
+      if (!blob) throw new Error("toBlob falhou");
+      const file = new File([blob], "emoticon-" + Date.now() + ".png", { type: "image/png" });
+      const url = await MSNSupabase.uploadSceneImage(file);
+      const id = saveCustomEmoticon(url);
+      stagedEmoticon = { kind: "custom", id, url };
+      closeEmoticonEditor();
+      renderEmoticonDialogGrid();
+    } catch (err) {
+      infoModal("Emoticons", MSNSupabase.friendlyError(err, "Não foi possível salvar o emoticon."));
+    } finally {
+      if (saveBtn) saveBtn.disabled = false;
+    }
   }
 
   // Menu rápido "Seus Planos de Fundo" (botão 🖌) — mostra os últimos
@@ -3587,17 +3776,34 @@ const Dashboard = (() => {
     if (emoticonDialogClose) emoticonDialogClose.addEventListener("click", closeEmoticonDialog);
     const emoticonDialogOk = document.getElementById("emoticon-dialog-ok");
     if (emoticonDialogOk) emoticonDialogOk.addEventListener("click", commitEmoticonDialog);
-    // "Criar.../Excluir": sem lista personalizada de verdade pra
-    // gerenciar aqui (ver comentário grande em openEmoticonDialog) —
-    // só avisam que ainda não dá, em vez de ficarem sem fazer nada.
+    // "Criar..." abre o seletor de arquivo; a foto escolhida entra no
+    // editor (varinha mágica, ver onEmoticonImageSelected). "Excluir"
+    // só funciona com um personalizado selecionado (ver
+    // updateEmoticonDeleteBtn/disabled) — não dá pra excluir embutido.
+    const emoticonImageInput = document.getElementById("emoticon-image-input");
+    if (emoticonImageInput) emoticonImageInput.addEventListener("change", onEmoticonImageSelected);
     const emoticonDialogCreate = document.getElementById("emoticon-dialog-create");
     if (emoticonDialogCreate) emoticonDialogCreate.addEventListener("click", () => {
-      infoModal("Emoticons", "Ainda não é possível criar emoticons personalizados nesta versão.");
+      if (emoticonImageInput) emoticonImageInput.click();
     });
     const emoticonDialogDelete = document.getElementById("emoticon-dialog-delete");
-    if (emoticonDialogDelete) emoticonDialogDelete.addEventListener("click", () => {
-      infoModal("Emoticons", "Ainda não é possível excluir emoticons personalizados nesta versão.");
+    if (emoticonDialogDelete) emoticonDialogDelete.addEventListener("click", deleteStagedCustomEmoticon);
+
+    // Editor de emoticon (varinha mágica pra remover fundo).
+    const emoticonEditorCanvas = document.getElementById("emoticon-editor-canvas");
+    if (emoticonEditorCanvas) emoticonEditorCanvas.addEventListener("click", (e) => {
+      if (!emoticonEditorCtx) return;
+      const { x, y } = canvasClickToPixel(emoticonEditorCanvas, e.clientX, e.clientY);
+      applyMagicWand(x, y);
     });
+    const emoticonEditorX = document.getElementById("emoticon-editor-x");
+    if (emoticonEditorX) emoticonEditorX.addEventListener("click", closeEmoticonEditor);
+    const emoticonEditorCancel = document.getElementById("emoticon-editor-cancel");
+    if (emoticonEditorCancel) emoticonEditorCancel.addEventListener("click", closeEmoticonEditor);
+    const emoticonEditorReset = document.getElementById("emoticon-editor-reset");
+    if (emoticonEditorReset) emoticonEditorReset.addEventListener("click", resetEmoticonEditor);
+    const emoticonEditorSave = document.getElementById("emoticon-editor-save");
+    if (emoticonEditorSave) emoticonEditorSave.addEventListener("click", saveEmoticonEditor);
 
     // Sair (rodapé — opcional; sign-out principal fica no menu do nick)
     const signoutBtn = document.getElementById("btn-signout");

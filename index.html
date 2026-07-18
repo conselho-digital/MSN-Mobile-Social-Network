@@ -850,6 +850,7 @@
        da galeria) nos navegadores mobile que suportam o atributo. -->
   <input type="file" id="avatar-webcam-input" accept="image/*" capture="user" hidden />
   <input type="file" id="scene-image-input" accept="image/*" hidden />
+  <input type="file" id="emoticon-image-input" accept="image/*" hidden />
 
   <!-- Opções: lista de categorias (recolhível, pra poupar espaço no
        mobile) + painel de conteúdo. Só "Pessoal" tem conteúdo de
@@ -1329,12 +1330,44 @@
         </div>
         <div class="emoticon-dialog__actions">
           <button type="button" id="emoticon-dialog-create" class="btn-signin btn-signin--sm">Criar...</button>
-          <button type="button" id="emoticon-dialog-delete" class="btn-signin btn-signin--sm">Excluir</button>
+          <button type="button" id="emoticon-dialog-delete" class="btn-signin btn-signin--sm" disabled>Excluir</button>
         </div>
       </div>
       <footer class="scene-dialog__footer">
         <button type="button" id="emoticon-dialog-ok" class="btn-signin btn-signin--sm">OK</button>
         <button type="button" id="emoticon-dialog-close" class="btn-signin btn-signin--sm">Fechar</button>
+      </footer>
+    </div>
+  </div>
+
+  <!-- Editor de emoticon (varinha mágica pra remover fundo) — aberto
+       depois de escolher uma foto em "Criar..." (ver
+       emoticon-image-input). Tela cheia no celular, 50% da tela no
+       computador (ver #emoticon-editor no CSS). -->
+  <div id="emoticon-editor" class="modal-overlay" hidden>
+    <div class="emoticon-editor__panel" role="dialog" aria-modal="true" aria-label="Criar emoticon">
+      <header class="scene-dialog__titlebar">
+        <span class="scene-dialog__titlebar-app">
+          <img src="assets/icons/favicon.png" alt="" />
+          Criar emoticon
+        </span>
+        <button type="button" id="emoticon-editor-x" class="scene-dialog__x" aria-label="Fechar">&times;</button>
+      </header>
+      <div class="emoticon-editor__body">
+        <p class="emoticon-editor__hint">Toque numa cor da foto pra remover ela (e as parecidas) — use pra tirar o fundo antes de salvar como emoticon.</p>
+        <div class="emoticon-editor__canvas-wrap">
+          <canvas id="emoticon-editor-canvas"></canvas>
+        </div>
+        <label class="emoticon-editor__tolerance">
+          Sensibilidade
+          <input type="range" id="emoticon-editor-tolerance" min="5" max="120" value="40" />
+        </label>
+      </div>
+      <footer class="scene-dialog__footer emoticon-editor__footer">
+        <button type="button" id="emoticon-editor-reset" class="btn-signin btn-signin--sm">Desfazer tudo</button>
+        <span class="emoticon-editor__spacer"></span>
+        <button type="button" id="emoticon-editor-cancel" class="btn-signin btn-signin--sm">Cancelar</button>
+        <button type="button" id="emoticon-editor-save" class="btn-signin btn-signin--sm">Salvar</button>
       </footer>
     </div>
   </div>

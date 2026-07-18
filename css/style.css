@@ -3605,3 +3605,96 @@ body[data-login-theme="cenario1"] #screen-connecting::before {
   width: 90px;
 }
 .emoticon-dialog__actions .btn-signin { width: 100%; }
+/* Personalizado (imagem, não emoji unicode) — a foto preenche o
+   quadradinho do jeito que já vier (o fundo, se removido no editor,
+   aparece transparente por cima do branco do botão). */
+.emoticon-dialog__swatch--custom { padding: 2px; }
+.emoticon-dialog__swatch--custom img {
+  display: block;
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+}
+
+/* ---------- Editor de emoticon (varinha mágica) ---------- */
+/* Tela cheia no celular (a maioria dos aparelhos que vão usar isso);
+   50% da tela no computador (mesmo breakpoint de 700px já usado em
+   .login-message) — pedido explícito, em vez do tamanho fixo dos
+   outros diálogos (.scene-dialog). */
+#emoticon-editor {
+  padding: 0;
+  align-items: stretch;
+  justify-content: stretch;
+}
+.emoticon-editor__panel {
+  width: 100%;
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+  background: #ffffff;
+  overflow: hidden;
+}
+@media (min-width: 700px) {
+  #emoticon-editor { align-items: center; justify-content: center; padding: 16px; }
+  .emoticon-editor__panel {
+    width: 50vw;
+    height: 50vh;
+    min-width: 360px;
+    min-height: 360px;
+    border-radius: 6px;
+    box-shadow: 0 14px 38px rgba(0, 0, 0, 0.5);
+  }
+}
+.emoticon-editor__body {
+  flex: 1 1 auto;
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  padding: 12px 16px;
+  overflow-y: auto;
+}
+.emoticon-editor__hint { margin: 0; font-size: 0.8rem; color: #5a6b78; }
+/* Fundo xadrez (transparência clássica de editor de imagem) — deixa
+   claro o que a varinha mágica já apagou, sem precisar adivinhar se é
+   "branco de verdade" ou "sem nada" ali. */
+.emoticon-editor__canvas-wrap {
+  flex: 1 1 auto;
+  min-height: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background-image:
+    linear-gradient(45deg, #e8ecef 25%, transparent 25%, transparent 75%, #e8ecef 75%, #e8ecef),
+    linear-gradient(45deg, #e8ecef 25%, transparent 25%, transparent 75%, #e8ecef 75%, #e8ecef);
+  background-size: 16px 16px;
+  background-position: 0 0, 8px 8px;
+  background-color: #ffffff;
+  border: 1px solid #cfd8df;
+  border-radius: 4px;
+  overflow: hidden;
+}
+/* Mostrado bem maior que a resolução real (EMOTICON_MAX_DIM, só
+   128px) — "width" fixo + "height:auto" (mantém a proporção,
+   parecido com <img>) faz o próprio navegador ampliar o desenho,
+   deixando mais fácil acertar o pixel certo com o dedo/mouse; o clique
+   ainda mira certo porque o JS reconverte a posição de volta pra
+   resolução real (ver canvasClickToPixel). */
+#emoticon-editor-canvas {
+  width: 280px;
+  height: auto;
+  max-width: 100%;
+  max-height: 100%;
+  cursor: crosshair;
+  touch-action: none;
+}
+.emoticon-editor__tolerance {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 0.8rem;
+  color: #3d4f5a;
+}
+.emoticon-editor__tolerance input { flex: 1 1 auto; }
+.emoticon-editor__footer { flex-wrap: wrap; }
+.emoticon-editor__spacer { flex: 1 1 auto; }
