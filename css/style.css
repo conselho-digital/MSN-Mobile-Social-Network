@@ -2943,11 +2943,20 @@ body[data-login-theme="cenario1"] #screen-connecting::before {
    (.chat-sidebar-toggle) + a lista de mensagens lado a lado — só a
    lista rola (overflow-y nela, não mais aqui), a barrinha fica sempre
    à mostra com a altura inteira da caixa (ver comentário grande em
-   .chat-sidebar-toggle). */
+   .chat-sidebar-toggle).
+   O fundo tem duas camadas (ver applyChatBackground em dashboard.js):
+   sem plano de fundo pessoal escolhido, o degradê da cor do tema do
+   CONTATO fica aqui, no .chat-thread — atrás da caixa de mensagens,
+   igual ao degradê do Dashboard (.dash-body) — e #chat-messages fica
+   transparente pra deixá-lo aparecer por trás das bolhas. Com um
+   plano de fundo pessoal escolhido, é o contrário: a imagem/cor fica
+   sólida direto em #chat-messages (só quem escolheu vê) e o
+   .chat-thread volta a ficar transparente. */
 .chat-thread {
   flex: 1 1 auto;
   display: flex;
   min-height: 0;
+  background: transparent;
 }
 .chat-messages {
   flex: 1 1 auto;
@@ -2960,13 +2969,13 @@ body[data-login-theme="cenario1"] #screen-connecting::before {
   display: flex;
   flex-direction: column;
   gap: 8px;
-  min-height: 100%;
-  /* O "background" completo (imagem + posição/tamanho/repetição) é
-     definido via JS em applyChatBackground() — ver dashboard.js. Fica
-     aqui (na lista em si, não em .chat-thread que só embrulha ela +
-     a barrinha) pra sempre cobrir exatamente essa caixa, sem depender
-     de "esticar igual" à barrinha do lado (ver comentário em
-     applyChatBackground). */
+  /* "min-height: 0" (não mais 100%) — sendo item de flex de
+     .chat-thread, o "stretch" (align-items padrão) já estica pra
+     altura inteira da linha sozinho, com o mesmo cálculo exato usado
+     pela barrinha ao lado (.chat-sidebar-toggle); um "min-height: 100%"
+     percentual aqui arredondava separado do "stretch" da barrinha,
+     abrindo uma frestinha de 1px vazando a cor de baixo dela. */
+  min-height: 0;
 }
 .chat-message {
   max-width: 78%;

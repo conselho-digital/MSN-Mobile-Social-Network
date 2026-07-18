@@ -2187,17 +2187,19 @@ const Dashboard = (() => {
     updateHeaderTextContrast(header, sceneId, c.scene_image_url);
   }
 
-  // Resolve e aplica o "Plano de Fundo" (atrás do texto das
-  // mensagens) da conversa atualmente aberta — no PRÓPRIO
-  // #chat-messages (não mais em #chat-thread, que só "embrulha" ele e
-  // a barrinha de esconder fotos lado a lado). Antes, com o fundo no
-  // .chat-thread, uma pequena diferença de altura entre a barrinha e a
-  // lista (min-height:100% de #chat-messages arredondando de um jeito
-  // diferente do "stretch" da barrinha) deixava um pedacinho do verde
-  // vazando embaixo da barrinha branca — botando o fundo direto na
-  // lista, ele sempre cobre exatamente a própria caixa dela, não
-  // importa o que a barrinha ao lado estiver fazendo.
+  // Resolve e aplica o fundo da conversa atualmente aberta. Duas
+  // situações bem diferentes (ver comentário grande em .chat-thread/
+  // .chat-messages no CSS):
+  // - Plano de fundo PESSOAL escolhido (só eu vejo, por contato):
+  //   sólido, direto em #chat-messages — cobre exatamente a caixa da
+  //   lista, não importa o que a barrinha ao lado estiver fazendo.
+  // - Sem escolha pessoal: cor de TEMA do contato, em degradê (mesma
+  //   técnica do Dashboard — ver --tint-vivid/.dash-body), aplicada no
+  //   .chat-thread (o "row" que embrulha a barrinha + a lista) — ou
+  //   seja, ATRÁS da caixa de mensagens, não nela; #chat-messages fica
+  //   transparente pra deixar o degradê aparecer por trás das bolhas.
   function applyChatBackground() {
+    const thread = document.getElementById("chat-thread");
     const messages = document.getElementById("chat-messages");
     if (!messages || !currentChatContact) return;
     const myBg = getPersonalChatBackground(currentChatContact.id);
@@ -2207,10 +2209,20 @@ const Dashboard = (() => {
       // propriedade "background" (shorthand) — não pra
       // "background-image" sozinha (ver .dash-header, mesma técnica).
       messages.style.background = resolveSceneBg(myBg.scene, myBg.sceneImageUrl, tintHex);
+      if (thread) thread.style.background = "transparent";
     } else {
-      // Sem escolha pessoal pra esse contato: só a cor do tema dele,
-      // sólida (a foto/cenário fica reservada pro banner do topo).
-      messages.style.background = MSNScenes.effectiveTheme(currentChatContact.scene, currentChatContact.color_scheme);
+      const hex = MSNScenes.effectiveTheme(currentChatContact.scene, currentChatContact.color_scheme);
+      // Mesmas 4 paradas/proporção do degradê do Dashboard
+      // (.dash-body / --tint-vivid): cor do tema nas pontas, branco no
+      // meio — só que calculada aqui na hora (a cor é a do CONTATO,
+      // não a minha, então não dá pra reaproveitar --tint-vivid, que é
+      // sempre o MEU tema).
+      const vivid = MSNScenes.pastel(hex, 0.7875);
+      if (thread) {
+        thread.style.background =
+          "linear-gradient(180deg, " + vivid + " 0%, #ffffff 22%, #ffffff 78%, " + vivid + " 100%)";
+      }
+      messages.style.background = "transparent";
     }
   }
 
