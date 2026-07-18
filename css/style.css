@@ -3061,8 +3061,13 @@ body[data-login-theme="cenario1"] #screen-connecting::before {
      barrinha de esconder fotos (.chat-sidebar-toggle, ver z-index nela
      mais abaixo, que garante que ela continua clicável por cima dessa
      pontinha). Só a caixa de baixo (texto/ícones/Enviar), não a lista
-     de mensagens nem o aviso amarelo acima. */
-  margin-left: -20px;
+     de mensagens nem o aviso amarelo acima. -20px chegava a invadir a
+     PRÓPRIA caixa de texto (não só o respiro/padding em volta dela) —
+     como a barrinha fica por cima (z-index), o brilho azul de foco
+     (.chat-compose__input:focus) ficava escondido atrás dela do lado
+     esquerdo. -8px é pouco o bastante pra nunca alcançar a caixa em
+     si, só o espaço vazio ao redor dela. */
+  margin-left: -8px;
 }
 .chat-compose__box { flex: 1 1 auto; min-width: 0; display: flex; flex-direction: column; gap: 6px; }
 .chat-compose__input {
