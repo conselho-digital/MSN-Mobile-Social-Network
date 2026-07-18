@@ -2188,18 +2188,22 @@ const Dashboard = (() => {
   }
 
   // Resolve e aplica o fundo da conversa atualmente aberta. Duas
-  // situações bem diferentes (ver comentário grande em .chat-thread/
-  // .chat-messages no CSS):
+  // situações bem diferentes:
   // - Plano de fundo PESSOAL escolhido (só eu vejo, por contato):
   //   sólido, direto em #chat-messages — cobre exatamente a caixa da
-  //   lista, não importa o que a barrinha ao lado estiver fazendo.
+  //   lista, não o resto da tela (ver .chat-body abaixo, volta a
+  //   ficar transparente nesse caso).
   // - Sem escolha pessoal: cor de TEMA do contato, em degradê (mesma
-  //   técnica do Dashboard — ver --tint-vivid/.dash-body), aplicada no
-  //   .chat-thread (o "row" que embrulha a barrinha + a lista) — ou
-  //   seja, ATRÁS da caixa de mensagens, não nela; #chat-messages fica
-  //   transparente pra deixar o degradê aparecer por trás das bolhas.
+  //   técnica do Dashboard — ver --tint-vivid/.dash-body), aplicada em
+  //   #chat-body — ou seja, atrás de TUDO (coluna das fotos, barrinha
+  //   de esconder, aviso amarelo e mensagens, não só a caixa de
+  //   mensagens), igual ao cliente clássico (a cor do tema cobre a
+  //   janela inteira abaixo do banner do cenário). #chat-messages e a
+  //   coluna das fotos ficam transparentes pra deixar esse degradê
+  //   único aparecer por trás de tudo, sem costura entre as partes
+  //   (uma única camada de cor, não várias tentando bater exatas).
   function applyChatBackground() {
-    const thread = document.getElementById("chat-thread");
+    const body = document.getElementById("chat-body");
     const messages = document.getElementById("chat-messages");
     if (!messages || !currentChatContact) return;
     const myBg = getPersonalChatBackground(currentChatContact.id);
@@ -2209,7 +2213,7 @@ const Dashboard = (() => {
       // propriedade "background" (shorthand) — não pra
       // "background-image" sozinha (ver .dash-header, mesma técnica).
       messages.style.background = resolveSceneBg(myBg.scene, myBg.sceneImageUrl, tintHex);
-      if (thread) thread.style.background = "transparent";
+      if (body) body.style.background = "transparent";
     } else {
       const hex = MSNScenes.effectiveTheme(currentChatContact.scene, currentChatContact.color_scheme);
       // Mesmas 4 paradas/proporção do degradê do Dashboard
@@ -2218,8 +2222,8 @@ const Dashboard = (() => {
       // não a minha, então não dá pra reaproveitar --tint-vivid, que é
       // sempre o MEU tema).
       const vivid = MSNScenes.pastel(hex, 0.7875);
-      if (thread) {
-        thread.style.background =
+      if (body) {
+        body.style.background =
           "linear-gradient(180deg, " + vivid + " 0%, #ffffff 22%, #ffffff 78%, " + vivid + " 100%)";
       }
       messages.style.background = "transparent";

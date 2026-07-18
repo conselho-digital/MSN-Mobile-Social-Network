@@ -2687,6 +2687,11 @@ body[data-login-theme="cenario1"] #screen-connecting::before {
   flex: 1 1 auto;
   display: flex;
   min-height: 0;
+  /* Fundo de verdade (cor do tema do contato em degradê, ou o plano de
+     fundo pessoal só na caixa de mensagens) é definido via JS em
+     applyChatBackground() — ver dashboard.js. Branco aqui é só o
+     estado inicial (antes da 1ª conversa abrir). */
+  background: #ffffff;
 }
 /* Largura = mesma do respiro do banner (.chat-header__info, 124px) —
    as duas ficam alinhadas, a foto do contato "gruda" embaixo do texto
@@ -2707,18 +2712,16 @@ body[data-login-theme="cenario1"] #screen-connecting::before {
   flex-direction: column;
   align-items: center;
   padding: 0 8px 12px;
-  /* Sólido (não mais transparente) — a caixa da própria aside começa
-     abaixo do banner do topo (.chat-header, que é outra "linha" da
-     tela, não sobreposta por esta caixa; a foto sobe por cima dele
-     via overflow visible + margin-top negativo, sem depender do
-     fundo aqui ser transparente pra isso), então um fundo sólido não
-     esconde nada do cenário do contato. Só que sem ele, os espaços
-     sem foto dentro da coluna (entre as duas fotos, embaixo da de
-     cima) deixavam a faixa amarela de "contato offline" (esticada por
-     baixo desta coluna, ver .chat-offline-banner) vazar por uma
-     frestinha — a coluna precisa "cobrir" a faixa de verdade, não só
-     nos pontos onde tem foto. */
-  background: #ffffff;
+  /* Transparente — deixa o fundo de #chat-body (cor do tema do
+     contato ou plano de fundo pessoal, ver applyChatBackground em
+     dashboard.js) aparecer por trás, nos espaços sem foto dentro da
+     coluna (entre as duas fotos, embaixo da de cima), igual ao
+     cliente clássico (a cor do tema cobre a janela inteira, não só a
+     caixa de mensagens). Antes era sólido pra tapar uma frestinha da
+     faixa amarela de "contato offline" que vazava aqui — essa faixa
+     não se estica mais por baixo desta coluna (ver .chat-offline-banner),
+     então não tem mais frestinha nenhuma pra tapar. */
+  background: transparent;
   /* "overflow-x: hidden" sozinho (sem mexer no eixo Y) NÃO existe pro
      navegador: se um eixo é "hidden" e o outro fica "visible", o
      "visible" vira "auto" sozinho (regra do próprio CSS) — e "auto"
@@ -2780,10 +2783,13 @@ body[data-login-theme="cenario1"] #screen-connecting::before {
   margin: 0;
   padding: 0;
   border: none;
-  background-color: #ffffff;
+  /* Transparente — deixa o fundo de #chat-body (cor do tema/plano de
+     fundo pessoal) aparecer por trás, igual à coluna das fotos (ver
+     .chat-sidebar). */
+  background-color: transparent;
   /* Linha de brilho na borda esquerda — cor + fraca (0.35/0.12) do que
      o brilho do clique (ver ::before), some rápido (70% já é
-     transparente) pra não competir com o miolo branco da barra. */
+     transparente) pra não competir com o resto da barra. */
   background-image: linear-gradient(90deg, rgba(46, 144, 220, 0.35) 0%, rgba(46, 144, 220, 0.12) 35%, transparent 70%);
   background-repeat: no-repeat;
   cursor: pointer;
@@ -3005,18 +3011,11 @@ body[data-login-theme="cenario1"] #screen-connecting::before {
 }
 .chat-offline-banner__close:hover { background: rgba(0, 0, 0, 0.08); color: #5a5230; }
 
-/* Só "embrulha" a lista de mensagens (a barrinha de esconder fotos,
-   .chat-sidebar-toggle, não fica mais aqui dentro — ver comentário
-   grande nela, agora é irmã de .chat-sidebar/.chat-main pra cobrir a
-   altura inteira da tela de conversa, aviso amarelo incluído).
-   O fundo tem duas camadas (ver applyChatBackground em dashboard.js):
-   sem plano de fundo pessoal escolhido, o degradê da cor do tema do
-   CONTATO fica aqui, no .chat-thread — atrás da caixa de mensagens,
-   igual ao degradê do Dashboard (.dash-body) — e #chat-messages fica
-   transparente pra deixá-lo aparecer por trás das bolhas. Com um
-   plano de fundo pessoal escolhido, é o contrário: a imagem/cor fica
-   sólida direto em #chat-messages (só quem escolheu vê) e o
-   .chat-thread volta a ficar transparente. */
+/* Só "embrulha" a lista de mensagens. Sempre transparente — o degradê
+   da cor do tema do contato (sem plano de fundo pessoal escolhido)
+   fica em #chat-body, atrás de tudo (coluna das fotos, barrinha,
+   aviso amarelo e mensagens de uma vez, igual ao cliente clássico —
+   ver applyChatBackground em dashboard.js), não mais só aqui. */
 .chat-thread {
   flex: 1 1 auto;
   display: flex;
