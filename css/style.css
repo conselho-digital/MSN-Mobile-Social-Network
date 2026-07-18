@@ -3153,7 +3153,13 @@ body[data-login-theme="cenario1"] #screen-connecting::before {
   color: #5a6b78;
   cursor: pointer;
 }
-.chat-toolbar__btn:hover:not(:disabled) { background: #eef1f4; border-color: #d7dee4; }
+/* ":active" (não ":hover") — em tela de toque, ":hover" "gruda" depois
+   do toque (não existe ponteiro real pra "sair" do botão), deixando o
+   fundo aceso permanentemente depois de soltar (ex.: sininho de
+   "chamar a atenção" ficando com a cara de apertado pra sempre) —
+   mesmo problema já corrigido em .dash-tool-btn. ":active" só fica
+   aceso durante o toque de verdade, sempre. */
+.chat-toolbar__btn:active:not(:disabled) { background: #eef1f4; border-color: #d7dee4; }
 .chat-toolbar__btn:disabled { opacity: 0.4; cursor: default; }
 /* "Pressionado" enquanto o menu dele está aberto (emoji/plano de
    fundo) — direto do estado real do picker (:has), então volta ao
@@ -3174,7 +3180,7 @@ body[data-login-theme="cenario1"] #screen-connecting::before {
   background: linear-gradient(#3d9be0, #1f7fd0);
   border-color: #1a6fbb;
 }
-.chat-toolbar__btn--send:hover { background: linear-gradient(#4aa6e8, #2384d6); }
+.chat-toolbar__btn--send:active { background: linear-gradient(#4aa6e8, #2384d6); }
 
 .chat-emoji-picker {
   position: absolute;
