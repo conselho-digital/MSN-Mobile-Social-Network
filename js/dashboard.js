@@ -542,6 +542,10 @@ const Dashboard = (() => {
      animação. */
   let onlineToastQueue = [];
   let onlineToastTimer = null;
+  // Contato mostrado no aviso agora aberto na tela — clicar em
+  // qualquer lugar do aviso (menos "Opções" e o "X") abre a conversa
+  // com ele (ver bindEvents, listener de click em #online-toast).
+  let onlineToastCurrentContact = null;
   const ONLINE_TOAST_DURATION_MS = 6000;
 
   function queueOnlineToast(contact) {
@@ -555,6 +559,7 @@ const Dashboard = (() => {
     if (!toast) return;
     const contact = onlineToastQueue.shift();
     if (!contact) return;
+    onlineToastCurrentContact = contact;
     document.getElementById("online-toast-name").textContent = contact.display_name || contact.email || "Contato";
     document.getElementById("online-toast-avatar").innerHTML = chatStatusFrameMarkup(contact.avatar_url, "online");
     toast.hidden = false;
@@ -580,6 +585,7 @@ const Dashboard = (() => {
     setTimeout(() => {
       toast.hidden = true;
       if (onlineToastQueue.length) processOnlineToastQueue();
+      else onlineToastCurrentContact = null;
     }, 350);
   }
 
@@ -3097,14 +3103,28 @@ const Dashboard = (() => {
     });
 
     // Aviso "fulano acabou de entrar": X fecha; "Opções" fecha e abre
-    // Opções > Sons, pra mudar essa configuração.
+    // Opções > Sons, pra mudar essa configuração; clicar em qualquer
+    // outro lugar do aviso abre a conversa com esse contato (ver
+    // e.stopPropagation() nos dois de cima, pra não abrir a conversa
+    // também quando a intenção era só fechar ou ver Opções).
     const onlineToastClose = document.getElementById("online-toast-close");
-    if (onlineToastClose) onlineToastClose.addEventListener("click", hideOnlineToast);
+    if (onlineToastClose) onlineToastClose.addEventListener("click", (e) => {
+      e.stopPropagation();
+      hideOnlineToast();
+    });
     const onlineToastOptions = document.getElementById("online-toast-options");
     if (onlineToastOptions) onlineToastOptions.addEventListener("click", (e) => {
       e.preventDefault();
+      e.stopPropagation();
       hideOnlineToast();
       openOptionsDialog("sounds");
+    });
+    const onlineToast = document.getElementById("online-toast");
+    if (onlineToast) onlineToast.addEventListener("click", () => {
+      const contact = onlineToastCurrentContact;
+      if (!contact) return;
+      hideOnlineToast();
+      openChat(contact);
     });
 
     // "Alterar Fonte": botão "A" na caixa de mensagem e botão em

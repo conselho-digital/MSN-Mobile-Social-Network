@@ -823,10 +823,10 @@ const App = (function () {
     const msg = (err && (err.message || err.error_description || err.msg || err.error)) || "";
     if (/invalid login credentials/i.test(msg)) {
       // O Supabase usa essa mesma mensagem tanto pra senha errada quanto
-      // pra e-mail ainda não confirmado (por segurança, não diferencia) —
-      // por isso o texto cobre os dois casos, e o link de reenviar
-      // confirmação aparece do lado (ver toggleResendConfirmLink).
-      return "E-mail ou senha incorretos, ou o e-mail ainda não foi confirmado.";
+      // pra e-mail ainda não confirmado (por segurança, não diferencia
+      // os dois casos) — pedido explícito pra não sugerir "e-mail não
+      // confirmado" aqui, só "informações erradas" de forma genérica.
+      return "As informações de autenticação estão incorretas.";
     }
     if (/email not confirmed/i.test(msg)) {
       return "Confirme seu e-mail antes de entrar.";

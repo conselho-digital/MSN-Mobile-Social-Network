@@ -827,6 +827,15 @@ body[data-login-theme="cenario1"] #screen-connecting::before {
   color: #1b5a8f;
   border-color: #bcdcf5;
 }
+/* No computador (tela mais larga que a de celular), a caixa de erro
+   de login fica 50% maior — mesmo texto, só a caixa/fonte crescem. */
+@media (min-width: 700px) {
+  .login-message {
+    margin-top: 21px;
+    padding: 12px 15px;
+    font-size: 1.275rem;
+  }
+}
 
 /* ---------- Botão Entrar ---------- */
 .btn-signin {
@@ -3261,6 +3270,7 @@ body[data-login-theme="cenario1"] #screen-connecting::before {
   align-items: center;
   gap: 14px;
   padding: 12px 14px 14px;
+  cursor: pointer;
 }
 .online-toast__avatar {
   position: relative;
