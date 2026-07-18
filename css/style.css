@@ -2758,11 +2758,18 @@ body[data-login-theme="cenario1"] #screen-connecting::before {
    (align-items:stretch) só até o fim da caixa de mensagens — NÃO
    desce até a caixa de texto (.chat-compose fica fora desse "row",
    como outro item da coluna de .chat-main). Largura = 3% da largura
-   de .chat-main. Branca; fica azul num flash rápido ao clicar e volta
-   pra branca sozinha (ver .is-pressed, ligada/desligada em
-   bindEvents). Seta = mesmo desenho das categorias do Dashboard
+   de .chat-main. Branca; ao clicar acende um brilho circular azul
+   atrás da setinha (não a barra toda, ver ::before/.is-pressed
+   abaixo, ligada/desligada em bindEvents — igual ao cliente clássico)
+   e apaga sozinho. Seta = mesmo desenho das categorias do Dashboard
    (.group-caret), só trocando de lado conforme aria-expanded. */
 .chat-sidebar-toggle {
+  /* "z-index:0" (não só position:relative) cria um contexto de
+     empilhamento próprio pra esse botão — sem isso, o z-index:-1 do
+     brilho (ver ::before abaixo, precisa ficar atrás da seta) vazaria
+     pra trás de elementos FORA do botão também, não só da seta. */
+  position: relative;
+  z-index: 0;
   flex: 0 0 3%;
   min-width: 4px;
   display: flex;
@@ -2773,9 +2780,29 @@ body[data-login-theme="cenario1"] #screen-connecting::before {
   border: none;
   background: #ffffff;
   cursor: pointer;
-  transition: background-color 0.35s ease;
 }
-.chat-sidebar-toggle.is-pressed { background: #1f7fd0; transition: none; }
+/* Brilho: só um círculo atrás da seta (não a barra inteira), do
+   tamanho dela + uma margem — centralizado via top/left 50% + margin
+   negativo (metade do próprio tamanho). "opacity" (não a cor de
+   fundo) é o que anima aqui, pra dar um fade suave ao apagar mesmo
+   sendo um degradê (transição de "background" não anima gradientes
+   de um jeito confiável entre navegadores). */
+.chat-sidebar-toggle::before {
+  content: "";
+  position: absolute;
+  z-index: -1;
+  top: 50%;
+  left: 50%;
+  width: 28px;
+  height: 28px;
+  margin: -14px 0 0 -14px;
+  border-radius: 50%;
+  background: radial-gradient(circle, rgba(46, 144, 220, 0.75) 0%, rgba(46, 144, 220, 0.35) 55%, rgba(46, 144, 220, 0) 75%);
+  opacity: 0;
+  transition: opacity 0.35s ease;
+  pointer-events: none;
+}
+.chat-sidebar-toggle.is-pressed::before { opacity: 1; transition: none; }
 /* Fechada (fotos escondidas) aponta pra direita (mostrar mais);
    aberta (padrão) aponta pra esquerda (esconder) — desenho idêntico
    ao .group-caret, só espelhado. */
