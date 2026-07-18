@@ -2752,24 +2752,17 @@ body[data-login-theme="cenario1"] #screen-connecting::before {
   opacity: 0;
   overflow: hidden;
 }
-/* Barrinha de esconder/mostrar a coluna das fotos — irmã de
-   .chat-sidebar e .chat-main dentro do "row" .chat-body (não mais só
-   dentro da caixa de mensagens), pra esticar (align-items:stretch) a
-   altura INTEIRA da tela de conversa: aviso amarelo de offline +
-   mensagens + caixa de texto, tudo de uma vez — igual ao cliente
-   clássico, e sem deixar um trecho (o aviso amarelo) sem essa
-   barrinha do lado. Largura = 3% da largura da tela de conversa.
-   Branca; fica azul num flash rápido ao clicar e volta pra branca
-   sozinha (ver .is-pressed, ligada/desligada em bindEvents). Seta =
-   mesmo desenho das categorias do Dashboard (.group-caret), só
-   trocando de lado conforme aria-expanded. */
+/* Barrinha de esconder/mostrar a coluna das fotos — dentro de
+   .chat-main, ao lado de .chat-content (aviso amarelo + mensagens),
+   dentro do "row" .chat-toggle-row (ver abaixo). Estica
+   (align-items:stretch) só até o fim da caixa de mensagens — NÃO
+   desce até a caixa de texto (.chat-compose fica fora desse "row",
+   como outro item da coluna de .chat-main). Largura = 3% da largura
+   de .chat-main. Branca; fica azul num flash rápido ao clicar e volta
+   pra branca sozinha (ver .is-pressed, ligada/desligada em
+   bindEvents). Seta = mesmo desenho das categorias do Dashboard
+   (.group-caret), só trocando de lado conforme aria-expanded. */
 .chat-sidebar-toggle {
-  /* Posicionada + acima (mesmo z-index de .chat-sidebar) — a caixa de
-     texto (ver margin-left negativo em .chat-compose) invade uns
-     pixels dessa coluna reservada, e essa barrinha precisa continuar
-     clicável por cima dessa pontinha, não escondida atrás dela. */
-  position: relative;
-  z-index: 2;
   flex: 0 0 3%;
   min-width: 4px;
   display: flex;
@@ -2788,6 +2781,26 @@ body[data-login-theme="cenario1"] #screen-connecting::before {
    ao .group-caret, só espelhado. */
 .chat-sidebar-toggle .group-caret { transform: scaleX(-1); }
 .chat-sidebar-toggle[aria-expanded="false"] .group-caret { transform: scaleX(1); }
+
+/* Linha com a barrinha de esconder fotos + .chat-content lado a lado
+   — só até o fim da caixa de mensagens (ver comentário grande em
+   .chat-sidebar-toggle). */
+.chat-toggle-row {
+  flex: 1 1 auto;
+  display: flex;
+  min-height: 0;
+}
+/* Coluna com o aviso amarelo + a caixa de mensagens (ex-filhos diretos
+   de .chat-main, agora um nível mais fundo por causa de
+   .chat-toggle-row) — mesmo layout de antes, só "embrulhando" os
+   dois. */
+.chat-content {
+  flex: 1 1 auto;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
+}
 
 .chat-main {
   flex: 1 1 auto;
@@ -3057,17 +3070,10 @@ body[data-login-theme="cenario1"] #screen-connecting::before {
   gap: 10px;
   padding: 10px 12px calc(10px + env(safe-area-inset-bottom));
   background: #ffffff;
-  /* Um pouco mais larga — invade uns pixels da coluna reservada pra
-     barrinha de esconder fotos (.chat-sidebar-toggle, ver z-index nela
-     mais abaixo, que garante que ela continua clicável por cima dessa
-     pontinha). Só a caixa de baixo (texto/ícones/Enviar), não a lista
-     de mensagens nem o aviso amarelo acima. -20px chegava a invadir a
-     PRÓPRIA caixa de texto (não só o respiro/padding em volta dela) —
-     como a barrinha fica por cima (z-index), o brilho azul de foco
-     (.chat-compose__input:focus) ficava escondido atrás dela do lado
-     esquerdo. -8px é pouco o bastante pra nunca alcançar a caixa em
-     si, só o espaço vazio ao redor dela. */
-  margin-left: -8px;
+  /* Fora do "row" da barrinha de esconder fotos (.chat-toggle-row, ver
+     CSS dela) — largura natural = .chat-main inteiro, sem precisar de
+     margin negativo pra "roubar" espaço da barrinha, já que ela nem
+     desce até aqui. */
 }
 .chat-compose__box { flex: 1 1 auto; min-width: 0; display: flex; flex-direction: column; gap: 6px; }
 .chat-compose__input {
