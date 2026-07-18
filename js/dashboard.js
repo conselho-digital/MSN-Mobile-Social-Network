@@ -34,7 +34,19 @@ const Dashboard = (() => {
     // supabase/contact_settings.sql).
     if (contactId && forcedOfflineReasons.has(String(contactId))) return "offline";
     if (status === "invisible") return "offline";
-    if (presenceReady && contactId && !presenceOnlineIds.has(String(contactId))) return "offline";
+    // Antes de "presenceReady" (ainda esperando o 1º sync do canal de
+    // presença em tempo real, ver subscribePresenceUpdates — sempre
+    // leva um instante depois do load()), NENHUM contato é confirmado
+    // como online ainda — mostra todo mundo offline nesse meio-tempo,
+    // em vez do "status" salvo (que pode estar desatualizado, ex.:
+    // internet caiu sem ninguém atualizar a coluna). Sem isso, a lista
+    // pintava rápido com o status antigo (às vezes "Disponível" de uma
+    // sessão que nem existe mais) e "corrigia" pra offline um instante
+    // depois — essa correção que parecia estranha/lenta. Mostrar todo
+    // mundo offline primeiro e "acender" quem está confirmado online
+    // é bem menos estranho do que mostrar (e depois desmentir) um
+    // status errado.
+    if (contactId && (!presenceReady || !presenceOnlineIds.has(String(contactId)))) return "offline";
     return status;
   }
   // contact_id (string) -> "blocked" | "appear_offline", carregado uma
