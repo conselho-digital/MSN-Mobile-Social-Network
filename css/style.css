@@ -2880,6 +2880,16 @@ body[data-login-theme="cenario1"] #screen-connecting::before {
   text-shadow: none;
 }
 
+/* Largura natural (dentro de .chat-main, nunca por baixo de
+   .chat-sidebar) — chegou a esticar por baixo da coluna das fotos via
+   margin-left negativo, pra cobrir uma emenda entre o branco da
+   coluna e o amarelo, mas os dois números (-124px/136px) eram um
+   "chute" fixo que não necessariamente batia pixel a pixel com a
+   largura real da coluna (fonte/zoom/aparelho podem variar essa
+   largura um pouco), deixando uma frestinha fina bem na emenda. Sem
+   essa esticada, o layout flex já garante um encontro exato entre as
+   duas colunas sozinho (sem "chute" nenhum) — a faixa simplesmente
+   não invade a coluna da foto, então não tem emenda pra cobrir. */
 .chat-offline-banner {
   flex: 0 0 auto;
   display: flex;
@@ -2891,18 +2901,6 @@ body[data-login-theme="cenario1"] #screen-connecting::before {
   font-size: 0.8rem;
   color: #5a5230;
   line-height: 1.4;
-  transition: margin-left 0.2s ease, padding-left 0.2s ease;
-}
-/* Com a coluna das fotos visível, a faixa amarela estica por baixo
-   dela (margin-left negativo do tamanho da coluna, ver .chat-sidebar)
-   em vez de parar exatamente na borda — sem isso, sobrava uma quebra/
-   emenda vertical bem no meio da tela, entre o branco da coluna e o
-   amarelo. O ícone/texto continuam alinhados com as mensagens (o
-   padding-left compensa o espaço que o margin-left tomou). Some
-   sozinho com a coluna escondida (mesma regra de .chat-header__info). */
-#screen-chat:has(.chat-sidebar:not(.is-collapsed)) .chat-offline-banner {
-  margin-left: -124px;
-  padding-left: 136px;
 }
 .chat-offline-banner__icon {
   flex: 0 0 auto;
