@@ -3550,16 +3550,34 @@ body[data-login-theme="cenario1"] #screen-connecting::before {
   font-size: 0.82rem;
   color: #3d4f5a;
 }
+/* "Iframe" dos emoticons — moldura própria com scroll (não estica
+   junto com o resto da janela): altura fixa (390px, 50% a mais que os
+   260px de antes, pra caber muito mais emoticons no futuro sem
+   esticar a janela toda) + overflow-y:auto. Scrollbar finita (mesmo
+   estilo já usado no aviso de contato offline, ver
+   .chat-offline-banner__text) — sempre visível, não só ao passar o
+   mouse, pra ficar claro que é uma área separada que rola por conta
+   própria. */
 .emoticon-dialog__grid {
   display: grid;
   grid-template-columns: repeat(8, 1fr);
+  align-content: start;
   gap: 4px;
-  max-height: 260px;
+  height: 390px;
   overflow-y: auto;
+  -webkit-overflow-scrolling: touch;
   padding: 4px;
   border: 1px solid #cfd8df;
   border-radius: 3px;
   background: #fff;
+  scrollbar-width: thin;
+  scrollbar-color: #adb6bd #eef1f4;
+}
+.emoticon-dialog__grid::-webkit-scrollbar { width: 8px; }
+.emoticon-dialog__grid::-webkit-scrollbar-track { background: #eef1f4; }
+.emoticon-dialog__grid::-webkit-scrollbar-thumb {
+  background: #adb6bd;
+  border-radius: 4px;
 }
 .emoticon-dialog__swatch {
   width: 100%;
