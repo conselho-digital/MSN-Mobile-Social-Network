@@ -2758,10 +2758,12 @@ body[data-login-theme="cenario1"] #screen-connecting::before {
    (align-items:stretch) só até o fim da caixa de mensagens — NÃO
    desce até a caixa de texto (.chat-compose fica fora desse "row",
    como outro item da coluna de .chat-main). Largura = 3% da largura
-   de .chat-main. Branca; ao clicar acende um brilho circular azul
-   atrás da setinha (não a barra toda, ver ::before/.is-pressed
-   abaixo, ligada/desligada em bindEvents — igual ao cliente clássico)
-   e apaga sozinho. Seta = mesmo desenho das categorias do Dashboard
+   de .chat-main. Branca, com uma linha clara e fininha de brilho azul
+   colada na borda esquerda (sempre visível, ver background-image
+   abaixo — mesmo efeito "vidro" do cliente clássico); ao clicar
+   acende, além disso, um brilho circular (bem fraco) atrás da setinha
+   (ver ::before/.is-pressed, ligada/desligada em bindEvents) e apaga
+   sozinho. Seta = mesmo desenho das categorias do Dashboard
    (.group-caret), só trocando de lado conforme aria-expanded. */
 .chat-sidebar-toggle {
   /* "z-index:0" (não só position:relative) cria um contexto de
@@ -2778,15 +2780,22 @@ body[data-login-theme="cenario1"] #screen-connecting::before {
   margin: 0;
   padding: 0;
   border: none;
-  background: #ffffff;
+  background-color: #ffffff;
+  /* Linha de brilho na borda esquerda — cor + fraca (0.35/0.12) do que
+     o brilho do clique (ver ::before), some rápido (70% já é
+     transparente) pra não competir com o miolo branco da barra. */
+  background-image: linear-gradient(90deg, rgba(46, 144, 220, 0.35) 0%, rgba(46, 144, 220, 0.12) 35%, transparent 70%);
+  background-repeat: no-repeat;
   cursor: pointer;
 }
-/* Brilho: só um círculo atrás da seta (não a barra inteira), do
-   tamanho dela + uma margem — centralizado via top/left 50% + margin
-   negativo (metade do próprio tamanho). "opacity" (não a cor de
-   fundo) é o que anima aqui, pra dar um fade suave ao apagar mesmo
-   sendo um degradê (transição de "background" não anima gradientes
-   de um jeito confiável entre navegadores). */
+/* Brilho do clique: só um círculo atrás da seta (não a barra inteira),
+   do tamanho dela + uma margem — centralizado via top/left 50% +
+   margin negativo (metade do próprio tamanho). Fraco (metade da
+   intensidade da primeira versão) pra combinar com a linha da borda
+   acima. "opacity" (não a cor de fundo) é o que anima aqui, pra dar um
+   fade suave ao apagar mesmo sendo um degradê (transição de
+   "background" não anima gradientes de um jeito confiável entre
+   navegadores). */
 .chat-sidebar-toggle::before {
   content: "";
   position: absolute;
@@ -2797,7 +2806,7 @@ body[data-login-theme="cenario1"] #screen-connecting::before {
   height: 28px;
   margin: -14px 0 0 -14px;
   border-radius: 50%;
-  background: radial-gradient(circle, rgba(46, 144, 220, 0.75) 0%, rgba(46, 144, 220, 0.35) 55%, rgba(46, 144, 220, 0) 75%);
+  background: radial-gradient(circle, rgba(46, 144, 220, 0.38) 0%, rgba(46, 144, 220, 0.18) 55%, rgba(46, 144, 220, 0) 75%);
   opacity: 0;
   transition: opacity 0.35s ease;
   pointer-events: none;
