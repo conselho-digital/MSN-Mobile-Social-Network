@@ -2707,7 +2707,18 @@ body[data-login-theme="cenario1"] #screen-connecting::before {
   flex-direction: column;
   align-items: center;
   padding: 0 8px 12px;
-  background: transparent;
+  /* Sólido (não mais transparente) — a caixa da própria aside começa
+     abaixo do banner do topo (.chat-header, que é outra "linha" da
+     tela, não sobreposta por esta caixa; a foto sobe por cima dele
+     via overflow visible + margin-top negativo, sem depender do
+     fundo aqui ser transparente pra isso), então um fundo sólido não
+     esconde nada do cenário do contato. Só que sem ele, os espaços
+     sem foto dentro da coluna (entre as duas fotos, embaixo da de
+     cima) deixavam a faixa amarela de "contato offline" (esticada por
+     baixo desta coluna, ver .chat-offline-banner) vazar por uma
+     frestinha — a coluna precisa "cobrir" a faixa de verdade, não só
+     nos pontos onde tem foto. */
+  background: #ffffff;
   /* "overflow-x: hidden" sozinho (sem mexer no eixo Y) NÃO existe pro
      navegador: se um eixo é "hidden" e o outro fica "visible", o
      "visible" vira "auto" sozinho (regra do próprio CSS) — e "auto"
