@@ -583,6 +583,21 @@
             </div>
 
             <div class="chat-thread" id="chat-thread">
+              <!-- Plano de fundo "Relógio" (fundo6) — imagem (mostrador
+                   sem ponteiros) + ponteiros de verdade desenhados por
+                   cima, girando com a hora do aparelho (ver
+                   startChatClock em dashboard.js). Fica atrás de
+                   #chat-messages (que fica transparente nesse caso),
+                   escondido (hidden) pra qualquer outro plano de
+                   fundo/cenário. -->
+              <div class="chat-clock-bg" id="chat-clock-bg" hidden>
+                <div class="chat-clock-bg__frame">
+                  <img class="chat-clock-bg__img" src="assets/backgrounds/fundo6.webp" alt="" />
+                  <div class="chat-clock-bg__hand chat-clock-bg__hand--hour"></div>
+                  <div class="chat-clock-bg__hand chat-clock-bg__hand--minute"></div>
+                  <div class="chat-clock-bg__hand chat-clock-bg__hand--second"></div>
+                </div>
+              </div>
               <ul class="chat-messages" id="chat-messages"></ul>
             </div>
           </div>

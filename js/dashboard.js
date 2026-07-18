@@ -84,6 +84,10 @@ const Dashboard = (() => {
   const SCENES = MSNScenes.list;
   const sceneBg = MSNScenes.bg;
   const pastel = MSNScenes.pastel;
+  // Planos de fundo de CONVERSA (galeria própria, ver comentário grande
+  // em scenes.js) — catálogo separado dos 23 cenários acima, só pra o
+  // diálogo "Plano de Fundo" (botão 🖌 da caixa de mensagem).
+  const CHAT_BACKGROUNDS = MSNScenes.chatBackgrounds;
 
   // Cenário "custom" (enviado pela pessoa via "Procurar...") não está
   // no catálogo fixo — usa a URL enviada em vez de procurar por id.
@@ -95,6 +99,16 @@ const Dashboard = (() => {
       return "linear-gradient(transparent,transparent), url('" + customUrl + "') center/cover no-repeat, " + SCENES[0].css;
     }
     return sceneBg(sceneId, tintHex);
+  }
+
+  // Mesma ideia, pro catálogo de plano de fundo de CONVERSA (galeria
+  // própria) — sem camada de tingimento (essas fotos não têm cor de
+  // tema pareada, ao contrário dos 23 cenários da conta).
+  function resolveChatBg(sceneId, customUrl) {
+    if (sceneId === "custom" && customUrl) {
+      return "url('" + customUrl + "') center/cover no-repeat";
+    }
+    return MSNScenes.chatBackgroundBg(sceneId);
   }
 
   // ---------- Contraste automático do texto do cabeçalho ----------
@@ -1868,11 +1882,14 @@ const Dashboard = (() => {
       stagedCustomImageUrl = originalCustomImageUrl;
     }
 
+    // Diálogo de conversa usa a galeria própria de planos de fundo
+    // (CHAT_BACKGROUNDS, fotos sem cor de tema pareada); o de
+    // cenário/perfil continua com os 23 cenários da conta (SCENES).
     grid.innerHTML =
       (isChatBg ? noneSwatchHtml(stagedScene === "") : "") +
-      SCENES.map((s) =>
+      (isChatBg ? CHAT_BACKGROUNDS : SCENES).map((s) =>
         '<button type="button" class="scene-swatch' + (s.id === stagedScene ? " is-selected" : "") +
-        '" data-scene="' + s.id + '" style="background:' + sceneBg(s.id) +
+        '" data-scene="' + s.id + '" style="background:' + (isChatBg ? MSNScenes.chatBackgroundBg(s.id) : sceneBg(s.id)) +
         '" aria-label="' + esc(s.name) + '" title="' + esc(s.name) + '"></button>'
       ).join("");
     if (stagedScene === "custom" && stagedCustomImageUrl) {
@@ -2205,12 +2222,17 @@ const Dashboard = (() => {
     updateHeaderTextContrast(header, sceneId, c.scene_image_url);
   }
 
-  // Resolve e aplica o fundo da conversa atualmente aberta. Duas
-  // situações bem diferentes:
-  // - Plano de fundo PESSOAL escolhido (só eu vejo, por contato):
-  //   sólido, direto em #chat-messages — cobre exatamente a caixa da
-  //   lista, não o resto da tela (ver .chat-body abaixo, volta a
-  //   ficar transparente nesse caso).
+  // Resolve e aplica o fundo da conversa atualmente aberta. Três
+  // situações:
+  // - Plano de fundo PESSOAL "Relógio" (fundo6, ver CHAT_BACKGROUNDS
+  //   em scenes.js): a imagem (mostrador sem ponteiros) + os ponteiros
+  //   de verdade, ao vivo (#chat-clock-bg, ver startChatClock) — não é
+  //   um "background" comum, então #chat-messages fica transparente
+  //   pra deixá-lo aparecer atrás.
+  // - Plano de fundo PESSOAL comum escolhido (só eu vejo, por
+  //   contato): sólido, direto em #chat-messages — cobre exatamente a
+  //   caixa da lista, não o resto da tela (ver #chat-body abaixo,
+  //   volta a ficar transparente nesse caso).
   // - Sem escolha pessoal: cor de TEMA do contato, em degradê (mesma
   //   técnica do Dashboard — ver --tint-vivid/.dash-body), aplicada em
   //   #chat-body — ou seja, atrás de TUDO (coluna das fotos, barrinha
@@ -2223,14 +2245,29 @@ const Dashboard = (() => {
   function applyChatBackground() {
     const body = document.getElementById("chat-body");
     const messages = document.getElementById("chat-messages");
+    const clockBg = document.getElementById("chat-clock-bg");
     if (!messages || !currentChatContact) return;
     const myBg = getPersonalChatBackground(currentChatContact.id);
+
+    if (myBg && myBg.scene === "fundo6") {
+      messages.style.background = "transparent";
+      if (body) body.style.background = "transparent";
+      if (clockBg) clockBg.hidden = false;
+      startChatClock();
+      return;
+    }
+    stopChatClock();
+    if (clockBg) clockBg.hidden = true;
+
     if (myBg && myBg.scene) {
-      const tintHex = MSNScenes.colorSchemeHex(myBg.colorScheme);
-      // MSNScenes.bg()/resolveSceneBg() devolvem um valor pra
-      // propriedade "background" (shorthand) — não pra
-      // "background-image" sozinha (ver .dash-header, mesma técnica).
-      messages.style.background = resolveSceneBg(myBg.scene, myBg.sceneImageUrl, tintHex);
+      // "custom" (foto enviada pela pessoa) continua vindo do mesmo
+      // catálogo dos 23 cenários (resolveSceneBg, com camada de
+      // tingimento) — os demais agora vêm da galeria própria de
+      // planos de fundo de conversa (resolveChatBg/CHAT_BACKGROUNDS),
+      // sem tingimento (não têm cor de tema pareada).
+      messages.style.background = myBg.scene === "custom"
+        ? resolveSceneBg(myBg.scene, myBg.sceneImageUrl, MSNScenes.colorSchemeHex(myBg.colorScheme))
+        : resolveChatBg(myBg.scene, myBg.sceneImageUrl);
       if (body) body.style.background = "transparent";
     } else {
       const hex = MSNScenes.effectiveTheme(currentChatContact.scene, currentChatContact.color_scheme);
@@ -2245,6 +2282,44 @@ const Dashboard = (() => {
           "linear-gradient(180deg, " + vivid + " 0%, #ffffff 22%, #ffffff 78%, " + vivid + " 100%)";
       }
       messages.style.background = "transparent";
+    }
+  }
+
+  // ---------- Relógio ao vivo (plano de fundo "fundo6") ----------
+  // Ponteiros de hora/minuto/segundo, posicionados via % sobre o
+  // mostrador (ver clockCenter em CHAT_BACKGROUNDS/scenes.js — medido
+  // a partir da imagem real, assets/backgrounds/fundo6.webp) e girados
+  // via transform:rotate, recalculado a cada segundo com a hora de
+  // verdade do aparelho (new Date()) — não é uma imagem de relógio
+  // "parado", os ponteiros se mexem sozinhos igual um relógio de
+  // verdade.
+  let chatClockInterval = null;
+  function updateChatClockHands() {
+    const wrap = document.getElementById("chat-clock-bg");
+    if (!wrap || wrap.hidden) return;
+    const now = new Date();
+    const h = now.getHours() % 12;
+    const m = now.getMinutes();
+    const s = now.getSeconds();
+    const hourDeg = (h + m / 60) * 30; // 360°/12h
+    const minuteDeg = (m + s / 60) * 6; // 360°/60min
+    const secondDeg = s * 6; // 360°/60s
+    const hourEl = wrap.querySelector(".chat-clock-bg__hand--hour");
+    const minEl = wrap.querySelector(".chat-clock-bg__hand--minute");
+    const secEl = wrap.querySelector(".chat-clock-bg__hand--second");
+    if (hourEl) hourEl.style.transform = "rotate(" + hourDeg + "deg)";
+    if (minEl) minEl.style.transform = "rotate(" + minuteDeg + "deg)";
+    if (secEl) secEl.style.transform = "rotate(" + secondDeg + "deg)";
+  }
+  function startChatClock() {
+    stopChatClock();
+    updateChatClockHands();
+    chatClockInterval = setInterval(updateChatClockHands, 1000);
+  }
+  function stopChatClock() {
+    if (chatClockInterval) {
+      clearInterval(chatClockInterval);
+      chatClockInterval = null;
     }
   }
 
@@ -2618,10 +2693,15 @@ const Dashboard = (() => {
     const currentScene = mine ? mine.scene : null;
 
     const recentSwatches = getRecentChatScenes().map((id) => {
-      const s = MSNScenes.find(id);
+      // MSNScenes.findChatBackground (não .find, que é só os 23
+      // cenários da conta) — "recentes" guardados de antes dessa
+      // galeria própria existir (ids "cenarioN") somem sozinhos daqui
+      // (viram "" abaixo, filtrado pelo join), já que não fazem mais
+      // parte das opções oferecidas no diálogo.
+      const s = MSNScenes.findChatBackground(id);
       if (!s) return "";
       const selected = currentScene === id;
-      const img = MSNScenes.example(id) || MSNScenes.image(id);
+      const img = s.image;
       return (
         '<button type="button" class="chat-bg-picker__swatch' + (selected ? " is-selected" : "") +
         '" data-scene="' + id + '" style="background-image:url(\'' + img + '\')" title="' + esc(s.name) + '">' +
@@ -2685,6 +2765,7 @@ const Dashboard = (() => {
   // chat-close em bindEvents, que usa history.back() em vez disso).
   function closeChat() {
     currentChatContact = null;
+    stopChatClock();
     UIManager.showScreen("screen-dashboard");
   }
 
