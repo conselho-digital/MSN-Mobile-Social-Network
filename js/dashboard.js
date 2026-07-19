@@ -2802,6 +2802,11 @@ const Dashboard = (() => {
   const EMOTICON_MAX_DIM = 128;
   let emoticonEditorCtx = null;
   let emoticonEditorOriginalImageData = null;
+  // Resultado do recorte automático, calculado uma vez e reaproveitado
+  // ao alternar "Original"/"Fundo detectado" (sem rodar o modelo de
+  // novo a cada toque) — ver selectEmoticonEditorMode.
+  let emoticonEditorDetectedImageData = null;
+  let emoticonEditorMode = "original"; // "original" | "detected"
 
   function loadImageFile(file) {
     return new Promise((resolve, reject) => {
@@ -2837,6 +2842,9 @@ const Dashboard = (() => {
     ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
     emoticonEditorCtx = ctx;
     emoticonEditorOriginalImageData = ctx.getImageData(0, 0, canvas.width, canvas.height);
+    emoticonEditorDetectedImageData = null;
+    emoticonEditorMode = "original";
+    updateEmoticonEditorModeButtons();
     // Esconde a janela de baixo (não fecha — "Cancelar" só volta pra
     // ela, sem perder a seleção/scroll de antes) enquanto o editor,
     // que é OUTRO overlay por cima, estiver aberto.
@@ -2848,10 +2856,13 @@ const Dashboard = (() => {
     document.getElementById("emoticon-dialog").hidden = false;
     emoticonEditorCtx = null;
     emoticonEditorOriginalImageData = null;
+    emoticonEditorDetectedImageData = null;
   }
   function resetEmoticonEditor() {
     if (!emoticonEditorCtx || !emoticonEditorOriginalImageData) return;
     emoticonEditorCtx.putImageData(emoticonEditorOriginalImageData, 0, 0);
+    emoticonEditorMode = "original";
+    updateEmoticonEditorModeButtons();
   }
 
   // Recorte automático via IA (TensorFlow.js + MediaPipe Selfie
@@ -2899,33 +2910,68 @@ const Dashboard = (() => {
     }
     return segmenterLoadPromise;
   }
-  async function autoDetectBackground() {
-    if (!emoticonEditorCtx) return;
-    const btn = document.getElementById("emoticon-editor-auto");
+  function updateEmoticonEditorModeButtons() {
+    const originalBtn = document.getElementById("emoticon-editor-mode-original");
+    const detectedBtn = document.getElementById("emoticon-editor-mode-detected");
+    if (originalBtn) originalBtn.classList.toggle("is-selected", emoticonEditorMode === "original");
+    if (detectedBtn) detectedBtn.classList.toggle("is-selected", emoticonEditorMode === "detected");
+  }
+  // Alterna entre a foto original e o recorte automático (calculado só
+  // na primeira vez que "Fundo detectado" é tocado, e reaproveitado
+  // depois — ver emoticonEditorDetectedImageData). Sempre parte da foto
+  // ORIGINAL (não de cima de edições manuais já feitas com a varinha),
+  // pra dar um resultado prevísivel toda vez que alternar.
+  async function selectEmoticonEditorMode(mode) {
+    if (!emoticonEditorCtx || mode === emoticonEditorMode) return;
+    if (mode === "original") {
+      emoticonEditorCtx.putImageData(emoticonEditorOriginalImageData, 0, 0);
+      emoticonEditorMode = "original";
+      updateEmoticonEditorModeButtons();
+      return;
+    }
+    if (emoticonEditorDetectedImageData) {
+      emoticonEditorCtx.putImageData(emoticonEditorDetectedImageData, 0, 0);
+      emoticonEditorMode = "detected";
+      updateEmoticonEditorModeButtons();
+      return;
+    }
+    const btn = document.getElementById("emoticon-editor-mode-detected");
     const originalLabel = btn ? btn.textContent : "";
     if (btn) { btn.disabled = true; btn.textContent = "Detectando…"; }
     try {
       const segmenter = await ensureSegmenter();
       const canvas = emoticonEditorCtx.canvas;
+      // Roda sempre em cima da foto original, não do que já estiver
+      // desenhado no canvas (que pode ter edições manuais da varinha).
+      emoticonEditorCtx.putImageData(emoticonEditorOriginalImageData, 0, 0);
       const segmentation = await segmenter.segmentPeople(canvas);
       if (!segmentation || !segmentation.length) {
-        infoModal("Emoticons", "Não consegui detectar o assunto principal dessa foto. Tente usar a varinha mágica manualmente.");
+        infoModal("Emoticons", "Não consegui detectar o assunto principal dessa foto. Use a varinha mágica manualmente.");
         return;
       }
+      // foreground (o assunto, ex: a pessoa) fica OPACO — é o que
+      // queremos MANTER; background fica TRANSPARENTE — é o que
+      // queremos APAGAR. Trocar essas duas cores de lugar inverte o
+      // recorte (apaga a pessoa e mantém o fundo).
       const mask = await bodySegmentation.toBinaryMask(
         segmentation,
-        { r: 0, g: 0, b: 0, a: 0 },
-        { r: 0, g: 0, b: 0, a: 255 }
+        { r: 0, g: 0, b: 0, a: 255 },
+        { r: 0, g: 0, b: 0, a: 0 }
       );
       const imageData = emoticonEditorCtx.getImageData(0, 0, canvas.width, canvas.height);
       for (let i = 3; i < imageData.data.length; i += 4) {
         if (mask.data[i] === 0) imageData.data[i] = 0;
       }
       emoticonEditorCtx.putImageData(imageData, 0, 0);
+      emoticonEditorDetectedImageData = imageData;
+      emoticonEditorMode = "detected";
     } catch (_) {
-      infoModal("Emoticons", "Não foi possível detectar o fundo automaticamente agora (sem internet ou o navegador não suporta). Você ainda pode usar a varinha mágica pra remover manualmente.");
+      infoModal("Emoticons", "Não foi possível detectar o fundo automaticamente agora (sem internet ou o navegador não suporta). Use a varinha mágica pra remover manualmente.");
+      emoticonEditorCtx.putImageData(emoticonEditorOriginalImageData, 0, 0);
+      emoticonEditorMode = "original";
     } finally {
       if (btn) { btn.disabled = false; btn.textContent = originalLabel; }
+      updateEmoticonEditorModeButtons();
     }
   }
 
@@ -3866,18 +3912,18 @@ const Dashboard = (() => {
     const emoticonDialogDelete = document.getElementById("emoticon-dialog-delete");
     if (emoticonDialogDelete) emoticonDialogDelete.addEventListener("click", deleteStagedCustomEmoticon);
 
-    // Editor de emoticon (detecção automática via IA + varinha mágica
-    // pra remover fundo).
-    const emoticonEditorAuto = document.getElementById("emoticon-editor-auto");
-    if (emoticonEditorAuto) emoticonEditorAuto.addEventListener("click", autoDetectBackground);
+    // Editor de emoticon ("Original"/"Fundo detectado" via IA + varinha
+    // mágica manual pra remover fundo).
+    const emoticonEditorModeOriginal = document.getElementById("emoticon-editor-mode-original");
+    if (emoticonEditorModeOriginal) emoticonEditorModeOriginal.addEventListener("click", () => selectEmoticonEditorMode("original"));
+    const emoticonEditorModeDetected = document.getElementById("emoticon-editor-mode-detected");
+    if (emoticonEditorModeDetected) emoticonEditorModeDetected.addEventListener("click", () => selectEmoticonEditorMode("detected"));
     const emoticonEditorCanvas = document.getElementById("emoticon-editor-canvas");
     if (emoticonEditorCanvas) emoticonEditorCanvas.addEventListener("click", (e) => {
       if (!emoticonEditorCtx) return;
       const { x, y } = canvasClickToPixel(emoticonEditorCanvas, e.clientX, e.clientY);
       applyMagicWand(x, y);
     });
-    const emoticonEditorX = document.getElementById("emoticon-editor-x");
-    if (emoticonEditorX) emoticonEditorX.addEventListener("click", closeEmoticonEditor);
     const emoticonEditorCancel = document.getElementById("emoticon-editor-cancel");
     if (emoticonEditorCancel) emoticonEditorCancel.addEventListener("click", closeEmoticonEditor);
     const emoticonEditorReset = document.getElementById("emoticon-editor-reset");

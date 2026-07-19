@@ -1340,22 +1340,19 @@
     </div>
   </div>
 
-  <!-- Editor de emoticon (varinha mágica pra remover fundo) — aberto
-       depois de escolher uma foto em "Criar..." (ver
-       emoticon-image-input). Tela cheia no celular, 50% da tela no
-       computador (ver #emoticon-editor no CSS). -->
+  <!-- Editor de emoticon (recorte automático por IA + varinha mágica
+       manual pra remover fundo) — aberto depois de escolher uma foto
+       em "Criar..." (ver emoticon-image-input). Sem banner/titlebar de
+       propósito (ver pedido do usuário) — "Cancelar" no rodapé fecha.
+       Tela cheia no celular, 50% da tela no computador (ver
+       #emoticon-editor no CSS). -->
   <div id="emoticon-editor" class="modal-overlay" hidden>
     <div class="emoticon-editor__panel" role="dialog" aria-modal="true" aria-label="Criar emoticon">
-      <header class="scene-dialog__titlebar">
-        <span class="scene-dialog__titlebar-app">
-          <img src="assets/icons/favicon.png" alt="" />
-          Criar emoticon
-        </span>
-        <button type="button" id="emoticon-editor-x" class="scene-dialog__x" aria-label="Fechar">&times;</button>
-      </header>
       <div class="emoticon-editor__body">
-        <p class="emoticon-editor__hint">Toque em "Detectar fundo automaticamente" pra recortar sozinho, ou toque numa cor da foto pra remover ela (e as parecidas) manualmente com a varinha mágica.</p>
-        <button type="button" id="emoticon-editor-auto" class="btn-signin btn-signin--sm emoticon-editor__auto-btn">Detectar fundo automaticamente</button>
+        <div class="emoticon-editor__mode-toggle" role="group" aria-label="Fundo da foto">
+          <button type="button" id="emoticon-editor-mode-original" class="emoticon-editor__mode-btn is-selected">Original</button>
+          <button type="button" id="emoticon-editor-mode-detected" class="emoticon-editor__mode-btn">Fundo detectado</button>
+        </div>
         <div class="emoticon-editor__canvas-wrap">
           <canvas id="emoticon-editor-canvas"></canvas>
         </div>

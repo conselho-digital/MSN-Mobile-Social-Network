@@ -3616,7 +3616,7 @@ body[data-login-theme="cenario1"] #screen-connecting::before {
   object-fit: contain;
 }
 
-/* ---------- Editor de emoticon (varinha mágica) ---------- */
+/* ---------- Editor de emoticon (recorte automático + varinha mágica) ---------- */
 /* Tela cheia no celular (a maioria dos aparelhos que vão usar isso);
    50% da tela no computador (mesmo breakpoint de 700px já usado em
    .login-message) — pedido explícito, em vez do tamanho fixo dos
@@ -3654,15 +3654,35 @@ body[data-login-theme="cenario1"] #screen-connecting::before {
   padding: 12px 16px;
   overflow-y: auto;
 }
-.emoticon-editor__hint { margin: 0; font-size: 0.8rem; color: #5a6b78; }
-/* Ação principal do editor — recorte automático via modelo de IA (ver
-   ensureSegmenter/autoDetectBackground em dashboard.js), por isso fica
-   destacado (ocupa a largura toda) acima da varinha mágica manual. */
-.emoticon-editor__auto-btn {
-  align-self: stretch;
-  width: 100%;
-  margin: 0;
+/* Escolha entre a foto original e o recorte automático (IA, ver
+   selectEmoticonEditorMode em dashboard.js) — substitui o antigo botão
+   único + texto de instrução por um controle de duas opções, sem
+   banner/titlebar acima (pedido explícito do usuário). */
+.emoticon-editor__mode-toggle {
+  display: flex;
   flex: 0 0 auto;
+  border: 1px solid #adb6bd;
+  border-radius: 4px;
+  overflow: hidden;
+}
+.emoticon-editor__mode-btn {
+  flex: 1 1 50%;
+  padding: 8px 10px;
+  font: inherit;
+  font-size: 0.82rem;
+  color: #34495a;
+  background: #eef1f4;
+  border: none;
+  border-right: 1px solid #adb6bd;
+  cursor: pointer;
+}
+.emoticon-editor__mode-btn:last-child { border-right: none; }
+.emoticon-editor__mode-btn:active:not(:disabled) { background: #dfe6ea; }
+.emoticon-editor__mode-btn:disabled { opacity: 0.7; cursor: default; }
+.emoticon-editor__mode-btn.is-selected {
+  background: var(--msn-blue);
+  color: #ffffff;
+  font-weight: 600;
 }
 /* Fundo xadrez (transparência clássica de editor de imagem) — deixa
    claro o que a varinha mágica já apagou, sem precisar adivinhar se é
