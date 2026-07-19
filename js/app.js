@@ -162,11 +162,13 @@ const App = (function () {
       deferredInstallPrompt = e;
     });
 
-    // Esconde quando rodando como o app instalado (standalone) OU num
-    // aparelho Apple — o Safari/iOS não dispara "beforeinstallprompt"
-    // (não existe instalação com um clique), então o botão não tinha
-    // uma ação de verdade por trás nesses aparelhos.
-    setInstallButtonsHidden(isRunningStandalone() || isAppleDevice());
+    // Esconde só quando rodando como o app instalado (standalone) — em
+    // aparelho Apple o botão continua aparecendo (pedido explícito),
+    // mesmo sem "beforeinstallprompt": o clique cai no fallback de
+    // showInstallInstructions(), que mostra o passo a passo manual do
+    // Safari (Compartilhar → Adicionar à Tela de Início), já que iOS
+    // não tem instalação de um clique só.
+    setInstallButtonsHidden(isRunningStandalone());
     // Mas no exato momento em que a instalação acontece NESTA aba, some
     // na hora — sem isso, o botão continuava visível na mesma aba logo
     // depois de instalar com sucesso, o que parecia que não tinha
@@ -208,13 +210,21 @@ const App = (function () {
   }
 
   // Fallback para navegadores sem beforeinstallprompt (ex.: Chrome
-  // desktop mais antigo, ou algum outro sem suporte). Usa um modal
-  // global (funciona em qualquer tela: login, cadastro ou entrando), já
-  // que nem toda tela tem uma área de mensagem própria.
+  // desktop mais antigo, iOS/Safari, ou algum outro sem suporte). Usa
+  // um modal global (funciona em qualquer tela: login, cadastro ou
+  // entrando), já que nem toda tela tem uma área de mensagem própria.
   function showInstallInstructions() {
-    const msg = isRunningStandalone()
-      ? "O app já está instalado neste dispositivo. 🎉"
-      : "Para instalar: abra o menu do navegador (⋮) e escolha “Instalar app” ou “Adicionar à tela inicial”.";
+    let msg;
+    if (isRunningStandalone()) {
+      msg = "O app já está instalado neste dispositivo. 🎉";
+    } else if (isAppleDevice()) {
+      // iOS/iPadOS não tem instalação de um clique — o único jeito é
+      // manual, pelo Safari (não funciona em outro navegador no iOS,
+      // já que todos usam o motor do Safari por baixo).
+      msg = "Para instalar no iPhone/iPad: abra este site no Safari, toque no ícone de Compartilhar (□ com uma seta ↑) na barra de baixo e escolha “Adicionar à Tela de Início”.";
+    } else {
+      msg = "Para instalar: abra o menu do navegador (⋮) e escolha “Instalar app” ou “Adicionar à tela inicial”.";
+    }
     showGlobalInfo("Adicionar App", msg);
   }
 
