@@ -2605,41 +2605,54 @@ const Dashboard = (() => {
 
   // "Recentemente usados" do picker rápido — uma lista só (não por
   // contato), mais recente primeiro, sempre 10 vagas (as que sobram
-  // ficam vazias/desabilitadas — ver renderEmojiPicker).
+  // ficam vazias/desabilitadas — ver renderEmojiPicker). Cada entrada é
+  // { value, custom } — custom=true quando value é a URL de um
+  // emoticon personalizado (ver saveCustomEmoticon), pra saber
+  // desenhar uma <img> em vez do texto cru na hora de mostrar (ver
+  // emojiGridButtons). Entradas antigas (formato string simples, de
+  // antes dos personalizados existirem) continuam funcionando — viram
+  // {value, custom:false} na leitura.
   const RECENT_EMOJIS_MAX = 10;
   function getRecentEmojis() {
     try {
       const raw = localStorage.getItem("msn:recentEmojis");
-      return raw ? JSON.parse(raw) : [];
+      const parsed = raw ? JSON.parse(raw) : [];
+      return parsed.map((e) => (typeof e === "string" ? { value: e, custom: false } : e));
     } catch (_) { return []; }
   }
-  function addRecentEmoji(emoji) {
+  function addRecentEmoji(value, isCustom) {
     try {
-      const list = getRecentEmojis().filter((e) => e !== emoji);
-      list.unshift(emoji);
+      const list = getRecentEmojis().filter((e) => e.value !== value);
+      list.unshift({ value, custom: !!isCustom });
       localStorage.setItem("msn:recentEmojis", JSON.stringify(list.slice(0, RECENT_EMOJIS_MAX)));
     } catch (_) {}
   }
 
   // Insere na caixa de texto — chamado tanto pelo picker rápido quanto
-  // pelo botão OK da janela cheia (ver commitEmoticonDialog). Só
-  // registra em "recentemente usados" os embutidos (unicode) — um
-  // personalizado é uma URL de imagem, mostrar a URL crua numa
-  // vaguinha de "recente" ficaria estranho (ver openEmoticonDialog).
+  // pelo botão OK da janela cheia (ver commitEmoticonDialog). Registra
+  // em "recentemente usados" tanto embutidos quanto personalizados.
   function insertChatEmoji(value, isCustom) {
     const input = document.getElementById("chat-input");
     input.value += value;
     input.focus();
-    if (!isCustom) addRecentEmoji(value);
+    addRecentEmoji(value, isCustom);
   }
 
   // Botão vazio (sem emoji, "disabled") pras vagas de "recentemente
   // usados" que ainda não foram preenchidas — ver .chat-emoji-picker__btn:disabled
-  // no CSS (só o contorno pontilhado, sem clique).
+  // no CSS (só o contorno pontilhado, sem clique). Itens podem ser uma
+  // string (unicode, grade "Emoticons incluídos") ou {value, custom}
+  // (grade "recentemente usados", que pode ter personalizados).
   function emojiGridButtons(list) {
-    return list.map((e) =>
-      '<button type="button" class="chat-emoji-picker__btn"' + (e ? "" : " disabled") + ">" + e + "</button>"
-    ).join("");
+    return list.map((item) => {
+      if (!item) return '<button type="button" class="chat-emoji-picker__btn" disabled></button>';
+      const value = typeof item === "string" ? item : item.value;
+      const isCustom = typeof item === "object" && item.custom;
+      return isCustom
+        ? '<button type="button" class="chat-emoji-picker__btn chat-emoji-picker__btn--custom" data-value="' +
+            esc(value) + '" data-custom="1"><img src="' + esc(value) + '" alt="" /></button>'
+        : '<button type="button" class="chat-emoji-picker__btn" data-value="' + esc(value) + '">' + value + "</button>";
+    }).join("");
   }
 
   function renderEmojiPicker() {
@@ -2647,13 +2660,13 @@ const Dashboard = (() => {
     const allGrid = document.getElementById("chat-emoji-all-grid");
     if (!recentGrid || !allGrid) return;
     const recent = getRecentEmojis();
-    const slots = Array.from({ length: RECENT_EMOJIS_MAX }, (_, i) => recent[i] || "");
+    const slots = Array.from({ length: RECENT_EMOJIS_MAX }, (_, i) => recent[i] || null);
     recentGrid.innerHTML = emojiGridButtons(slots);
     allGrid.innerHTML = emojiGridButtons(CHAT_EMOJIS);
     [recentGrid, allGrid].forEach((grid) => {
       grid.querySelectorAll("button:not(:disabled)").forEach((btn) => {
         btn.addEventListener("click", () => {
-          insertChatEmoji(btn.textContent);
+          insertChatEmoji(btn.dataset.value, btn.dataset.custom === "1");
           renderEmojiPicker();
         });
       });
@@ -2712,11 +2725,19 @@ const Dashboard = (() => {
     } catch (_) {}
     return id;
   }
-  function deleteCustomEmoticon(id) {
+  function deleteCustomEmoticon(id, url) {
     try {
       const list = getCustomEmoticons().filter((e) => e.id !== id);
       localStorage.setItem("msn:customEmoticons", JSON.stringify(list));
     } catch (_) {}
+    // Tira também de "recentemente usados", senão sobra uma vaguinha
+    // apontando pra uma imagem que não existe mais.
+    if (url) {
+      try {
+        const recents = getRecentEmojis().filter((e) => !(e.custom && e.value === url));
+        localStorage.setItem("msn:recentEmojis", JSON.stringify(recents));
+      } catch (_) {}
+    }
   }
 
   /* ---------- Janela cheia de emoticons ("Mostrar tudo…") ----------
@@ -2779,16 +2800,17 @@ const Dashboard = (() => {
         insertChatEmoji(stagedEmoticon.url, true);
       } else {
         insertChatEmoji(stagedEmoticon.emoji, false);
-        renderEmojiPicker();
       }
+      renderEmojiPicker();
     }
     closeEmoticonDialog();
   }
   function deleteStagedCustomEmoticon() {
     if (!stagedEmoticon || stagedEmoticon.kind !== "custom") return;
-    deleteCustomEmoticon(stagedEmoticon.id);
+    deleteCustomEmoticon(stagedEmoticon.id, stagedEmoticon.url);
     stagedEmoticon = null;
     renderEmoticonDialogGrid();
+    renderEmojiPicker();
   }
 
   /* ---------- Editor de emoticon (detecção automática + varinha
@@ -3869,10 +3891,21 @@ const Dashboard = (() => {
       toggleEmojiPicker();
     });
     document.addEventListener("click", (e) => {
+      // composedPath() (não e.target.closest) porque clicar num
+      // emoticon/plano de fundo da grade re-renderiza o próprio
+      // popover na hora (ver renderEmojiPicker/renderChatBgPicker),
+      // desligando o botão clicado do documento ANTES desse listener
+      // rodar — e um nó já desligado não acha mais nenhum ancestral
+      // via closest(), fazendo o popover "fechar sozinho" a cada
+      // clique. composedPath() guarda o caminho de quando o clique
+      // aconteceu, então continua valendo mesmo depois do re-render.
+      const path = typeof e.composedPath === "function" ? e.composedPath() : [e.target];
       const picker = document.getElementById("chat-emoji-picker");
-      if (picker && !picker.hidden && !e.target.closest(".chat-emoji-wrap")) picker.hidden = true;
+      const emojiWrap = document.querySelector(".chat-emoji-wrap");
+      if (picker && !picker.hidden && !(emojiWrap && path.includes(emojiWrap))) picker.hidden = true;
       const bgPicker = document.getElementById("chat-bg-picker");
-      if (bgPicker && !bgPicker.hidden && !e.target.closest(".chat-bg-wrap")) bgPicker.hidden = true;
+      const bgWrap = document.querySelector(".chat-bg-wrap");
+      if (bgPicker && !bgPicker.hidden && !(bgWrap && path.includes(bgWrap))) bgPicker.hidden = true;
     });
     const chatBgBtn = document.getElementById("chat-bg-btn");
     if (chatBgBtn) chatBgBtn.addEventListener("click", (e) => {

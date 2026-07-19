@@ -3250,6 +3250,15 @@ body[data-login-theme="cenario1"] #screen-connecting::before {
   border: 1px dashed #d7dee4;
   cursor: default;
 }
+/* Personalizado (imagem, não emoji unicode) na fileira de "recentemente
+   usados" — mesma ideia do .emoticon-dialog__swatch--custom. */
+.chat-emoji-picker__btn--custom { padding: 1px; }
+.chat-emoji-picker__btn--custom img {
+  display: block;
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+}
 
 /* Menu "Seus Planos de Fundo" (botão 🖌) — mesma ideia do picker de
    emoji (popover, some ao clicar fora ou de novo no botão), mas com
