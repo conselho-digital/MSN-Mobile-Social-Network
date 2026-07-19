@@ -3115,7 +3115,7 @@ body[data-login-theme="cenario1"] #screen-connecting::before {
      margin negativo pra "roubar" espaço da barrinha, já que ela nem
      desce até aqui. */
 }
-.chat-compose__box { flex: 1 1 auto; min-width: 0; display: flex; flex-direction: column; gap: 6px; }
+.chat-compose__box { position: relative; flex: 1 1 auto; min-width: 0; display: flex; flex-direction: column; gap: 6px; }
 .chat-compose__input {
   width: 100%;
   height: 54px;
@@ -3129,6 +3129,43 @@ body[data-login-theme="cenario1"] #screen-connecting::before {
 }
 .chat-compose__input:focus { border-color: var(--field-border-focus); box-shadow: 0 0 0 2px rgba(75,160,230,0.2); }
 .chat-compose__input:disabled { background: #eef1f4; color: #9aa7b1; cursor: not-allowed; }
+/* Cobre a caixa de texto (mesmo espaço, por cima — ver position:relative
+   em .chat-compose__box) enquanto a mensagem inteira for um emoticon
+   personalizado, mostrando a figurinha em vez da URL crua da imagem. */
+.chat-compose__sticker-preview {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 54px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 6px 8px;
+  background: #ffffff;
+  border: 1px solid var(--field-border-focus);
+  border-radius: 4px;
+  box-shadow: 0 0 0 2px rgba(75,160,230,0.2);
+}
+.chat-compose__sticker-preview img {
+  height: 100%;
+  max-width: 90px;
+  object-fit: contain;
+}
+.chat-compose__sticker-preview button {
+  margin-left: auto;
+  flex: 0 0 auto;
+  width: 22px;
+  height: 22px;
+  border: 1px solid #cfd8df;
+  border-radius: 50%;
+  background: #eef1f4;
+  color: #5a6b78;
+  font-size: 0.9rem;
+  line-height: 1;
+  cursor: pointer;
+}
+.chat-compose__sticker-preview button:active { background: #dfe6ea; }
 /* Contato me bloqueou (ver applyChatBlockedLockdown em dashboard.js) —
    os próprios botões já ficam com a cara de "desligado" via
    .chat-toolbar__btn:disabled acima; isso aqui só garante que nada na

@@ -2563,6 +2563,7 @@ const Dashboard = (() => {
     const text = input.value.trim();
     if (!text || !currentChatContact) return;
     input.value = "";
+    updateComposeStickerPreview();
     try {
       const msg = await MSNSupabase.sendMessage(currentChatContact.id, text);
       // Já mostra na hora (o realtime só ecoa mensagens de outras
@@ -2636,6 +2637,25 @@ const Dashboard = (() => {
     input.value += value;
     input.focus();
     addRecentEmoji(value, isCustom);
+    updateComposeStickerPreview();
+  }
+
+  // Quando a mensagem inteira é a URL de uma imagem (emoticon
+  // personalizado inserido sozinho, ou colado à mão) — mesma regra que
+  // decide se uma mensagem ENVIADA vira <img> (CHAT_MEDIA_URL_RE) —
+  // cobre a caixa de texto com uma prévia da figurinha em vez de deixar
+  // a URL crua visível. #chat-input continua com a URL de verdade por
+  // baixo (é o que é lido/enviado em sendChatMessage); a prévia é só
+  // visual.
+  function updateComposeStickerPreview() {
+    const input = document.getElementById("chat-input");
+    const preview = document.getElementById("chat-compose-sticker-preview");
+    const img = document.getElementById("chat-compose-sticker-img");
+    if (!input || !preview || !img) return;
+    const value = input.value.trim();
+    const isSticker = !!value && CHAT_MEDIA_URL_RE.test(value);
+    preview.hidden = !isSticker;
+    img.src = isSticker ? value : "";
   }
 
   // Botão vazio (sem emoji, "disabled") pras vagas de "recentemente
@@ -3142,6 +3162,7 @@ const Dashboard = (() => {
     document.getElementById("chat-emoji-picker").hidden = true;
     document.getElementById("chat-bg-picker").hidden = true;
     document.getElementById("chat-input").value = "";
+    updateComposeStickerPreview();
     loadChatMessages();
     subscribeChatRealtime();
     subscribeChatNudges();
@@ -3882,6 +3903,14 @@ const Dashboard = (() => {
       if (!window.matchMedia("(pointer: fine)").matches) return;
       e.preventDefault();
       sendChatMessage();
+    });
+    // Digitar/colar à mão também atualiza a prévia (ex: colar uma URL
+    // de imagem direto) — não só a inserção pelo picker de emoticons.
+    if (chatInput) chatInput.addEventListener("input", updateComposeStickerPreview);
+    const composeStickerRemove = document.getElementById("chat-compose-sticker-remove");
+    if (composeStickerRemove) composeStickerRemove.addEventListener("click", () => {
+      if (chatInput) { chatInput.value = ""; chatInput.focus(); }
+      updateComposeStickerPreview();
     });
     const chatNudgeBtn = document.getElementById("chat-nudge-btn");
     if (chatNudgeBtn) chatNudgeBtn.addEventListener("click", sendChatNudge);

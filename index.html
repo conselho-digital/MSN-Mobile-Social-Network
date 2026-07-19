@@ -591,6 +591,15 @@
         <div class="chat-compose" id="chat-compose">
           <div class="chat-compose__box">
             <textarea id="chat-input" class="chat-compose__input" maxlength="2000"></textarea>
+            <!-- Mostrado NO LUGAR da caixa de texto (por cima, ver CSS)
+                 quando a mensagem inteira é um emoticon personalizado —
+                 assim aparece a figurinha em vez da URL crua. O valor
+                 de verdade continua sendo a URL, guardado no próprio
+                 #chat-input por baixo (ver insertChatEmoji). -->
+            <div class="chat-compose__sticker-preview" id="chat-compose-sticker-preview" hidden>
+              <img id="chat-compose-sticker-img" alt="" />
+              <button type="button" id="chat-compose-sticker-remove" aria-label="Remover figurinha">&times;</button>
+            </div>
             <div class="chat-toolbar">
               <div class="chat-emoji-wrap">
                 <button type="button" id="chat-emoji-btn" class="chat-toolbar__btn" title="Emoticons">🙂<span class="caret-down"></span></button>
