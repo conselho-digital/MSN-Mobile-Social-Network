@@ -257,7 +257,10 @@ const MSNScenes = (() => {
   }
   function chatBackgroundBg(id) {
     const b = findChatBackground(id);
-    return b ? "url('" + resolveUrl(b.image) + "') center/cover no-repeat" : "none";
+    return b
+      ? "linear-gradient(rgba(255,255,255,.5), rgba(255,255,255,.5)), url('" +
+          resolveUrl(b.image) + "') center/cover no-repeat"
+      : "none";
   }
 
   return {
