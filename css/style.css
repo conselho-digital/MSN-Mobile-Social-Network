@@ -3655,6 +3655,15 @@ body[data-login-theme="cenario1"] #screen-connecting::before {
   overflow-y: auto;
 }
 .emoticon-editor__hint { margin: 0; font-size: 0.8rem; color: #5a6b78; }
+/* Ação principal do editor — recorte automático via modelo de IA (ver
+   ensureSegmenter/autoDetectBackground em dashboard.js), por isso fica
+   destacado (ocupa a largura toda) acima da varinha mágica manual. */
+.emoticon-editor__auto-btn {
+  align-self: stretch;
+  width: 100%;
+  margin: 0;
+  flex: 0 0 auto;
+}
 /* Fundo xadrez (transparência clássica de editor de imagem) — deixa
    claro o que a varinha mágica já apagou, sem precisar adivinhar se é
    "branco de verdade" ou "sem nada" ali. */

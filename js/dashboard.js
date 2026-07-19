@@ -2791,7 +2791,8 @@ const Dashboard = (() => {
     renderEmoticonDialogGrid();
   }
 
-  /* ---------- Editor de emoticon (varinha mágica) ----------
+  /* ---------- Editor de emoticon (detecção automática + varinha
+     mágica) ----------
      Aberto depois de escolher uma foto em "Criar..." — tela cheia no
      celular, 50% da tela no computador (ver #emoticon-editor no CSS).
      Reduz a imagem pra um tamanho de emoticon de verdade antes de
@@ -2852,6 +2853,82 @@ const Dashboard = (() => {
     if (!emoticonEditorCtx || !emoticonEditorOriginalImageData) return;
     emoticonEditorCtx.putImageData(emoticonEditorOriginalImageData, 0, 0);
   }
+
+  // Recorte automático via IA (TensorFlow.js + MediaPipe Selfie
+  // Segmentation) — detecta sozinho o "primeiro plano" (pessoa/objeto
+  // principal) e apaga o resto, igual apps de figurinha prontos. Os
+  // scripts só são baixados na PRIMEIRA vez que o botão é usado (não
+  // no carregamento do app inteiro, pra manter o app leve) e o
+  // segmentador fica em cache pro resto da sessão. Depois do recorte
+  // automático a varinha mágica continua disponível pra ajustar
+  // detalhes que sobraram.
+  const SEGMENTER_SCRIPTS = [
+    "https://cdn.jsdelivr.net/npm/@tensorflow/tfjs-core@4.20.0/dist/tf-core.min.js",
+    "https://cdn.jsdelivr.net/npm/@tensorflow/tfjs-converter@4.20.0/dist/tf-converter.min.js",
+    "https://cdn.jsdelivr.net/npm/@tensorflow/tfjs-backend-webgl@4.20.0/dist/tf-backend-webgl.min.js",
+    "https://cdn.jsdelivr.net/npm/@mediapipe/selfie_segmentation@0.1.1675465747/selfie_segmentation.js",
+    "https://cdn.jsdelivr.net/npm/@tensorflow-models/body-segmentation@1.0.2/dist/body-segmentation.min.js",
+  ];
+  const SEGMENTER_SOLUTION_PATH = "https://cdn.jsdelivr.net/npm/@mediapipe/selfie_segmentation@0.1.1675465747";
+  let cachedSegmenter = null;
+  let segmenterLoadPromise = null;
+  function loadScriptOnce(src) {
+    return new Promise((resolve, reject) => {
+      if (document.querySelector('script[src="' + src + '"]')) { resolve(); return; }
+      const s = document.createElement("script");
+      s.src = src;
+      s.onload = () => resolve();
+      s.onerror = () => reject(new Error("Falha ao carregar " + src));
+      document.head.appendChild(s);
+    });
+  }
+  function ensureSegmenter() {
+    if (cachedSegmenter) return Promise.resolve(cachedSegmenter);
+    if (!segmenterLoadPromise) {
+      segmenterLoadPromise = (async () => {
+        for (const src of SEGMENTER_SCRIPTS) await loadScriptOnce(src);
+        cachedSegmenter = await bodySegmentation.createSegmenter(
+          bodySegmentation.SupportedModels.MediaPipeSelfieSegmentation,
+          { runtime: "mediapipe", solutionPath: SEGMENTER_SOLUTION_PATH }
+        );
+        return cachedSegmenter;
+      })().catch((err) => {
+        segmenterLoadPromise = null;
+        throw err;
+      });
+    }
+    return segmenterLoadPromise;
+  }
+  async function autoDetectBackground() {
+    if (!emoticonEditorCtx) return;
+    const btn = document.getElementById("emoticon-editor-auto");
+    const originalLabel = btn ? btn.textContent : "";
+    if (btn) { btn.disabled = true; btn.textContent = "Detectando…"; }
+    try {
+      const segmenter = await ensureSegmenter();
+      const canvas = emoticonEditorCtx.canvas;
+      const segmentation = await segmenter.segmentPeople(canvas);
+      if (!segmentation || !segmentation.length) {
+        infoModal("Emoticons", "Não consegui detectar o assunto principal dessa foto. Tente usar a varinha mágica manualmente.");
+        return;
+      }
+      const mask = await bodySegmentation.toBinaryMask(
+        segmentation,
+        { r: 0, g: 0, b: 0, a: 0 },
+        { r: 0, g: 0, b: 0, a: 255 }
+      );
+      const imageData = emoticonEditorCtx.getImageData(0, 0, canvas.width, canvas.height);
+      for (let i = 3; i < imageData.data.length; i += 4) {
+        if (mask.data[i] === 0) imageData.data[i] = 0;
+      }
+      emoticonEditorCtx.putImageData(imageData, 0, 0);
+    } catch (_) {
+      infoModal("Emoticons", "Não foi possível detectar o fundo automaticamente agora (sem internet ou o navegador não suporta). Você ainda pode usar a varinha mágica pra remover manualmente.");
+    } finally {
+      if (btn) { btn.disabled = false; btn.textContent = originalLabel; }
+    }
+  }
+
   // Varinha mágica: clica numa cor, remove ela (deixa transparente) —
   // em TODA a imagem, não só na região "conectada" que toca o clique,
   // já que o objetivo é tirar um fundo de cor só que o assunto
@@ -3789,7 +3866,10 @@ const Dashboard = (() => {
     const emoticonDialogDelete = document.getElementById("emoticon-dialog-delete");
     if (emoticonDialogDelete) emoticonDialogDelete.addEventListener("click", deleteStagedCustomEmoticon);
 
-    // Editor de emoticon (varinha mágica pra remover fundo).
+    // Editor de emoticon (detecção automática via IA + varinha mágica
+    // pra remover fundo).
+    const emoticonEditorAuto = document.getElementById("emoticon-editor-auto");
+    if (emoticonEditorAuto) emoticonEditorAuto.addEventListener("click", autoDetectBackground);
     const emoticonEditorCanvas = document.getElementById("emoticon-editor-canvas");
     if (emoticonEditorCanvas) emoticonEditorCanvas.addEventListener("click", (e) => {
       if (!emoticonEditorCtx) return;
