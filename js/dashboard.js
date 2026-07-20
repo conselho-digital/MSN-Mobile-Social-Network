@@ -2700,13 +2700,18 @@ const Dashboard = (() => {
   function positionChatEmojiPicker() {
     const btn = document.getElementById("chat-emoji-btn");
     const picker = document.getElementById("chat-emoji-picker");
+    const compose = document.getElementById("chat-compose");
     if (!btn || !picker) return;
     const rect = btn.getBoundingClientRect();
     const margin = 8;
     let left = rect.left;
     left = Math.max(margin, Math.min(left, window.innerWidth - CHAT_EMOJI_PICKER_WIDTH - margin));
     picker.style.left = left + "px";
-    picker.style.bottom = (window.innerHeight - rect.top + 6) + "px";
+    // Ancorado no topo da caixa de compor INTEIRA (não só no botão, que
+    // fica na barra de baixo) — senão o popover cobria a própria caixa
+    // de texto, que fica acima da barra de botões.
+    const anchorTop = compose ? compose.getBoundingClientRect().top : rect.top;
+    picker.style.bottom = (window.innerHeight - anchorTop + 6) + "px";
   }
 
   function toggleEmojiPicker() {
@@ -3100,13 +3105,17 @@ const Dashboard = (() => {
   function positionChatBgPicker() {
     const btn = document.getElementById("chat-bg-btn");
     const picker = document.getElementById("chat-bg-picker");
+    const compose = document.getElementById("chat-compose");
     if (!btn || !picker) return;
     const rect = btn.getBoundingClientRect();
     const margin = 8;
     let left = rect.right - CHAT_BG_PICKER_WIDTH;
     left = Math.max(margin, Math.min(left, window.innerWidth - CHAT_BG_PICKER_WIDTH - margin));
     picker.style.left = left + "px";
-    picker.style.bottom = (window.innerHeight - rect.top + 6) + "px";
+    // Mesmo motivo do positionChatEmojiPicker: ancora no topo da caixa
+    // de compor inteira, não só no botão, senão cobre a caixa de texto.
+    const anchorTop = compose ? compose.getBoundingClientRect().top : rect.top;
+    picker.style.bottom = (window.innerHeight - anchorTop + 6) + "px";
   }
 
   function renderChatBgPicker() {
